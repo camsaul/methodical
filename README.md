@@ -41,7 +41,7 @@ should so desire, by calling `next-method`:
 ;; -> {:type java.lang.String, :string? true, :object? true}
 ```
 
-This makes it easy to reuse shared parent implementations of methods without having to know the exact dispatch of the
+This makes it easy to reuse shared parent implementations of methods without having to know the exact dispatch value of the
 next method. In vanilla Clojure multimethods, you'd have to do something like this:
 
 ```clj
