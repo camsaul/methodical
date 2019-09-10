@@ -1,0 +1,179 @@
+version: 2.1
+
+########################################################################################################################
+#                                                      EXECUTORS                                                       #
+########################################################################################################################
+
+executors:
+  default:
+    working_directory: /home/circleci/camsaul/methodical/
+    docker:
+      - image: circleci/clojure:lein-2.9.1
+
+  java-11:
+    working_directory: /home/circleci/camsaul/methodical/
+    docker:
+      - image: circleci/clojure:openjdk-11-lein-2.9.1
+
+
+########################################################################################################################
+#                                                       COMMANDS                                                       #
+########################################################################################################################
+
+commands:
+
+  attach-workspace:
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+
+  restore-deps-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - deps-{{ checksum "project.clj" }}
+            - deps-
+
+jobs:
+
+  checkout:
+    executor: default
+    steps:
+      - restore_cache:
+          keys:
+            - source-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Branch }}
+            - source-
+      - checkout
+      - save_cache:
+          key: source-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .git
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - camsaul/methodical
+
+  lein:
+    parameters:
+      e:
+        type: executor
+        default: default
+      lein-command:
+        type: string
+      after-steps:
+        type: steps
+        default: []
+    executor: << parameters.e >>
+    steps:
+      - attach-workspace
+      - restore-deps-cache
+      - run:
+          command: lein << parameters.lein-command >>
+          no_output_timeout: 5m
+      - steps: << parameters.after-steps >>
+
+  reflection-warnings:
+    executor: default
+    steps:
+      - attach-workspace
+      - restore-deps-cache
+      - run:
+          command: ./check-for-reflection-warnings.sh
+          no_output_timeout: 3m
+
+
+########################################################################################################################
+#                                                      WORKFLOWS                                                       #
+########################################################################################################################
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - checkout
+
+      - lein:
+          name: deps
+          requires:
+            - checkout
+          lein-command: all-deps
+          after-steps:
+            - save_cache:
+                key: deps-{{ checksum "project.clj" }}
+                paths:
+                  - /home/circleci/.m2
+
+      - lein:
+          name: tests
+          requires:
+            - deps
+          lein-command: test
+
+      - lein:
+          name: tests-java-11
+          requires:
+            - deps
+          e: java-11
+          lein-command: test
+
+      - lein:
+          name: eastwood
+          requires:
+            - deps
+          lein-command: eastwood
+
+      - lein:
+          name: docstring-checker
+          requires:
+            - deps
+          lein-command: docstring-checker
+
+      - lein:
+          name: namespace-decls
+          requires:
+            - deps
+          lein-command: check-namespace-decls
+
+      - lein:
+          name: bikeshed
+          requires:
+            - deps
+          lein-command: bikeshed
+
+          # Kibit disabled for now because namespace docstrings break it
+      # - lein:
+      #     name: kibit
+      #     requires:
+      #       - deps
+      #     lein-command: kibit
+
+      - lein:
+          name: cloverage
+          requires:
+            - deps
+          lein-command: cloverage --codecov
+          after-steps:
+            - run:
+                command: bash <(curl -s https://codecov.io/bash)
+
+      - reflection-warnings:
+          requires:
+            - deps
+
+      - lein:
+          name: deploy
+          requires:
+            - bikeshed
+            - docstring-checker
+            - eastwood
+            - namespace-decls
+            # - kibit
+            - cloverage
+            - reflection-warnings
+            - tests
+            - tests-java-11
+          lein-command: deploy clojars
+          filters:
+            branches:
+              only: master
