@@ -29,7 +29,7 @@ Methodical is a library that provides drop-in replacements for Clojure multimeth
 
 ## Calling the next-most-specific method with `next-method`
 
-Inspired by the Common Lisp Object System (CLOS), Methodical methods can call the next-most-specific method, if the
+Inspired by the Common Lisp Object System (CLOS), Methodical methods can call the next-most-specific method, if they
 should so desire, by calling `next-method`:
 
 ```clj
