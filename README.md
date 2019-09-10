@@ -56,7 +56,7 @@ If you're not sure whether a `next-method` exists, you can check whether it's `n
 Inspired by the CLOS, Methodical multimethods support both *primary methods* and *auxiliary methods*. Primary methods
 are the main methods that are invoked for a given dispatch value, such as the implementations for `String` or `Object`
 in the examples above; they are the same type of method vanilla `defmethod` supports. Auxiliary methods are additional
-methods that are wrap `:before`, `:after`, or `:around` the primary methods:
+methods that are invoked `:before`, `:after`, or `:around` the primary methods:
 
 ```clj
 (m/defmethod my-multimethod :before String
@@ -73,9 +73,9 @@ methods that are wrap `:before`, `:after`, or `:around` the primary methods:
 
 #### `:before` methods
 
-All applicable `:before` methods are invoked *before* the primary method, in order from most-specific (Object before
-String) to least-specific. Unlike the CLOS, which ignores the results of `:before` and `:after` auxiliary methods, by
-default Methodical threads the result of each before method into the next methodas its *last* argument. This better
+All applicable `:before` methods are invoked *before* the primary method, in order from most-specific (String before
+Object) to least-specific. Unlike the CLOS, which ignores the results of `:before` and `:after` auxiliary methods, by
+default Methodical threads the result of each `:before` method into the next method as its *last* argument. This better
 supports Clojure's functional programming style.
 
 ```clj
@@ -113,8 +113,8 @@ individual log statment to every method! With Methodical, just add a new `:defau
 
 #### `:after` methods
 
-All applicable `:after` methods are invoked after the primary method, in order from least-specific (String before
-Object) to most-specific. Like `:before` methods, (by default) the result of the previous method is threaded thru as
+All applicable `:after` methods are invoked after the primary method, in order from least-specific (Object before
+String) to most-specific. Like `:before` methods, (by default) the result of the previous method is threaded thru as
 the last argument of the next function:
 
 ```clj
@@ -138,15 +138,12 @@ the last argument of the next function:
 ;; -> [:default :object :string]
 ```
 
-Access to the other arguments, rather than just the result, lets your `:after` methods accomplish more.
-
 #### `:around` methods
 
 `:around` methods are called around all other methods and give you the power to choose how or when to invoke those
-methods, and modify any arguments passed to them, or their results, as needed. Like primary methods (but unlike
-`:before` and `:after` methods), `:around` methods have an implicit `next-method`; you'll need to call this to invoke
-the next method (the next `:around` method, or the `:before`/primary method(s) if there are no more `:around`
-methods). `:around` methods are invoked from least-specific to most-specific:
+methods, and modify any arguments passed to them, or their result, as needed. Like primary methods (but unlike
+`:before` and `:after` methods), `:around` methods have an implicit `next-method` argument; you'll need to call this to invoke
+the next method. `:around` methods are invoked from least-specific to most-specific (Object before String):
 
 ```clj
 (m/defmulti around-example
@@ -170,7 +167,9 @@ methods). `:around` methods are invoked from least-specific to most-specific:
 (m/defmethod around-example :default
   [x acc]
   (conj acc :default))
-;; -> [:string-before :object-before :default :object-after :string-after]
+  
+(around-example {:type String} [])
+;; -> [:object-before :string-before :default :string-after :object-after]
 ```
 
 Around methods give you amazing power: you can decider whether to skip invoking `next-method` altogether, or even
@@ -238,8 +237,8 @@ You can also use this key to remove specific auxiliary methods.
 
 The *effective method* is the method that is ultimately invoked when you invoke a multimethod for a given dispatch
 value. With vanilla Clojure multimethods, `get-method` returns this "effective method" (which is nothing more than a
-single function); in Methodical, you can use `effective-method` to get an effective method that combines all auxiliary
-methods and primary methods. By default, this effective method is cached.
+single function); in Methodical, you can use `effective-method` to build an effective method that combines all auxiliary
+methods and primary methods into a single composed function. By default, this effective method is cached.
 
 ## Constructing and composing multimethods programmatically
 
@@ -260,7 +259,7 @@ immutable Clojure objects (with the exception of caching).
 ;; -> [:object :string]
 ```
 
-Note that when using the programmatic functions, primary and `:around` methods are each passed an implicit
+Note that when using these programmatic functions, primary and `:around` methods are each passed an implicit
 `next-method` arg as their first arg. The `defmethod` macro binds this automatically, but you'll need to handle it
 yourself when using these functions.
 
@@ -270,56 +269,52 @@ Every operation available for Clojure multimethods, and quite a few more, are av
 
 ## Advanced Customization
 
-Clojure's multimethods, while quite powerful, are somewhat limited the ways you can customize their behavior. Here's a
-quick list of some of the endless things you can do with Methodical multimethods, that are simply impossible with
+Clojure's multimethods, while quite powerful, are somewhat limited in the ways you can customize their behavior. Here's a
+quick list of some of the things you can do with Methodical multimethods, all of which are simply impossible with
 vanilla Clojure mulitmethods:
 
 *  Dispatch with multiple hierarchies (e.g., one for each arg)
 
-*  Change the strategy used to cache effective methods (the method that is ultimately invoked for a set of args)
+*  Change the strategy used to cache effective methods (the compiled function that is ultimately invoked for a set of args)
 
 *  Invoke *all* applicable primary methods, and return a sequence of their results
 
-*  Dynamically compute new primary or auxiliary methods with users manually adding them
+*  Dynamically compute new primary or auxiliary methods without users manually adding them
 
-*  Support default values for part of a dispatch value, e.g. when dispatching off a pair of classes, support `[String
-   String]`, `[:default String]`, and `[String :default]`
+*  Support default values for part of a dispatch value, e.g. when dispatching off a pair of classes, e.g. support `[String
+   String]`, `[:default String]`, or `[String :default]`
 
-*  Combine multiple multimethods into a single multimethod; when invoked, tries invoking each each in turn until it
-   finds one with a matching method implementation
+*  Combine multiple multimethods into a single multimethod; that, when invoked, tries invoking each constituent multimethod    in turn until it finds one with a matching method implementation
 
 To enable such advanced functionality, Methodical multimethods are divided into four components, and two that manage
 them:
 
 *  The *method combination*, which defines the way applicable primary and auxiliary methods are combined into a single
    *effective method*. The default method combination, `thread-last-method-combination`, binds implicit `next-method`
-   args for primary and `:around` methods, and implements logic to thread the result of each method into the next.
-   Method combinations also specify with auxiliary method *qualifiers* (e.g. `:before` or `:around`) are allowed, and
-   how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit `next-method`
-   arg). Method combinations implement the `MethodCombination` interface.
+   args for primary and `:around` methods, and implements logic to thread the result of each method into the last argument    of the next. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are 
+   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit 
+   `next-method` arg). Method combinations implement the `MethodCombination` interface.
 
-*  The *method table* store primary and auxiliary methods, and return them when asked. The default implementation,
+*  The *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
    `standard-method-table`, uses simple Clojure immutable maps, but there is nothing stopping you from creating an
-   implementation that ignores requests to store new methods, or dynamically generates a set of methods to return
-   based on outside factors. Method tables implement the `MethodTable` interface.
+   implementation that ignores requests to store new methods, or dynamically generates and returns a set of methods based on outside factors. Method tables implement the `MethodTable` interface.
 
-*  The *dispatcher* decides which dispatch value should be used for a given set of argument arguments, which primary
+*  The *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary
    and auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods
-   should be applied in -- which methods are most-specific, and which are least-specific (e.g. `String` is usually
-   more-specific than `Object`.) The default implementation, `standard-dispatcher`, mimics the behavior of the Clojure
-   multimethod, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers` map to
-   determine which methods are applicable; you could easily create your own implementation that uses multiple
-   hierarchies, or one that uses no hierarchies at all, or one with that optimizes performance. Dispatchers implement
+   should be applied in -- which methods are most specific, and which are the least specific (e.g., `String` is
+   more-specific than `Object`.) The default implementation, `standard-dispatcher`, mimics the behavior of Clojure
+   multimethods, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers` map to
+   determine which methods are applicable. You could easily create your own implementation that uses multiple
+   hierarchies, or one that uses no hierarchies at all. Dispatchers implement
    the `Dispatcher` interface.
 
-*  A *cache*, if present, implements a caching strategy for effective methods, so that need not be recomputed on every
+*  A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on every
    invocation. Caches implement the `Cache` interface. Depending on whether you create a multimethod via `defmulti` or
    with the programmatic functions, the cache is either a `watching-cache`, which watches the hierarchy referenced by
-   the *dispatcher* (default `#'clojure.core/global-hierarchy`), clearing the cache when it changes; or
-   `simple-cache`, a bare-bones cache that manages an atom containing a table of dispatch value -> effective method.
-   You can easily implement alternative caching strategies, such as TTL or LRU caches, or ones that better optimize
-   memory and locality (e.g. if dispatch values Object and String both have the same effective method, storing that
-   method once rather than once per dispatch value.)
+   the *dispatcher* (by default, `#'clojure.core/global-hierarchy`), clearing the cache when it changes; or
+   `simple-cache`, a bare-bones cache.
+   You could easily implement alternative caching strategies, such as TTL or LRU caches, or ones that better optimize
+   memory and locality.
 
 The method combination, method table, and dispatcher are managed by an object called the *multifn impl*, which
 implements `MultiFnImpl`. If this impl supports caching, it manages a cache as well, albeit indirectly (thru its
@@ -329,7 +324,7 @@ components.
 
 Finally, the *multifn impl* is wrapped in `StandardMultiFn`, which implements a variety of interfaces, such as
 `clojure.lang.IObj`, `clojure.lang.Named`, `clojure.lang.IFn`, as well as `MethodCombination`, `MethodTable`,
-`Dispatcher`, and `MultiFnImpl` (by providing proxy access to the components via the multifn impl).
+`Dispatcher`, and `MultiFnImpl`.
 
 You can use alternative components directly in the `defmulti` macro by passing `:combo`, `:method-table`,
 `dispatcher`, or `:cache`:
@@ -340,7 +335,7 @@ You can use alternative components directly in the `defmulti` macro by passing `
   :combo (m/thread-first-method-combination))
 ```
 
-When constructing multimethods programmatically, you can use `standard-multifn-impl` and `multifn` to create a multifn with the desired
+When constructing multimethods programmatically, you can use `standard-multifn-impl` and `multifn` to create a multimethod with the desired
 combination of components:
 
 ```clj
@@ -355,13 +350,13 @@ combination of components:
 
 ## Component implementations that ship with Methodical
 
-As previously mentioned, Methodical ships with a variety of alternative implementations of these components. The
+As previously mentioned, Methodical ships with a variety of alternative implementations of these constituent components of multimethods. The
 following summarizes all component implementations that currently ship with Methodical:
 
 ### Method Combinations
 
 *  `clojure-method-combination` - mimics behavior of vanilla Clojure multimethods. Disallows auxiliary methods;
-   primary methods do not get an implicit `next-method` arg.
+   primary methods do *not* get an implicit `next-method` arg.
 
 *  `clos-method-combination` - mimics behavior of the CLOS standard method combination. Supports `:before`, `:after`,
    and `:around` auxiliary methods. Return values of `:before` and `:after` methods are ignored. `:after` methods are
@@ -370,15 +365,14 @@ following summarizes all component implementations that currently ship with Meth
 
 *  `thread-last-method-combination`: the default method combination. Similar to `clos-method-combination`, but the
    result of `:before` methods, the primary method, and `:after` methods are threaded thru to the next method as the
-   *last* argument. `:after` methods
+   *last* argument. `:after` methods are passed the full set of arguments the multimethod as a whole was invoked with.
 
-*  `thread-first-method-combination`: Like `thread-last-method-combination`, but results are threaded into the next
-   method as the first arg.
+*  `thread-first-method-combination`: Like `thread-last-method-combination`, but results of each method are threaded into the next
+   method as its first arg.
 
 *  *Operator method combinations*. The following method combinations are inspired by CLOS operator method
    combinations; each combination behaves similarly, in that it invokes *all* applicable primary methods, from
-   most-specific to least-specific (String before Object), combining results with an operator. Thus, the result
-   follows this form:
+   most-specific to least-specific (String before Object), combining results with the operator for which they are named. Generally, the result is of this form:
 
    ```clj
    (operator (primary-method-1 args)
@@ -387,14 +381,14 @@ following summarizes all component implementations that currently ship with Meth
    ```
 
    Operator method combinations support `:around` methods, but not `:before` or `:after`; primary methods do not
-   support `next-method` (but `:around` methods do).
+   support `next-method`, but `:around` methods do.
 
    The following operator method combinations ship with Methodical:
 
    *  `do-method-combination` -- executes all primary methods sequentially, as if by `do`, returning the result of the
       least-specific method. The classic use case for this combination is to implement the equivalent of hooks in
       Emacs Lisp -- you could, for example, define a system shutdown multimethod, and various implementations can be
-      added as needed to add additional shutdown operations:
+      added as needed to to define additional shutdown actions:
 
       ```clj
       ;; This example uses the `everything-dispatcher`, see below
@@ -452,12 +446,12 @@ following summarizes all component implementations that currently ship with Meth
 
 ### Dispatchers
 
-*  `standard-dispatcher` -- Dispatcher that mimics behavior of vanilla Clojure multimethods. Uses a single hierarchy,
-   dispatch function, default dispatch value, and map of prefers.
+*  `standard-dispatcher` -- The default. Dispatcher that mimics behavior of vanilla Clojure multimethods. Uses a single hierarchy,
+   dispatch function, default dispatch value, and map of preferences defined by `prefer-method`.
 
-*  `everything-dispatcher` -- The default. Dispatcher that always considers *all* primary and auxiliary methods to be
-   matches. Does not calculate dispatch values, but does sort methods from most- to least-specific using a hierarchy
-   and map of prefers. Particularly useful with the operator method combinations.
+*  `everything-dispatcher` -- Dispatcher that always considers *all* primary and auxiliary methods to be
+   matches. Does not calculate dispatch values, but can sort methods from most- to least-specific using a hierarchy
+   and map of preferences. Particularly useful with the operator method combinations.
 
 ### Method Tables
 
@@ -468,11 +462,11 @@ following summarizes all component implementations that currently ship with Meth
 ### Caches
 
 *  `simple-cache` -- Default for multimethods constructed programmatically. Simple cache that maintains a map of
-   dispatch value -> effective method.a
+   dispatch value -> effective method.
 
 *  `watching-cache` -- Default for multimethods constructed via `defmulti`. Wraps another cache (by default,
-    `simple-cache`) and maintains watches one or more Vars (by default, `#'clojure.core/global-hierarchy`), clearing
-    the cache when the watched Var changes. Clears watches when cache is finalized.
+    `simple-cache`) and watches one or more Vars (by default, `#'clojure.core/global-hierarchy`), clearing
+    the cache when the watched Vars change. Clears watches when cache is garbage-collected.
 
 ### Multifn Impls
 
@@ -481,7 +475,6 @@ following summarizes all component implementations that currently ship with Meth
 *  `cached-multifn-impl` -- wraps another multifn impl and an instance of `Cache` to implement caching.
 
 ## Performance
-
 
 Methodical is built with performance in mind. Although it is written entirely in Clojure, and supports many more
 features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with Criterium
@@ -510,7 +503,7 @@ There is still room for even more performance improvement!
 
 ## License
 
-Copyright © 2019 Cam Saul.
+Code, documentation, and artwork copyright © 2019 Cam Saul.
 
 Distributed under the [Eclipse Public
 License](https://raw.githubusercontent.com/metabase/camsaul/methodical/LICENSE.txt), same as Clojure.
