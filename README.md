@@ -477,8 +477,7 @@ following summarizes all component implementations that currently ship with Meth
 ## Performance
 
 Methodical is built with performance in mind. Although it is written entirely in Clojure, and supports many more
-features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with Criterium
-[https://github.com/hugoduncan/criterium/] show Methodical performing up to 20% faster in some cases:
+features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with (Criterium)[https://github.com/hugoduncan/criterium/] show Methodical performing up to 20% faster in some cases:
 
 ```
 ;;; Vanilla clojure
