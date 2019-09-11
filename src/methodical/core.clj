@@ -94,7 +94,6 @@
   add-aux-method-with-unique-key
   remove-aux-method-with-unique-key
   remove-all-methods
-  prefers?
   ;; destructive ops
   add-primary-method!
   remove-primary-method!

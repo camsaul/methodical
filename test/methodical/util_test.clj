@@ -261,31 +261,3 @@
 
       (is (= nil
              (seq (i/aux-methods remove-all-methods-multifn)))))))
-
-(deftest prefers-test
-  (testing "prefers?"
-    (let [f (-> (m/default-multifn keyword)
-                (m/prefer-method :x :y)
-                (m/prefer-method :y :z))]
-      (is (= true
-             (u/prefers? f :x :y))
-          "prefers? should handle direct preferences")
-
-      (is (= true
-             (u/prefers? f :x :z))
-          "prefers? shoud handle indirect preferences")
-
-      (is (= false
-             (u/prefers? f :y :x)))
-
-      (is (= false
-             (u/prefers? f :z :x)))))
-
-  (testing "prefer-method!"
-    (def prefer-method-multifn nil)
-    (m/defmulti prefer-method-multifn keyword)
-
-    (u/prefer-method! #'prefer-method-multifn :x :y)
-
-    (is (= {:x #{:y}}
-           (m/prefers prefer-method-multifn)))))

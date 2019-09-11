@@ -148,18 +148,6 @@
   [multifn]
   (-> multifn remove-all-primary-methods remove-all-aux-methods))
 
-(defn prefers?
-  "Does this multifn's dispatcher have an *explict* preference specified (i.e., via `prefer-method`) for
-  `dispatch-val-x` over `dispatch-val-y`?"
-  [multifn dispatch-val-x dispatch-val-y]
-  (boolean
-   (when-let [preferences (get (i/prefers multifn) dispatch-val-x)]
-     (or (contains? preferences dispatch-val-y)
-         (some
-          (fn [pref]
-            (prefers? multifn pref dispatch-val-y))
-          preferences)))))
-
 
 ;;;; #### Low-level destructive operations
 
