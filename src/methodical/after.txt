@@ -1,0 +1,86 @@
+(profile)
+
+
+Profiling plain fns...
+Evaluation count : 921179100 in 60 samples of 15352985 calls.
+             Execution time mean : 58,672614 ns
+    Execution time std-deviation : 3,121113 ns
+   Execution time lower quantile : 56,465928 ns ( 2,5%)
+   Execution time upper quantile : 67,537719 ns (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 8 outliers in 60 samples (13,3333 %)
+        low-severe	 3 (5,0000 %)
+        low-mild	 5 (8,3333 %)
+ Variance from outliers : 38,5275 % Variance is moderately inflated by outliers
+
+
+Profiling methodical...
+Evaluation count : 12310320 in 60 samples of 205172 calls.
+             Execution time mean : 4,945147 µs
+    Execution time std-deviation : 111,030217 ns
+   Execution time lower quantile : 4,797622 µs ( 2,5%)
+   Execution time upper quantile : 5,195639 µs (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 2 outliers in 60 samples (3,3333 %)
+        low-severe	 2 (3,3333 %)
+ Variance from outliers : 10,9635 % Variance is moderately inflated by outliers
+
+
+Profiling vanilla clojure multimethod...
+Evaluation count : 619336320 in 60 samples of 10322272 calls.
+             Execution time mean : 87,838083 ns
+    Execution time std-deviation : 2,354604 ns
+   Execution time lower quantile : 83,970415 ns ( 2,5%)
+   Execution time upper quantile : 91,613467 ns (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 3 outliers in 60 samples (5,0000 %)
+        low-severe	 1 (1,6667 %)
+        low-mild	 1 (1,6667 %)
+        high-mild	 1 (1,6667 %)
+ Variance from outliers : 14,1846 % Variance is moderately inflated by outliers
+(profile-big-hierarchy)
+
+
+vanilla clojure
+Evaluation count : 2309105340 in 60 samples of 38485089 calls.
+             Execution time mean : 17,462694 ns
+    Execution time std-deviation : 0,637189 ns
+   Execution time lower quantile : 16,740270 ns ( 2,5%)
+   Execution time upper quantile : 19,011378 ns (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 4 outliers in 60 samples (6,6667 %)
+        low-severe	 3 (5,0000 %)
+        low-mild	 1 (1,6667 %)
+ Variance from outliers : 23,7775 % Variance is moderately inflated by outliers
+
+
+methodical
+Evaluation count : 26667780 in 60 samples of 444463 calls.
+             Execution time mean : 2,401364 µs
+    Execution time std-deviation : 91,221632 ns
+   Execution time lower quantile : 2,301876 µs ( 2,5%)
+   Execution time upper quantile : 2,609200 µs (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 4 outliers in 60 samples (6,6667 %)
+        low-severe	 2 (3,3333 %)
+        low-mild	 2 (3,3333 %)
+ Variance from outliers : 23,8721 % Variance is moderately inflated by outliers
+
+
+methodical clojure
+Evaluation count : 42115320 in 60 samples of 701922 calls.
+             Execution time mean : 1,476671 µs
+    Execution time std-deviation : 75,846076 ns
+   Execution time lower quantile : 1,399422 µs ( 2,5%)
+   Execution time upper quantile : 1,625068 µs (97,5%)
+                   Overhead used : 8,821677 ns
+
+Found 3 outliers in 60 samples (5,0000 %)
+        low-severe	 2 (3,3333 %)
+        low-mild	 1 (1,6667 %)
+ Variance from outliers : 36,8828 % Variance is moderately inflated by outliers
