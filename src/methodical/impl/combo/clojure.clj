@@ -1,8 +1,8 @@
 (ns methodical.impl.combo.clojure
   "Simple method combination strategy that mimics the way vanilla Clojure multimethods combine methods; that is, to say,
   not at all. Like vanilla Clojure multimethods, this method combination only supports primary methods."
-  (:require [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodCombination))
+  (:require [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (deftype ClojureMethodCombination []
   PrettyPrintable
@@ -13,7 +13,7 @@
   (equals [_ another]
     (instance? ClojureMethodCombination another))
 
-  MethodCombination
+  i/MethodCombination
   (allowed-qualifiers [_]
     #{nil}) ; only primary methods
 

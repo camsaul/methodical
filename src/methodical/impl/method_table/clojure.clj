@@ -1,6 +1,6 @@
 (ns methodical.impl.method-table.clojure
-  (:require [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodTable))
+  (:require [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (deftype ClojureMethodTable [m]
   PrettyPrintable
@@ -14,7 +14,7 @@
     (and (instance? ClojureMethodTable another)
          (= m (.m ^ClojureMethodTable another))))
 
-  MethodTable
+  i/MethodTable
   (primary-methods [_]
     m)
 

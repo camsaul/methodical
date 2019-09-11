@@ -1,6 +1,6 @@
 (ns methodical.impl.method-table.standard
-  (:require [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodTable))
+  (:require [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (deftype StandardMethodTable [primary aux]
   PrettyPrintable
@@ -22,7 +22,7 @@
          (= primary (.primary ^StandardMethodTable another))
          (= aux (.aux ^StandardMethodTable another))))
 
-  MethodTable
+  i/MethodTable
   (primary-methods [_]
     primary)
 

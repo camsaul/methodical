@@ -1,8 +1,7 @@
 (ns methodical.impl.multifn.standard
   "Standard Methodical MultiFn impl, which "
   (:require [methodical.interface :as i]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+            [pretty.core :refer [PrettyPrintable]]))
 
 (defn standard-effective-method
   "Build an effective method using the 'standard' technique, taking the dispatch-value-method pairs in the
@@ -12,9 +11,7 @@
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
     (i/combine-methods method-combination primary-methods aux-methods)))
 
-(deftype StandardMultiFnImpl [^MethodCombination combo
-                              ^Dispatcher dispatcher
-                              ^MethodTable method-table]
+(deftype StandardMultiFnImpl [combo dispatcher method-table]
   PrettyPrintable
   (pretty [_]
     (list 'standard-multifn-impl combo dispatcher method-table))
@@ -22,12 +19,11 @@
   Object
   (equals [_ another]
     (and (instance? StandardMultiFnImpl another)
-         (let [^StandardMultiFnImpl another another]
-           (and (= combo (.combo another))
-                (= dispatcher (.dispatcher another))
-                (= method-table (.method-table another))))))
+         (and (= combo (.combo another))
+              (= dispatcher (.dispatcher another))
+              (= method-table (.method-table another)))))
 
-  MultiFnImpl
+  i/MultiFnImpl
   (method-combination [_]
     combo)
 

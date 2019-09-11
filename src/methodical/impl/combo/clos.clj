@@ -4,8 +4,8 @@
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
   (:require [methodical.impl.combo.common :as combo.common]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodCombination))
+            [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 ;; TODO - I'm 90% sure we can leverage the `reducing-operator` stuff in `combo.operator` to implemet this
 (defn- apply-befores [combined-method befores]
@@ -61,7 +61,7 @@
   (equals [_ another]
     (instance? CLOSStandardMethodCombination another))
 
-  MethodCombination
+  i/MethodCombination
   (allowed-qualifiers [_]
     #{nil :before :after :around})
 

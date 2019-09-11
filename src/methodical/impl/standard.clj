@@ -1,32 +1,31 @@
 (ns methodical.impl.standard
   (:require [methodical.interface :as i]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+            [pretty.core :refer [PrettyPrintable]]))
 
-(defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
-  (or (.effective-method impl dispatch-value)
+(defn- ^:static effective-method [impl, dispatch-value]
+  (or (i/effective-method impl dispatch-value)
       (throw (UnsupportedOperationException. (format "No matching method for dispatch value %s" dispatch-value)))))
 
 (defn- ^:static invoke-multifn
-  ([^MultiFnImpl impl]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl)))))
+  ([impl]
+   ((effective-method impl (i/dispatch-value (i/dispatcher impl)))))
 
-  ([^MultiFnImpl impl a]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a)) a))
+  ([impl a]
+   ((effective-method impl (i/dispatch-value (i/dispatcher impl) a)) a))
 
-  ([^MultiFnImpl impl a b]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b)) a b))
+  ([impl a b]
+   ((effective-method impl (i/dispatch-value (i/dispatcher impl) a b)) a b))
 
-  ([^MultiFnImpl impl a b c]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c)) a b c))
+  ([impl a b c]
+   ((effective-method impl (i/dispatch-value (i/dispatcher impl) a b c)) a b c))
 
-  ([^MultiFnImpl impl a b c d]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d)) a b c d))
+  ([impl a b c d]
+   ((effective-method impl (i/dispatch-value (i/dispatcher impl) a b c d)) a b c d))
 
-  ([^MultiFnImpl impl a b c d & more]
-   (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)))
+  ([impl a b c d & more]
+   (apply (effective-method impl (i/dispatch-value (i/dispatcher impl) a b c d more)) a b c d more)))
 
-(deftype StandardMultiFn [^MultiFnImpl impl mta]
+(deftype StandardMultiFn [impl mta]
   PrettyPrintable
   (pretty [_]
     (list 'multifn impl))
@@ -34,7 +33,7 @@
   Object
   (equals [_ another]
     (and (instance? StandardMultiFn another)
-         (= impl (.impl ^StandardMultiFn another))))
+         (= impl (.-impl another))))
 
   clojure.lang.Named
   (getName [_] (some-> (:name mta) name))
@@ -48,7 +47,7 @@
       this
       (StandardMultiFn. impl new-meta)))
 
-  MethodCombination
+  i/MethodCombination
   (allowed-qualifiers [_]
     (i/allowed-qualifiers (i/method-combination impl)))
 
@@ -58,36 +57,36 @@
   (transform-fn-tail [_ qualifier fn-tail]
     (i/transform-fn-tail (i/method-combination impl) qualifier fn-tail))
 
-  Dispatcher
+  i/Dispatcher
   (dispatch-value [_]
-    (.dispatch-value ^Dispatcher (.dispatcher impl)))
+    (.dispatch-value (i/dispatcher impl)))
   (dispatch-value [_ a]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a))
+    (.dispatch-value (i/dispatcher impl) a))
   (dispatch-value [_ a b]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b))
+    (.dispatch-value (i/dispatcher impl) a b))
   (dispatch-value [_ a b c]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c))
+    (.dispatch-value (i/dispatcher impl) a b c))
   (dispatch-value [_ a b c d]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d))
+    (.dispatch-value (i/dispatcher impl) a b c d))
   (dispatch-value [_ a b c d more]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more))
+    (.dispatch-value (i/dispatcher impl) a b c d more))
 
   (matching-primary-methods [_ method-table dispatch-value]
-    (i/matching-primary-methods (.dispatcher impl) method-table dispatch-value))
+    (i/matching-primary-methods (i/dispatcher impl) method-table dispatch-value))
 
   (matching-aux-methods [_ method-table dispatch-value]
-    (i/matching-aux-methods (.dispatcher impl) method-table dispatch-value))
+    (i/matching-aux-methods (i/dispatcher impl) method-table dispatch-value))
 
   (default-dispatch-value [_]
-    (i/default-dispatch-value (.dispatcher impl)))
+    (i/default-dispatch-value (i/dispatcher impl)))
 
   (prefers [_]
-    (i/prefers (.dispatcher impl)))
+    (i/prefers (i/dispatcher impl)))
 
   (prefer-method [this dispatch-val-x dispatch-val-y]
-    (i/with-dispatcher this (i/prefer-method (.dispatcher impl) dispatch-val-x dispatch-val-y)))
+    (i/with-dispatcher this (i/prefer-method (i/dispatcher impl) dispatch-val-x dispatch-val-y)))
 
-  MethodTable
+  i/MethodTable
   (primary-methods [_]
     (i/primary-methods (i/method-table impl)))
 
@@ -106,16 +105,16 @@
   (remove-aux-method [this qualifier dispatch-val method]
     (i/with-method-table this (i/remove-aux-method (i/method-table impl) qualifier dispatch-val method)))
 
-  MultiFnImpl
+  i/MultiFnImpl
   (method-combination [_]
     (i/method-combination impl))
 
   (dispatcher [_]
-    (.dispatcher impl))
+    (i/dispatcher impl))
 
   (with-dispatcher [this new-dispatcher]
-    (assert (instance? Dispatcher new-dispatcher))
-    (if (= (.dispatcher impl) new-dispatcher)
+    (assert (satisfies? i/Dispatcher new-dispatcher))
+    (if (= (i/dispatcher impl) new-dispatcher)
       this
       (StandardMultiFn. (i/with-dispatcher impl new-dispatcher) mta)))
 
@@ -123,13 +122,13 @@
     (i/method-table impl))
 
   (with-method-table [this new-method-table]
-    (assert (instance? MethodTable new-method-table))
+    (assert (satisfies? i/MethodTable new-method-table))
     (if (= (i/method-table impl) new-method-table)
       this
       (StandardMultiFn. (i/with-method-table impl new-method-table) mta)))
 
   (effective-method [_ dispatch-value]
-    (.effective-method impl dispatch-value))
+    (i/effective-method impl dispatch-value))
 
   java.util.concurrent.Callable
   (call [_]

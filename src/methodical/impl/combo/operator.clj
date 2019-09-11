@@ -38,8 +38,8 @@
       ...)"
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodCombination))
+            [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (defmulti operator
   "Define a new operator that can be used as part of an `OperatorMethodCombination`. See examples below for more
@@ -161,7 +161,7 @@
     (and (instance? OperatorMethodCombination another)
          (= operator-name (.operator-name ^OperatorMethodCombination another))))
 
-  MethodCombination
+  i/MethodCombination
   (allowed-qualifiers [_]
     #{nil :around})
 

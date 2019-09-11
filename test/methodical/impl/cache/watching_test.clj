@@ -1,14 +1,13 @@
 (ns methodical.impl.cache.watching-test
   (:require [clojure.test :refer :all]
             [methodical.impl.cache.watching :as cache.watching]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.impl.cache.watching.WatchingCache
-           methodical.interface.Cache))
+            [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (defn- cache
   [& [num-times-cleared]]
   (reify
-    Cache
+    i/Cache
     (clear-cache! [_]
       (some-> num-times-cleared (swap! inc)))
 
@@ -30,7 +29,7 @@
   (testing "Creating a new WatchingCache should add watches to whatever it references."
     (let [a     (atom nil)
           cache (cache.watching/add-watches (cache) [a])]
-      (is (= [(.watch-key ^WatchingCache cache)]
+      (is (= [(.watch-key cache)]
              (keys (.getWatches ^clojure.lang.Atom a))))))
 
   (testing "watching-cache should throw an Exception if you try to pass invalid args."
@@ -43,8 +42,8 @@
   (testing "Passing another WatchingCache to add-watches should return a new, flattened WatchingCache."
     (let [[a1 a2]                         (repeatedly 2 #(atom nil))
           cache                           (cache)
-          ^WatchingCache watching-cache-1 (cache.watching/add-watches cache [a1])
-          ^WatchingCache watching-cache-2 (cache.watching/add-watches watching-cache-1 [a2])]
+          watching-cache-1 (cache.watching/add-watches cache [a1])
+          watching-cache-2 (cache.watching/add-watches watching-cache-1 [a2])]
       (is (= #{a1}
              (.refs watching-cache-1)))
       (is (= #{a1 a2}
@@ -74,13 +73,13 @@
                          (cache.watching/add-watches [a3]))]
 
       (is (= #{a1 a2 a3}
-             (.refs ^WatchingCache cache)))))
+             (.refs cache)))))
 
   (testing "add-watches should ignore duplicate references"
     (let [a     (atom nil)
           cache (cache.watching/add-watches (cache) [a a a])]
       (is (= #{a}
-             (.refs ^WatchingCache cache))))))
+             (.refs cache))))))
 
 (deftest remove-watches-test
   (let [[a1 a2]          (repeatedly 2 #(atom nil))

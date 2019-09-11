@@ -4,8 +4,7 @@
   (:refer-clojure :exclude [prefers prefer-method])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.Dispatcher))
+            [pretty.core :refer [PrettyPrintable]]))
 
 (defn- matching-primary-pairs-excluding-default
   "Return a sequence of pairs of `[dispatch-value method]` for all applicable dispatch values, excluding the default
@@ -109,7 +108,7 @@
         (= default-value (.default-value another))
         (= prefs (.prefs another))))))
 
-  Dispatcher
+  i/Dispatcher
   (dispatch-value [_]              (dispatch-fn))
   (dispatch-value [_ a]            (dispatch-fn a))
   (dispatch-value [_ a b]          (dispatch-fn a b))

@@ -1,8 +1,8 @@
 (ns methodical.impl.combo.threaded
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.MethodCombination))
+            [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (defn reducer-fn
   "Reduces a series of before/combined-primary/after methods, threading the resulting values to the next method by
@@ -74,13 +74,12 @@
   (pretty [_]
     (list 'threading-method-combination threading-type))
 
-  MethodCombination
   Object
   (equals [_ another]
     (and (instance? ThreadingMethodCombination another)
          (= threading-type (.threading-type ^ThreadingMethodCombination another))))
 
-  MethodCombination
+  i/MethodCombination
   (allowed-qualifiers [_]
     #{nil :before :after :around})
 

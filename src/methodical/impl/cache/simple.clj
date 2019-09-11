@@ -2,15 +2,15 @@
   "A basic, dumb cache. `SimpleCache` stores cached methods in a simple map of dispatch-value -> effective method; it
   offers no facilities to deduplicate identical methods for the same dispatch value. This behaves similarly to the
   caching mechanism in vanilla Clojure."
-  (:require [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.Cache))
+  (:require [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (deftype SimpleCache [atomm]
   PrettyPrintable
   (pretty [_]
     '(simple-cache))
 
-  Cache
+  i/Cache
   (cached-method [_ dispatch-value]
     (get @atomm dispatch-value))
 

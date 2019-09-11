@@ -13,12 +13,11 @@
   get made)."
   (:require [methodical.interface :as i]
             [pretty.core :refer [PrettyPrintable]])
-  (:import java.lang.ref.WeakReference
-           methodical.interface.Cache))
+  (:import java.lang.ref.WeakReference))
 
 (declare add-watches remove-watches)
 
-(deftype WatchingCache [^Cache cache watch-key refs]
+(deftype WatchingCache [cache watch-key refs]
   PrettyPrintable
   (pretty [_]
     (concat ['watching-cache cache 'watching] refs))
@@ -27,7 +26,7 @@
   (finalize [this]
     (remove-watches this))
 
-  Cache
+  i/Cache
   (cached-method [_ dispatch-value]
     (.cached-method cache dispatch-value))
 
@@ -50,7 +49,7 @@
           (i/clear-cache! cache))))))
 
 (defn- new-cache-with-watches
-  ^WatchingCache [^Cache wrapped-cache watch-key refs]
+  ^WatchingCache [wrapped-cache watch-key refs]
   (let [cache    (WatchingCache. wrapped-cache watch-key (set refs))
         watch-fn (cache-watch-fn cache)]
     (doseq [reference refs]
@@ -66,7 +65,7 @@
 
   * If `cache` is a WatchingCache with a *different* set of refs, this returns a flattened WatchingCache that both the
     orignal refs and the new ones. The original `cache` is unmodified."
-  ^Cache [^Cache cache refs]
+  [cache refs]
   {:pre [(every? (partial instance? clojure.lang.IRef) refs)]}
   (cond
     (empty? refs)

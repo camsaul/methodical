@@ -1,8 +1,8 @@
 (ns methodical.impl.dispatcher.everything
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.Dispatcher))
+            [pretty.core :refer [PrettyPrintable]]
+            [methodical.interface :as i]))
 
 (deftype EverythingDispatcher [hierarchy-var prefs]
   PrettyPrintable
@@ -24,7 +24,7 @@
         (= hierarchy-var (.hierarchy-var another))
         (= prefs (.prefs another))))))
 
-  Dispatcher
+  i/Dispatcher
   (dispatch-value [_]              nil)
   (dispatch-value [_ a]            nil)
   (dispatch-value [_ a b]          nil)

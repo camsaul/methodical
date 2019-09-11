@@ -77,19 +77,19 @@
 
 
 (defprotocol MultiFnImpl
-  (^methodical.interface.MethodCombination method-combination [multifn]
+  (method-combination [multifn]
     "Get the method combination associated with this multifn.")
 
-  (^methodical.interface.Dispatcher dispatcher [multifn]
+  (dispatcher [multifn]
     "Get the dispatcher associated with this multifn.")
 
-  (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
+  (with-dispatcher [multifn new-dispatcher]
     "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
 
-  (^methodical.interface.MethodTable method-table [multifn]
+  (method-table [multifn]
     "Get the method table associated with this multifn.")
 
-  (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
+  (with-method-table [multifn new-method-table]
     "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]

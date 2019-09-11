@@ -29,7 +29,7 @@
   [[pretty "1.0.0"]
    [potemkin "0.4.5"]]
 
-  :aot [methodical.interface methodical.impl.standard]
+  :aot [methodical.impl.standard]
 
   :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
 

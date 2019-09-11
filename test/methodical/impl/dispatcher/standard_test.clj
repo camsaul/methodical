@@ -2,8 +2,7 @@
   (:require [clojure.test :refer :all]
             [methodical
              [impl :as impl]
-             [interface :as i]])
-  (:import methodical.interface.MethodTable))
+             [interface :as i]]))
 
 (deftest equality-test
   (is (= (impl/standard-dispatcher keyword)
@@ -14,7 +13,7 @@
       "Two standard dispatchers with different args should *not* be considered equal."))
 
 (defn- method-table [primary-methods aux-methods]
-  (reify MethodTable
+  (reify i/MethodTable
     (primary-methods [_] primary-methods)
     (aux-methods [_] aux-methods)))
 

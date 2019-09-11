@@ -1,9 +1,8 @@
 (ns methodical.impl.multifn.cached
   (:require [methodical.interface :as i]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import [methodical.interface Cache MultiFnImpl]))
+            [pretty.core :refer [PrettyPrintable]]))
 
-(deftype CachedMultiFnImpl [^MultiFnImpl impl, ^Cache cache]
+(deftype CachedMultiFnImpl [impl cache]
   PrettyPrintable
   (pretty [_]
     (list 'cached-multifn-impl impl cache))
@@ -15,7 +14,7 @@
          ;; TODO - does this make sense?
          (= (class cache) (class (.cache ^CachedMultiFnImpl another)))))
 
-  MultiFnImpl
+  i/MultiFnImpl
   (method-combination [_]
     (i/method-combination impl))
 
