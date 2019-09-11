@@ -1,8 +1,7 @@
 (ns methodical.interface
-  (:refer-clojure :exclude [isa? prefers prefer-method])
-  (:require [potemkin.types :as p.types]))
+  (:refer-clojure :exclude [isa? prefers prefer-method]))
 
-(p.types/definterface+ MethodCombination
+(defprotocol MethodCombination
   (allowed-qualifiers [method-combination]
     "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
@@ -22,7 +21,7 @@
     `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
     return a Clojure form.)"))
 
-(p.types/definterface+ MethodTable
+(defprotocol MethodTable
   (primary-methods [method-table]
     "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
 
@@ -47,7 +46,7 @@
 
     In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
 
-(p.types/definterface+ Dispatcher
+(defprotocol Dispatcher
   (dispatch-value
     [dispatcher]
     [dispatcher a]
@@ -77,7 +76,7 @@
     "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."))
 
 
-(p.types/definterface+ MultiFnImpl
+(defprotocol MultiFnImpl
   (^methodical.interface.MethodCombination method-combination [multifn]
     "Get the method combination associated with this multifn.")
 
@@ -99,7 +98,7 @@
     to `get-method` in vanilla Clojure multimethods; a different name is used here because I felt `get-method` would
     be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
 
-(p.types/definterface+ Cache
+(defprotocol Cache
   (cached-method [cache dispatch-value]
     "Return cached effective method for `dispatch-value`, if it exists in the cache.")
 

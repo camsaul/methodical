@@ -1,9 +1,8 @@
 (ns methodical.impl.method-table.standard
-  (:require [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+  (:require [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodTable))
 
-(p.types/deftype+ StandardMethodTable [primary aux]
+(deftype StandardMethodTable [primary aux]
   PrettyPrintable
   (pretty [_]
     (cons

@@ -38,7 +38,6 @@
       ...)"
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 
@@ -152,7 +151,7 @@
 
 ;;;; ### `OperatorMethodCombination`
 
-(p.types/deftype+ OperatorMethodCombination [operator-name]
+(deftype OperatorMethodCombination [operator-name]
   PrettyPrintable
   (pretty [_]
     (list 'operator-method-combination operator-name))
