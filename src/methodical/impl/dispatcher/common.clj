@@ -16,14 +16,29 @@
                     x y))))
   (update prefs x #(conj (set %) y)))
 
+(defn prefers?
+  "True if `x` or one of its ancestors is prefered over `y` or one of its ancestors."
+  [hierarchy prefs x y]
+  (or
+   ;; direct preference for x over y
+   (contains? (get prefs x) y)
+   ;; direct preference for x over one of y's parents (or ancestors, recursively)
+   (some
+    #(prefers? hierarchy prefs x %)
+    (parents hierarchy y))
+   ;; direct preference for one of x's parents (or ancestors, recursively) over y
+   (some
+    #(prefers? hierarchy prefs % y)
+    (parents hierarchy x))))
 
 (defn dominates?
-  "True if `dispatch-val-x` should be considered more specific for purposes of method combination over `dispatch-val-y`,
-  e.g. because `x` derives from `y` or because `x` has been preferred over `y`."
+  "True if dispatch value `x` should be considered more specific for purposes of method combination over dispatch value
+  `y`, e.g. because `x` derives from `y`, or because `x` (or one of its ancestors) has been explicitly preferred over
+  `y` (or one of its ancestors)."
   [hierarchy prefs x y]
   (and
    (not= x y)
-   (or (contains? (get prefs x) y)
+   (or (prefers? hierarchy prefs x y)
        (isa? hierarchy x y))))
 
 (defn domination-comparitor
