@@ -37,7 +37,12 @@
   {:dev
    {:dependencies
     [[org.clojure/clojure "1.10.1"]
-     [criterium "0.4.5"]]
+     [criterium "0.4.5"]
+     [pjstadig/humane-test-output "0.9.0"]]
+
+    :injections
+    [(require 'pjstadig.humane-test-output)
+     (pjstadig.humane-test-output/activate!)]
 
     :jvm-opts ["-Xverify:none"]
 
@@ -47,12 +52,7 @@
    {:injections [(set! *warn-on-reflection* true)]}
 
    :test
-   {:dependencies
-    [[pjstadig/humane-test-output "0.9.0"]]
-
-    :injections
-    [(require 'pjstadig.humane-test-output)
-     (pjstadig.humane-test-output/activate!)]}
+   {}
 
    :cloverage
    {:dependencies
