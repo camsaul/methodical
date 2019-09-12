@@ -40,7 +40,7 @@
 
   (effectiveMethod [_ dispatch-value]
     (or
-     (.cached-method cache dispatch-value)
+     (.cachedMethod cache dispatch-value)
      (let [method (i/effective-method impl dispatch-value)]
        (i/cache-method! cache dispatch-value method)
        method))))

@@ -29,18 +29,18 @@
     (remove-watches this))
 
   Cache
-  (cached-method [_ dispatch-value]
-    (.cached-method cache dispatch-value))
+  (cachedMethod [_ dispatch-value]
+    (.cachedMethod cache dispatch-value))
 
-  (cache-method! [this dispatch-value method]
-    (.cache-method! cache dispatch-value method)
+  (cacheMethodBang [this dispatch-value method]
+    (.cacheMethodBang cache dispatch-value method)
     this)
 
-  (clear-cache! [this]
-    (.clear-cache! cache)
+  (clearCacheBang [this]
+    (.clearCacheBang cache)
     this)
 
-  (empty-copy [this]
+  (emptyCopy [this]
     (add-watches (i/empty-copy cache) refs)))
 
 (defn- cache-watch-fn [cache]

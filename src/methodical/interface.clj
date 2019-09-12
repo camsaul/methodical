@@ -169,15 +169,28 @@
   [^MultiFnImpl multifn dispatch-value]
   (.effectiveMethod multifn dispatch-value))
 
-(p.types/definterface+ Cache
-  (cached-method [cache dispatch-value]
-    "Return cached effective method for `dispatch-value`, if it exists in the cache.")
+(definterface Cache
+  (cachedMethod [dispatch-value])
+  (cacheMethodBang [dispatch-value method])
+  (clearCacheBang [])
+  (^methodical.interface.Cache emptyCopy []))
 
-  (cache-method! [cache dispatch-value method]
-    "Cache the effective method for `dispatch-value` in this cache.")
+(defn cached-method
+  "Return cached effective method for `dispatch-value`, if it exists in the cache."
+  [^Cache cache dispatch-value]
+  (.cachedMethod cache dispatch-value))
 
-  (clear-cache! [cache]
-    "Empty the contents of the cache in-place.")
+(defn cache-method!
+  "Cache the effective method for `dispatch-value` in this cache."
+  [^Cache cache dispatch-value method]
+  (.cacheMethodBang cache dispatch-value method))
 
-  (^methodical.interface.Cache empty-copy [cache]
-   "Return an empty copy of the same type as this cache, e.g. for use when copying a multifn."))
+(defn clear-cache!
+  "Empty the contents of the cache in-place."
+  [^Cache cache]
+  (.clearCacheBang cache))
+
+(defn ^methodical.interface.Cache empty-copy
+  "Return an empty copy of the same type as this cache, e.g. for use when copying a multifn."
+  [^Cache cache]
+  (.emptyCopy cache))
