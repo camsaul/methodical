@@ -163,15 +163,15 @@
          (= operator-name (.operator-name ^OperatorMethodCombination another))))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     #{nil :around})
 
-  (combine-methods [_ primary-methods {:keys [around]}]
+  (combineMethods [_ primary-methods {:keys [around]}]
     (when (seq primary-methods)
       (-> ((operator operator-name) primary-methods)
           (combo.common/apply-around-methods around))))
 
-  (transform-fn-tail [_ qualifier fn-tail]
+  (transformFnTail [_ qualifier fn-tail]
     (if (= qualifier :around)
       (combo.common/add-implicit-next-method-args qualifier fn-tail)
       fn-tail)))

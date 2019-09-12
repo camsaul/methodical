@@ -63,14 +63,14 @@
     (instance? CLOSStandardMethodCombination another))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     #{nil :before :after :around})
 
-  (combine-methods [_ primary-methods {:keys [before after around]}]
+  (combineMethods [_ primary-methods {:keys [before after around]}]
     (some-> (combo.common/combine-primary-methods primary-methods)
             (apply-befores before)
             (apply-afters after)
             (combo.common/apply-around-methods around)))
 
-  (transform-fn-tail [_ qualifier fn-tail]
+  (transformFnTail [_ qualifier fn-tail]
     (combo.common/add-implicit-next-method-args qualifier fn-tail)))

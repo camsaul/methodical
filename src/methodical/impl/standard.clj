@@ -50,13 +50,13 @@
       (StandardMultiFn. impl new-meta)))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     (i/allowed-qualifiers (i/method-combination impl)))
 
-  (combine-methods [_ primary-methods aux-methods]
+  (combineMethods [_ primary-methods aux-methods]
     (i/combine-methods (i/method-combination impl) primary-methods aux-methods))
 
-  (transform-fn-tail [_ qualifier fn-tail]
+  (transformFnTail [_ qualifier fn-tail]
     (i/transform-fn-tail (i/method-combination impl) qualifier fn-tail))
 
   Dispatcher

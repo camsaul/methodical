@@ -15,13 +15,13 @@
     (instance? ClojureMethodCombination another))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     #{nil}) ; only primary methods
 
-  (combine-methods [_ [primary-method] aux-methods]
+  (combineMethods [_ [primary-method] aux-methods]
     (when (seq aux-methods)
       (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods.")))
     primary-method)
 
-  (transform-fn-tail [_ _ fn-tail]
+  (transformFnTail [_ _ fn-tail]
     fn-tail))

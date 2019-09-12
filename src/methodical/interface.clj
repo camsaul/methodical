@@ -2,25 +2,35 @@
   (:refer-clojure :exclude [isa? prefers prefer-method])
   (:require [potemkin.types :as p.types]))
 
-(p.types/definterface+ MethodCombination
-  (allowed-qualifiers [method-combination]
-    "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
+(definterface MethodCombination
+  (allowedQualifiers [])
+  (combineMethods [primary-methods aux-methods])
+  (transformFnTail [qualifier fn-tail]))
+
+(defn allowed-qualifiers
+  "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
     auxiliary methods with that qualifer, e.g. `:before`, `:after`, or `:around`.
 
     (allowed-qualifiers (clojure-method-combination)) ;-> #{nil}
     (allowed-qualifiers (clos-method-combination))    ;-> #{nil :before :after :around}
-    (allowed-qualifiers (doseq-method-combination))   ;-> #{:doseq}")
+    (allowed-qualifiers (doseq-method-combination))   ;-> #{:doseq}"
+  [^MethodCombination method-combination]
+  (.allowedQualifiers method-combination))
 
-  (combine-methods [method-combination primary-methods aux-methods]
-    "Combine a sequence of matching `primary-methods` with `aux-methods` (a map of qualifier -> sequence of methods)
-    into a single effective method.")
+(defn combine-methods
+  "Combine a sequence of matching `primary-methods` with `aux-methods` (a map of qualifier -> sequence of methods)
+    into a single effective method."
+  [^MethodCombination method-combination primary-methods aux-methods]
+  (.combineMethods method-combination primary-methods aux-methods))
 
-  (transform-fn-tail [method-combination qualifier fn-tail]
-    "Make appropriate transformations to the `fn-tail` of a `defmethod` macro expansion for a primary
+(defn transform-fn-tail
+  "Make appropriate transformations to the `fn-tail` of a `defmethod` macro expansion for a primary
     method (qualifier will be `nil`) or an auxiliary method. You can use this method to add implicit args like
     `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
-    return a Clojure form.)"))
+    return a Clojure form.)"
+  [^MethodCombination method-combination qualifier fn-tail]
+  (.transformFnTail method-combination qualifier fn-tail))
 
 (p.types/definterface+ MethodTable
   (primary-methods [method-table]
