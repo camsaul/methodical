@@ -1,22 +1,22 @@
 (ns methodical.impl.combo.threaded-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :as t]
             [methodical.impl.combo.threaded :as combo.threaded]
             [methodical.interface :as i]))
 
-(deftest threading-invoker-test
-  (are [threading expected-2 expected-3 expected-4 expected-5]
+(t/deftest threading-invoker-test
+  (t/are [threading expected-2 expected-3 expected-4 expected-5]
       (let [invoker (comp second (combo.threaded/threading-invoker threading))]
-        (is (= expected-2
-               ((invoker :a :b) list 'acc)))
+        (t/is (= expected-2
+                 ((invoker :a :b) list 'acc)))
 
-        (is (= expected-3
-               ((invoker :a :b :c) list 'acc)))
+        (t/is (= expected-3
+                 ((invoker :a :b :c) list 'acc)))
 
-        (is (= expected-4
-               ((invoker :a :b :c :d) list 'acc)))
+        (t/is (= expected-4
+                 ((invoker :a :b :c :d) list 'acc)))
 
-        (is (= expected-5
-               ((invoker :a :b :c :d :e) list 'acc))))
+        (t/is (= expected-5
+                 ((invoker :a :b :c :d :e) list 'acc))))
 
     :thread-first
     ['acc :b]
@@ -73,34 +73,34 @@
             acc  (apply next-method args)]
         (after-xform acc)))))
 
-(deftest primary-test
-  (are [threading]
-      (testing threading
-        (testing "Empty primary methods"
-          (is (= nil
-                 (combine-methods threading [] {:before [(constantly :before)]}))
-              "Combine-methods should return nil if `primary-methods` is empty.")))
+(t/deftest primary-test
+  (t/are [threading]
+      (t/testing threading
+        (t/testing "Empty primary methods"
+          (t/is (= nil
+                   (combine-methods threading [] {:before [(constantly :before)]}))
+                "Combine-methods should return nil if `primary-methods` is empty.")))
 
     :thread-first
     :thread-last))
 
-(deftest before-test
-  (are [threading expected-1 expected-4]
+(t/deftest before-test
+  (t/are [threading expected-1 expected-4]
       (let [primary-methods [(fn [_ & args]
                                (apply (make-method threading :primary) args))]
             aux-methods     {:before [(make-method threading :before-1)
                                       (make-method threading :before-2)]}
             f (combine-methods threading primary-methods aux-methods)]
-        (testing threading
-          (is (= expected-1
-                 (f []))
-              "Arg should be correctly threaded thru for 1 arg.")
+        (t/testing threading
+          (t/is (= expected-1
+                   (f []))
+                "Arg should be correctly threaded thru for 1 arg.")
 
-          (is (= expected-4
-                 (case threading
-                   :thread-first (f [] :b :c :d)
-                   :thread-last  (f :a :b :c [])))
-              "Arg should be correctly threaded thru for 4 args.")))
+          (t/is (= expected-4
+                   (case threading
+                     :thread-first (f [] :b :c :d)
+                     :thread-last  (f :a :b :c [])))
+                "Arg should be correctly threaded thru for 4 args.")))
 
     :thread-first
     [:before-1 :before-2 :primary]
@@ -114,23 +114,23 @@
       (:before-2 :a :b :c acc)
       (:primary  :a :b :c acc)]))
 
-(deftest after-test
-  (are [threading expected-1 expected-4]
+(t/deftest after-test
+  (t/are [threading expected-1 expected-4]
       (let [primary-methods [(fn [_ & args]
                                (apply (make-method threading :primary) args))]
             aux-methods     {:after [(make-method threading :after-1)
                                      (make-method threading :after-2)]}
             f (combine-methods threading primary-methods aux-methods)]
-        (testing threading
-          (is (= expected-1
-                 (f []))
-              "Arg should be correctly threaded thru for 1 arg.")
+        (t/testing threading
+          (t/is (= expected-1
+                   (f []))
+                "Arg should be correctly threaded thru for 1 arg.")
 
-          (is (= expected-4
-                 (case threading
-                   :thread-first (f [] :b :c :d)
-                   :thread-last  (f :a :b :c [])))
-              "Arg should be correctly threaded thru for 4 args.")))
+          (t/is (= expected-4
+                   (case threading
+                     :thread-first (f [] :b :c :d)
+                     :thread-last  (f :a :b :c [])))
+                "Arg should be correctly threaded thru for 4 args.")))
 
     :thread-first
     [:primary :after-2 :after-1]
@@ -144,9 +144,9 @@
       (:after-2 :a :b :c acc)
       (:after-1 :a :b :c acc)]))
 
-(deftest everything-test
-  (testing "Aux methods should get called in the order we expect"
-    (are [threading expected]
+(t/deftest everything-test
+  (t/testing "Aux methods should get called in the order we expect"
+    (t/are [threading expected]
         (let [primary-methods [(make-primary-method threading :primary-1)
                                (make-primary-method threading :primary-2)]
               aux-methods     {:before [(make-method threading :before-1)
@@ -156,31 +156,31 @@
                                :around [(make-around-method threading :around-1)
                                         (make-around-method threading :around-2)]}
               f (combine-methods threading primary-methods aux-methods)]
-          (testing threading
-            (is (= expected
-                   (case threading
-                     :thread-first (f [] :a :b :c)
-                     :thread-last  (f :a :b :c []))))))
-        :thread-first
-        '[(:around-2-before  acc :a :b :c)
-          (:around-1-before  acc :a :b :c)
-          (:before-1         acc :a :b :c)
-          (:before-2         acc :a :b :c)
-          (:primary-1        acc :a :b :c)
-          (:primary-2        acc :a :b :c)
-          (:after-2          acc :a :b :c)
-          (:after-1          acc :a :b :c)
-          (:around-1-after   acc)
-          (:around-2-after   acc)]
+          (t/testing threading
+            (t/is (= expected
+                     (case threading
+                       :thread-first (f [] :a :b :c)
+                       :thread-last  (f :a :b :c []))))))
+      :thread-first
+      '[(:around-2-before  acc :a :b :c)
+        (:around-1-before  acc :a :b :c)
+        (:before-1         acc :a :b :c)
+        (:before-2         acc :a :b :c)
+        (:primary-1        acc :a :b :c)
+        (:primary-2        acc :a :b :c)
+        (:after-2          acc :a :b :c)
+        (:after-1          acc :a :b :c)
+        (:around-1-after   acc)
+        (:around-2-after   acc)]
 
-        :thread-last
-        '[(:around-2-before  :a :b :c acc)
-          (:around-1-before  :a :b :c acc)
-          (:before-1         :a :b :c acc)
-          (:before-2         :a :b :c acc)
-          (:primary-1        :a :b :c acc)
-          (:primary-2        :a :b :c acc)
-          (:after-2          :a :b :c acc)
-          (:after-1          :a :b :c acc)
-          (:around-1-after   acc)
-          (:around-2-after   acc)])))
+      :thread-last
+      '[(:around-2-before  :a :b :c acc)
+        (:around-1-before  :a :b :c acc)
+        (:before-1         :a :b :c acc)
+        (:before-2         :a :b :c acc)
+        (:primary-1        :a :b :c acc)
+        (:primary-2        :a :b :c acc)
+        (:after-2          :a :b :c acc)
+        (:after-1          :a :b :c acc)
+        (:around-1-after   acc)
+        (:around-2-after   acc)])))
