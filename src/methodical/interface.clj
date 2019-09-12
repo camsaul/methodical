@@ -1,6 +1,5 @@
 (ns methodical.interface
-  (:refer-clojure :exclude [isa? prefers prefer-method])
-  (:require [potemkin.types :as p.types]))
+  (:refer-clojure :exclude [isa? prefers prefer-method]))
 
 (definterface MethodCombination
   (allowedQualifiers [])
