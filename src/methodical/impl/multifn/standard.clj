@@ -29,24 +29,24 @@
                 (= method-table (.method-table another))))))
 
   MultiFnImpl
-  (method-combination [_]
+  (methodCombination [_]
     combo)
 
   (dispatcher [_]
     dispatcher)
 
-  (with-dispatcher [this new-dispatcher]
+  (withDispatcher [this new-dispatcher]
     (if (= dispatcher new-dispatcher)
       this
       (StandardMultiFnImpl. combo new-dispatcher method-table)))
 
-  (method-table [_]
+  (methodTable [_]
     method-table)
 
-  (with-method-table [this new-method-table]
+  (withMethodTable [this new-method-table]
     (if (= method-table new-method-table)
       this
       (StandardMultiFnImpl. combo dispatcher new-method-table)))
 
-  (effective-method [_ dispatch-value]
+  (effectiveMethod [_ dispatch-value]
     (standard-effective-method combo dispatcher method-table dispatch-value)))

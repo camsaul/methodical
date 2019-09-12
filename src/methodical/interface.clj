@@ -128,27 +128,46 @@
   [^Dispatcher dispatcher dispatch-val-x dispatch-val-y]
   (.preferMethod dispatcher dispatch-val-x dispatch-val-y))
 
-(p.types/definterface+ MultiFnImpl
-  (^methodical.interface.MethodCombination method-combination [multifn]
-   "Get the method combination associated with this multifn.")
+(definterface MultiFnImpl
+  (^methodical.interface.MethodCombination methodCombination [])
+  (^methodical.interface.Dispatcher dispatcher [])
+  (^methodical.interface.MultiFnImpl withDispatcher [new-dispatcher])
+  (^methodical.interface.MethodTable methodTable [])
+  (^methodical.interface.MultiFnImpl withMethodTable [new-method-table])
+  (effectiveMethod [dispatch-value]))
 
-  (^methodical.interface.Dispatcher dispatcher [multifn]
-   "Get the dispatcher associated with this multifn.")
+(defn ^methodical.interface.MethodCombination method-combination
+  "Get the method combination associated with this multifn."
+  [^MultiFnImpl multifn]
+  (.methodCombination multifn))
 
-  (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
-   "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
+(defn ^methodical.interface.Dispatcher dispatcher
+  "Get the dispatcher associated with this multifn."
+  [^MultiFnImpl multifn]
+  (.dispatcher multifn))
 
-  (^methodical.interface.MethodTable method-table [multifn]
-   "Get the method table associated with this multifn.")
+(defn ^methodical.interface.MultiFnImpl with-dispatcher
+  "Return a copy of this multifn using `new-dispatcher` as its dispatcher."
+  [^MultiFnImpl multifn new-dispatcher]
+  (.withDispatcher multifn new-dispatcher))
 
-  (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
-   "Return a copy of this multifn using `new-method-table` as its method table.")
+(defn ^methodical.interface.MethodTable method-table
+  "Get the method table associated with this multifn."
+  [^MultiFnImpl multifn]
+  (.methodTable multifn))
 
-  (effective-method [multifn dispatch-value]
-    "Return the effective method for `dispatch-value`. The effective method is a combined primary method and
+(defn ^methodical.interface.MultiFnImpl with-method-table
+  "Return a copy of this multifn using `new-method-table` as its method table."
+  [^MultiFnImpl multifn new-method-table]
+  (.withMethodTable multifn new-method-table))
+
+(defn effective-method
+  "Return the effective method for `dispatch-value`. The effective method is a combined primary method and
     applicable auxiliary methods that can be called like a normal function. `effective-method` is similar in purpose
     to `get-method` in vanilla Clojure multimethods; a different name is used here because I felt `get-method` would
-    be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
+    be ambiguous with regards to whether it returns only a primary method or a combined effective method."
+  [^MultiFnImpl multifn dispatch-value]
+  (.effectiveMethod multifn dispatch-value))
 
 (p.types/definterface+ Cache
   (cached-method [cache dispatch-value]

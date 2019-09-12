@@ -5,7 +5,7 @@
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
 (defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
-  (or (.effective-method impl dispatch-value)
+  (or (.effectiveMethod impl dispatch-value)
       (throw (UnsupportedOperationException. (format "No matching method for dispatch value %s" dispatch-value)))))
 
 (defn- ^:static invoke-multifn
@@ -108,29 +108,29 @@
     (i/with-method-table this (i/remove-aux-method (i/method-table impl) qualifier dispatch-val method)))
 
   MultiFnImpl
-  (method-combination [_]
+  (methodCombination [_]
     (i/method-combination impl))
 
   (dispatcher [_]
     (.dispatcher impl))
 
-  (with-dispatcher [this new-dispatcher]
+  (withDispatcher [this new-dispatcher]
     (assert (instance? Dispatcher new-dispatcher))
     (if (= (.dispatcher impl) new-dispatcher)
       this
       (StandardMultiFn. (i/with-dispatcher impl new-dispatcher) mta)))
 
-  (method-table [_]
+  (methodTable [_]
     (i/method-table impl))
 
-  (with-method-table [this new-method-table]
+  (withMethodTable [this new-method-table]
     (assert (instance? MethodTable new-method-table))
     (if (= (i/method-table impl) new-method-table)
       this
       (StandardMultiFn. (i/with-method-table impl new-method-table) mta)))
 
-  (effective-method [_ dispatch-value]
-    (.effective-method impl dispatch-value))
+  (effectiveMethod [_ dispatch-value]
+    (.effectiveMethod impl dispatch-value))
 
   java.util.concurrent.Callable
   (call [_]
