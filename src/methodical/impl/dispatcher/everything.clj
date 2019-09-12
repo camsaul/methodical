@@ -1,11 +1,10 @@
 (ns methodical.impl.dispatcher.everything
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.Dispatcher))
 
-(p.types/deftype+ EverythingDispatcher [hierarchy-var prefs]
+(deftype EverythingDispatcher [hierarchy-var prefs]
   PrettyPrintable
   (pretty [_]
     (cons

@@ -4,7 +4,6 @@
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
   (:require [methodical.impl.combo.common :as combo.common]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 
@@ -53,7 +52,7 @@
                          result)]
       (comp apply-afters combined-method))))
 
-(p.types/deftype+ CLOSStandardMethodCombination []
+(deftype CLOSStandardMethodCombination []
   PrettyPrintable
   (pretty [_]
     '(clos-method-combination))

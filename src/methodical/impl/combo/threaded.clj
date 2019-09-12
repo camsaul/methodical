@@ -1,7 +1,6 @@
 (ns methodical.impl.combo.threaded
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 
@@ -70,7 +69,7 @@
           (apply method (conj butlast* last*)))]))))
 
 
-(p.types/deftype+ ThreadingMethodCombination [threading-type]
+(deftype ThreadingMethodCombination [threading-type]
   PrettyPrintable
   (pretty [_]
     (list 'threading-method-combination threading-type))

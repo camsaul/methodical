@@ -4,7 +4,6 @@
   (:refer-clojure :exclude [prefers prefer-method])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.Dispatcher))
 
@@ -88,7 +87,7 @@
              [qualifier (map second pairs)])))
 
 
-(p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
+(deftype StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
   PrettyPrintable
   (pretty [_]
     (concat ['standard-dispatcher dispatch-fn]
