@@ -15,8 +15,8 @@
 
 (defn- method-table [primary-methods aux-methods]
   (reify MethodTable
-    (primary-methods [_] primary-methods)
-    (aux-methods [_] aux-methods)))
+    (primaryMethods [_] primary-methods)
+    (auxMethods [_] aux-methods)))
 
 (def ^:private basic-hierarchy
   (-> (make-hierarchy)

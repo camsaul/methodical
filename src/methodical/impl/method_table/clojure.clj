@@ -16,26 +16,26 @@
          (= m (.m ^ClojureMethodTable another))))
 
   MethodTable
-  (primary-methods [_]
+  (primaryMethods [_]
     m)
 
-  (aux-methods [_]
+  (auxMethods [_]
     nil)
 
-  (add-primary-method [this dispatch-val method]
+  (addPrimaryMethod [this dispatch-val method]
     (let [new-m (assoc m dispatch-val method)]
       (if (= m new-m)
         this
         (ClojureMethodTable. new-m))))
 
-  (remove-primary-method [this dispatch-val]
+  (removePrimaryMethod [this dispatch-val]
     (let [new-m (dissoc m dispatch-val)]
       (if (= m new-m)
         this
         (ClojureMethodTable. new-m))))
 
-  (add-aux-method [_ _ _ _]
+  (addAuxMethod [_ _ _ _]
     (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods.")))
 
-  (remove-aux-method [_ _ _ _]
+  (removeAuxMethod [_ _ _ _]
     (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods."))))

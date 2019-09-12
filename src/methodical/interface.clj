@@ -32,76 +32,117 @@
   [^MethodCombination method-combination qualifier fn-tail]
   (.transformFnTail method-combination qualifier fn-tail))
 
-(p.types/definterface+ MethodTable
-  (primary-methods [method-table]
-    "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
+(definterface MethodTable
+  (primaryMethods [])
+  (auxMethods [])
+  (addPrimaryMethod [dispatch-value f])
+  (removePrimaryMethod [dispatch-value])
+  (addAuxMethod [qualifier dispatch-value f])
+  (removeAuxMethod [qualifier dispatch-val method]))
 
-  (aux-methods [method-table]
-    "Get a `qualifier -> dispatch-value -> [fn]` map of all auxiliary methods associated with this method table.")
+(defn primary-methods
+  "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table."
+  [^MethodTable method-table]
+  (.primaryMethods method-table))
 
-  (add-primary-method [method-table dispatch-value f]
-    "Set the primary method implementation for `dispatch-value`, replacing it if it already exists.")
+(defn aux-methods
+  "Get a `qualifier -> dispatch-value -> [fn]` map of all auxiliary methods associated with this method table."
+  [^MethodTable method-table]
+  (.auxMethods method-table))
 
-  (remove-primary-method [method-table dispatch-value]
-    "Remove the primary method for `dispatch-value`.")
+(defn add-primary-method
+  "Set the primary method implementation for `dispatch-value`, replacing it if it already exists."
+  [^MethodTable method-table dispatch-value f]
+  (.addPrimaryMethod method-table dispatch-value f))
 
-  (add-aux-method [method-table qualifier dispatch-value f]
-    "Add an auxiliary method implementation for `qualifer` (e.g. `:before`) and `dispatch-value`. Unlike primary
+(defn remove-primary-method
+  "Remove the primary method for `dispatch-value`."
+  [^MethodTable method-table dispatch-value]
+  (.removePrimaryMethod method-table dispatch-value))
+
+(defn add-aux-method
+  "Add an auxiliary method implementation for `qualifer` (e.g. `:before`) and `dispatch-value`. Unlike primary
     methods, auxiliary methods are not limited to one method per dispatch value; thus this method does not remove
-    existing methods for this dispatch value. existing ")
+    existing methods for this dispatch value. existing "
+  [^MethodTable method-table qualifier dispatch-value f]
+  (.addAuxMethod method-table qualifier dispatch-value f))
 
-  (remove-aux-method [method-table qualifier dispatch-val method]
-    "Remove an auxiliary method from a method table. Because multiple auxiliary methods are allowed for the same
+(defn remove-aux-method
+  "Remove an auxiliary method from a method table. Because multiple auxiliary methods are allowed for the same
     dispatch value, existing implementations of `MethodTable` are currently only able to remove exact matches -- for
     functions, this usually means identical objects.
 
-    In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
+    In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."
+  [^MethodTable method-table qualifier dispatch-val method]
+  (.removeAuxMethod method-table qualifier dispatch-val method))
 
-(p.types/definterface+ Dispatcher
-  (dispatch-value
-    [dispatcher]
-    [dispatcher a]
-    [dispatcher a b]
-    [dispatcher a b c]
-    [dispatcher a b c d]
-    [dispatcher a b c d more]
-    "Return an appropriate dispatch value for args passed to a multimethod. (This method is equivalent in purpose to
-    the dispatch function of vanilla Clojure multimethods.)")
+(definterface Dispatcher
+  (dispatchValue [])
+  (dispatchValue [a])
+  (dispatchValue [a b])
+  (dispatchValue [a b c])
+  (dispatchValue [a b c d])
+  (dispatchValue [a b c d more])
 
-  (matching-primary-methods [dispatcher method-table dispatch-value]
-    "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to
+  (matchingPrimaryMethods [method-table dispatch-value])
+  (matchingAuxMethods [method-table dispatch-value])
+  (defaultDispatchValue [])
+  (prefers [])
+  (preferMethod [dispatch-val-x dispatch-val-y]))
+
+(defn dispatch-value
+  "Return an appropriate dispatch value for args passed to a multimethod. (This method is equivalent in purpose to
+    the dispatch function of vanilla Clojure multimethods.)"
+  ([^Dispatcher dispatcher] (.dispatchValue dispatcher))
+  ([^Dispatcher dispatcher a] (.dispatchValue dispatcher a))
+  ([^Dispatcher dispatcher a b] (.dispatchValue dispatcher a b))
+  ([^Dispatcher dispatcher a b c] (.dispatchValue dispatcher a b c))
+  ([^Dispatcher dispatcher a b c d] (.dispatchValue dispatcher a b c d))
+  ([^Dispatcher dispatcher a b c d more] (.dispatchValue dispatcher a b c d more)))
+
+(defn matching-primary-methods
+  "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to
     least-specific. The standard dispatcher also checks to make sure methods in the sequence are not
-    ambiguously specific, replacing ambiguous methods with ones that will throw an Exception when invoked.")
+    ambiguously specific, replacing ambiguous methods with ones that will throw an Exception when invoked."
+  [^Dispatcher dispatcher method-table dispatch-value]
+  (.matchingPrimaryMethods dispatcher method-table dispatch-value))
 
-  (matching-aux-methods [dispatcher method-table dispatch-value]
-    "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
-    most-specific to least-specific.")
+(defn matching-aux-methods
+  "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
+    most-specific to least-specific."
+  [^Dispatcher dispatcher method-table dispatch-value]
+  (.matchingAuxMethods dispatcher method-table dispatch-value))
 
-  (default-dispatch-value [dispatcher]
-    "Default dispatch value to use if no other dispatch value matches.")
+(defn default-dispatch-value
+ "Default dispatch value to use if no other dispatch value matches."
+ [^Dispatcher dispatcher]
+ (.defaultDispatchValue dispatcher))
 
-  (prefers [dispatcher]
-    "Return a map of preferred dispatch value -> set of other dispatch values.")
+(defn prefers
+  "Return a map of preferred dispatch value -> set of other dispatch values."
+  [^Dispatcher dispatcher]
+  (.prefers dispatcher))
 
-  (prefer-method [dispatcher dispatch-val-x dispatch-val-y]
-    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."))
-
+(defn prefer-method
+  "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."
+  [^Dispatcher dispatcher dispatch-val-x dispatch-val-y]
+  (.preferMethod dispatcher dispatch-val-x dispatch-val-y))
 
 (p.types/definterface+ MultiFnImpl
   (^methodical.interface.MethodCombination method-combination [multifn]
-    "Get the method combination associated with this multifn.")
+   "Get the method combination associated with this multifn.")
 
   (^methodical.interface.Dispatcher dispatcher [multifn]
-    "Get the dispatcher associated with this multifn.")
+   "Get the dispatcher associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
-    "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
+   "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
 
   (^methodical.interface.MethodTable method-table [multifn]
-    "Get the method table associated with this multifn.")
+   "Get the method table associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
-    "Return a copy of this multifn using `new-method-table` as its method table.")
+   "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]
     "Return the effective method for `dispatch-value`. The effective method is a combined primary method and

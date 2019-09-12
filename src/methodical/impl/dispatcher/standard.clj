@@ -111,26 +111,26 @@
         (= prefs (.prefs another))))))
 
   Dispatcher
-  (dispatch-value [_]              (dispatch-fn))
-  (dispatch-value [_ a]            (dispatch-fn a))
-  (dispatch-value [_ a b]          (dispatch-fn a b))
-  (dispatch-value [_ a b c]        (dispatch-fn a b c))
-  (dispatch-value [_ a b c d]      (dispatch-fn a b c d))
-  (dispatch-value [_ a b c d more] (apply dispatch-fn a b c d more))
+  (dispatchValue [_]              (dispatch-fn))
+  (dispatchValue [_ a]            (dispatch-fn a))
+  (dispatchValue [_ a b]          (dispatch-fn a b))
+  (dispatchValue [_ a b c]        (dispatch-fn a b c))
+  (dispatchValue [_ a b c d]      (dispatch-fn a b c d))
+  (dispatchValue [_ a b c d more] (apply dispatch-fn a b c d more))
 
-  (matching-primary-methods [_ method-table dispatch-value]
+  (matchingPrimaryMethods [_ method-table dispatch-value]
     (matching-primary-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
 
-  (matching-aux-methods [_ method-table dispatch-value]
+  (matchingAuxMethods [_ method-table dispatch-value]
     (matching-aux-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
 
-  (default-dispatch-value [_]
+  (defaultDispatchValue [_]
     default-value)
 
   (prefers [_]
     prefs)
 
-  (prefer-method [this x y]
+  (preferMethod [this x y]
     (let [new-prefs (dispatcher.common/add-preference (partial isa? (var-get hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this

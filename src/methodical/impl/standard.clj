@@ -10,22 +10,22 @@
 
 (defn- ^:static invoke-multifn
   ([^MultiFnImpl impl]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl)))))
+   ((effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl)))))
 
   ([^MultiFnImpl impl a]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a)) a))
+   ((effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl) a)) a))
 
   ([^MultiFnImpl impl a b]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b)) a b))
+   ((effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl) a b)) a b))
 
   ([^MultiFnImpl impl a b c]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c)) a b c))
+   ((effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl) a b c)) a b c))
 
   ([^MultiFnImpl impl a b c d]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d)) a b c d))
+   ((effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl) a b c d)) a b c d))
 
   ([^MultiFnImpl impl a b c d & more]
-   (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)))
+   (apply (effective-method impl (.dispatchValue ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)))
 
 (p.types/deftype+ StandardMultiFn [^MultiFnImpl impl mta]
   PrettyPrintable
@@ -60,51 +60,51 @@
     (i/transform-fn-tail (i/method-combination impl) qualifier fn-tail))
 
   Dispatcher
-  (dispatch-value [_]
-    (.dispatch-value ^Dispatcher (.dispatcher impl)))
-  (dispatch-value [_ a]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a))
-  (dispatch-value [_ a b]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b))
-  (dispatch-value [_ a b c]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c))
-  (dispatch-value [_ a b c d]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d))
-  (dispatch-value [_ a b c d more]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more))
+  (dispatchValue [_]
+    (.dispatchValue ^Dispatcher (.dispatcher impl)))
+  (dispatchValue [_ a]
+    (.dispatchValue ^Dispatcher (.dispatcher impl) a))
+  (dispatchValue [_ a b]
+    (.dispatchValue ^Dispatcher (.dispatcher impl) a b))
+  (dispatchValue [_ a b c]
+    (.dispatchValue ^Dispatcher (.dispatcher impl) a b c))
+  (dispatchValue [_ a b c d]
+    (.dispatchValue ^Dispatcher (.dispatcher impl) a b c d))
+  (dispatchValue [_ a b c d more]
+    (.dispatchValue ^Dispatcher (.dispatcher impl) a b c d more))
 
-  (matching-primary-methods [_ method-table dispatch-value]
+  (matchingPrimaryMethods [_ method-table dispatch-value]
     (i/matching-primary-methods (.dispatcher impl) method-table dispatch-value))
 
-  (matching-aux-methods [_ method-table dispatch-value]
+  (matchingAuxMethods [_ method-table dispatch-value]
     (i/matching-aux-methods (.dispatcher impl) method-table dispatch-value))
 
-  (default-dispatch-value [_]
+  (defaultDispatchValue [_]
     (i/default-dispatch-value (.dispatcher impl)))
 
   (prefers [_]
     (i/prefers (.dispatcher impl)))
 
-  (prefer-method [this dispatch-val-x dispatch-val-y]
+  (preferMethod [this dispatch-val-x dispatch-val-y]
     (i/with-dispatcher this (i/prefer-method (.dispatcher impl) dispatch-val-x dispatch-val-y)))
 
   MethodTable
-  (primary-methods [_]
+  (primaryMethods [_]
     (i/primary-methods (i/method-table impl)))
 
-  (aux-methods [_]
+  (auxMethods [_]
     (i/aux-methods (i/method-table impl)))
 
-  (add-primary-method [this dispatch-val method]
+  (addPrimaryMethod [this dispatch-val method]
     (i/with-method-table this (i/add-primary-method (i/method-table impl) dispatch-val method)))
 
-  (remove-primary-method [this dispatch-val]
+  (removePrimaryMethod [this dispatch-val]
     (i/with-method-table this (i/remove-primary-method (i/method-table impl) dispatch-val)))
 
-  (add-aux-method [this qualifier dispatch-val method]
+  (addAuxMethod [this qualifier dispatch-val method]
     (i/with-method-table this (i/add-aux-method (i/method-table impl) qualifier dispatch-val method)))
 
-  (remove-aux-method [this qualifier dispatch-val method]
+  (removeAuxMethod [this qualifier dispatch-val method]
     (i/with-method-table this (i/remove-aux-method (i/method-table impl) qualifier dispatch-val method)))
 
   MultiFnImpl
