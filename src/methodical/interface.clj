@@ -1,8 +1,8 @@
 (ns methodical.interface
   (:refer-clojure :exclude [isa? prefers prefer-method]))
 
-(defmacro ^:private defonceinterface [name & body]
-  (let [class-name (clojure.string/replace (str *ns* "." name) #"\-" "_")
+(defmacro ^:private defonceinterface [interface-name & body]
+  (let [class-name (clojure.string/replace (str *ns* "." interface-name) #"\-" "_")
         exists     (try
                      (Class/forName class-name)
                      true
@@ -12,7 +12,7 @@
       `(do
          (import ~(symbol class-name))
          nil)
-      `(definterface ~name ~@body))))
+      `(definterface ~interface-name ~@body))))
 
 (defonceinterface MethodCombination
   (allowedQualifiers [])
