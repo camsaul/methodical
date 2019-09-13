@@ -1,7 +1,20 @@
 (ns methodical.interface
   (:refer-clojure :exclude [isa? prefers prefer-method]))
 
-(definterface MethodCombination
+(defmacro ^:private defonceinterface [name & body]
+  (let [class-name (clojure.string/replace (str *ns* "." name) #"\-" "_")
+        exists     (try
+                     (Class/forName class-name)
+                     true
+                     (catch Exception _
+                       false))]
+    (if exists
+      `(do
+         (import ~(symbol class-name))
+         nil)
+      `(definterface ~name ~@body))))
+
+(defonceinterface MethodCombination
   (allowedQualifiers [])
   (combineMethods [primary-methods aux-methods])
   (transformFnTail [qualifier fn-tail]))
@@ -31,7 +44,7 @@
   [^MethodCombination method-combination qualifier fn-tail]
   (.transformFnTail method-combination qualifier fn-tail))
 
-(definterface MethodTable
+(defonceinterface MethodTable
   (primaryMethods [])
   (auxMethods [])
   (addPrimaryMethod [dispatch-value f])
@@ -75,7 +88,7 @@
   [^MethodTable method-table qualifier dispatch-val method]
   (.removeAuxMethod method-table qualifier dispatch-val method))
 
-(definterface Dispatcher
+(defonceinterface Dispatcher
   (dispatchValue [])
   (dispatchValue [a])
   (dispatchValue [a b])
@@ -127,7 +140,7 @@
   [^Dispatcher dispatcher dispatch-val-x dispatch-val-y]
   (.preferMethod dispatcher dispatch-val-x dispatch-val-y))
 
-(definterface MultiFnImpl
+(defonceinterface MultiFnImpl
   (^methodical.interface.MethodCombination methodCombination [])
   (^methodical.interface.Dispatcher dispatcher [])
   (^methodical.interface.MultiFnImpl withDispatcher [new-dispatcher])
@@ -168,7 +181,7 @@
   [^MultiFnImpl multifn dispatch-value]
   (.effectiveMethod multifn dispatch-value))
 
-(definterface Cache
+(defonceinterface Cache
   (cachedMethod [dispatch-value])
   (cacheMethodBang [dispatch-value method])
   (clearCacheBang [])
