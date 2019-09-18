@@ -1,11 +1,11 @@
 (ns methodical.impl.dispatcher.everything-test
   (:require [clojure
              [string :as str]
-             [test :refer :all]]
+             [test :as t]]
             [methodical.core :as m]))
 
-(deftest everything-dispatcher-test
-  (testing "everything dispatcher"
+(t/deftest everything-dispatcher-test
+  (t/testing "everything dispatcher"
     (let [f (-> (m/multifn
                  (m/standard-multifn-impl
                   (m/do-method-combination)
@@ -22,13 +22,13 @@
                                   (fn [next-method calls]
                                     (swap! calls conj "Initiating shutdown...")
                                     (next-method calls))))]
-      (is (= ["Initiating shutdown..."
-              "Shutdown Web Server"
-              "Shutdown Scheduler"]
-             (let [calls (atom [])]
-               (f calls)
-               @calls))
-          "We should be able to create a multifn using the everything dispatcher"))))
+      (t/is (= ["Initiating shutdown..."
+                "Shutdown Web Server"
+                "Shutdown Scheduler"]
+               (let [calls (atom [])]
+                 (f calls)
+                 @calls))
+            "We should be able to create a multifn using the everything dispatcher"))))
 
 (m/defmulti ^:private shutdown!
   :none
@@ -50,8 +50,8 @@
   (println "Initiating shutdown...")
   (next-method))
 
-(deftest e2e-test
-  (is (= ["Initiating shutdown..."
-          "Shutting down web server..."
-          "Shutting down task scheduler..."]
-         (str/split-lines (with-out-str (shutdown!))))))
+(t/deftest e2e-test
+  (t/is (= ["Initiating shutdown..."
+            "Shutting down web server..."
+            "Shutting down task scheduler..."]
+           (str/split-lines (with-out-str (shutdown!))))))

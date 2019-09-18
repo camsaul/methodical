@@ -1,16 +1,16 @@
 (ns methodical.impl.dispatcher.common-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :as t]
             [methodical.impl.dispatcher.common :as dispatcher.common]))
 
-(deftest prefers-test
-  (testing "prefers?"
+(t/deftest prefers-test
+  (t/testing "prefers?"
     (let [h (-> (make-hierarchy)
                 (derive :x :x-parent)
                 (derive :y :y-parent))]
-      (are [msg prefs] (testing (format "x should be preferred over y with prefers = %s" prefs)
-                         (is (= true
-                                (dispatcher.common/prefers? h prefs :x :y))
-                             msg))
+      (t/are [msg prefs] (t/testing (format "x should be preferred over y with prefers = %s" prefs)
+                           (t/is (= true
+                                    (dispatcher.common/prefers? h prefs :x :y))
+                                 msg))
         "x is directly preferred over y"
         {:x #{:y}}
         "x is preferred over an ancestor of y"
