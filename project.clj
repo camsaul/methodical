@@ -27,7 +27,8 @@
 
   :dependencies
   [[pretty "1.0.0"]
-   [potemkin "0.4.5"]]
+   [potemkin "0.4.5"]
+   [org.clojure/clojurescript "1.10.520" :scope "provided"]]
 
   :aot [methodical.interface methodical.impl.standard]
 

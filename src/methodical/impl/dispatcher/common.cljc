@@ -1,5 +1,10 @@
 (ns methodical.impl.dispatcher.common
-  "Utility functions for implementing Dispatchers.")
+  "Utility functions for implementing Dispatchers."
+  #?(:cljs
+     (:require
+      [goog.string :refer [format]])))
+
+#?(:cljs (def ^:private IllegalStateException js/Error))
 
 (defn add-preference
   "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`."

@@ -1,23 +1,27 @@
 (ns methodical.interface
   (:refer-clojure :exclude [isa? prefers prefer-method]))
 
-(defmacro ^:private defonceinterface [interface-name & body]
-  (let [class-name (clojure.string/replace (str *ns* "." interface-name) #"\-" "_")
-        exists     (try
-                     (Class/forName class-name)
-                     true
-                     (catch Exception _
-                       false))]
-    (if exists
-      `(do
-         (import ~(symbol class-name))
-         nil)
-      `(definterface ~interface-name ~@body))))
+#?(:clj
+   (defmacro ^:private defonceinterface [interface-name & body]
+     (let [class-name (clojure.string/replace (str *ns* "." interface-name) #"\-" "_")
+           exists     (try
+                        (Class/forName class-name)
+                        true
+                        (catch Exception _
+                          false))]
+       (if exists
+         `(do
+            (import ~(symbol class-name))
+            nil)
+         `(definterface ~interface-name ~@body)))))
 
-(defonceinterface MethodCombination
-  (allowedQualifiers [])
-  (combineMethods [primary-methods aux-methods])
-  (transformFnTail [qualifier fn-tail]))
+#?(:clj
+   (defonceinterface MethodCombination
+     (allowedQualifiers [])
+     (combineMethods [primary-methods aux-methods])
+     (transformFnTail [qualifier fn-tail]))
+   :cljs
+   (def MethodCombination))
 
 (defn allowed-qualifiers
   "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
@@ -44,13 +48,16 @@
   [^MethodCombination method-combination qualifier fn-tail]
   (.transformFnTail method-combination qualifier fn-tail))
 
-(defonceinterface MethodTable
-  (primaryMethods [])
-  (auxMethods [])
-  (addPrimaryMethod [dispatch-value f])
-  (removePrimaryMethod [dispatch-value])
-  (addAuxMethod [qualifier dispatch-value f])
-  (removeAuxMethod [qualifier dispatch-val method]))
+#?(:clj
+   (defonceinterface MethodTable
+     (primaryMethods [])
+     (auxMethods [])
+     (addPrimaryMethod [dispatch-value f])
+     (removePrimaryMethod [dispatch-value])
+     (addAuxMethod [qualifier dispatch-value f])
+     (removeAuxMethod [qualifier dispatch-val method]))
+   :cljs
+   (def MethodTable))
 
 (defn primary-methods
   "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table."
@@ -88,19 +95,22 @@
   [^MethodTable method-table qualifier dispatch-val method]
   (.removeAuxMethod method-table qualifier dispatch-val method))
 
-(defonceinterface Dispatcher
-  (dispatchValue [])
-  (dispatchValue [a])
-  (dispatchValue [a b])
-  (dispatchValue [a b c])
-  (dispatchValue [a b c d])
-  (dispatchValue [a b c d more])
+#?(:clj
+   (defonceinterface Dispatcher
+     (dispatchValue [])
+     (dispatchValue [a])
+     (dispatchValue [a b])
+     (dispatchValue [a b c])
+     (dispatchValue [a b c d])
+     (dispatchValue [a b c d more])
 
-  (matchingPrimaryMethods [method-table dispatch-value])
-  (matchingAuxMethods [method-table dispatch-value])
-  (defaultDispatchValue [])
-  (prefers [])
-  (preferMethod [dispatch-val-x dispatch-val-y]))
+     (matchingPrimaryMethods [method-table dispatch-value])
+     (matchingAuxMethods [method-table dispatch-value])
+     (defaultDispatchValue [])
+     (prefers [])
+     (preferMethod [dispatch-val-x dispatch-val-y]))
+   :cljs
+   (def Dispatcher))
 
 (defn dispatch-value
   "Return an appropriate dispatch value for args passed to a multimethod. (This method is equivalent in purpose to
@@ -140,13 +150,16 @@
   [^Dispatcher dispatcher dispatch-val-x dispatch-val-y]
   (.preferMethod dispatcher dispatch-val-x dispatch-val-y))
 
-(defonceinterface MultiFnImpl
-  (^methodical.interface.MethodCombination methodCombination [])
-  (^methodical.interface.Dispatcher dispatcher [])
-  (^methodical.interface.MultiFnImpl withDispatcher [new-dispatcher])
-  (^methodical.interface.MethodTable methodTable [])
-  (^methodical.interface.MultiFnImpl withMethodTable [new-method-table])
-  (effectiveMethod [dispatch-value]))
+#?(:clj
+   (defonceinterface MultiFnImpl
+     (^methodical.interface.MethodCombination methodCombination [])
+     (^methodical.interface.Dispatcher dispatcher [])
+     (^methodical.interface.MultiFnImpl withDispatcher [new-dispatcher])
+     (^methodical.interface.MethodTable methodTable [])
+     (^methodical.interface.MultiFnImpl withMethodTable [new-method-table])
+     (effectiveMethod [dispatch-value]))
+   :cljs
+   (def MultiFnImpl))
 
 (defn ^methodical.interface.MethodCombination method-combination
   "Get the method combination associated with this multifn."
@@ -181,11 +194,14 @@
   [^MultiFnImpl multifn dispatch-value]
   (.effectiveMethod multifn dispatch-value))
 
-(defonceinterface Cache
-  (cachedMethod [dispatch-value])
-  (cacheMethodBang [dispatch-value method])
-  (clearCacheBang [])
-  (^methodical.interface.Cache emptyCopy []))
+#?(:clj
+   (defonceinterface Cache
+     (cachedMethod [dispatch-value])
+     (cacheMethodBang [dispatch-value method])
+     (clearCacheBang [])
+     (^methodical.interface.Cache emptyCopy []))
+   :cljs
+   (def Cache))
 
 (defn cached-method
   "Return cached effective method for `dispatch-value`, if it exists in the cache."
