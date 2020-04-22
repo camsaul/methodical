@@ -119,7 +119,7 @@
 
    :docstring-checker
    {:plugins
-    [[docstring-checker "1.0.3"]]
+    [[docstring-checker "1.1.0"]]
 
     :docstring-checker
     {:include [#"^methodical"]
