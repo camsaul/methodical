@@ -4,7 +4,8 @@
              [impl :as impl]
              [interface :as i]
              [macros :as m]
-             [util :as u]]))
+             [util :as u]]
+            [potemkin.namespaces :as p.namespaces]))
 
 (m/defmulti ^:private mf1 :type)
 
@@ -52,7 +53,22 @@
   [m]
   (assoc m :after? true))
 
+;; make a var that is basically an alias for another var. This mimics the way Potemkin import-vars works
+(intern *ns* 'mf4 mf3)
+(alter-meta! #'mf4 (constantly (meta #'mf3)))
+
+(p.namespaces/link-vars #'mf3 #'mf4)
+
+(m/defmethod mf4 :y
+  [m]
+  (assoc m :method :y))
+
 (t/deftest defmethod-test
+  (t/is (identical? mf3 mf4))
   (t/is (= (mf3 {:type :x})
            {:type :x, :after? true, :method :x})
-        "We should be able to define new primary & aux methods using `defmethod`"))
+        "We should be able to define new primary & aux methods using `defmethod`")
+  (t/is (= {:type :y, :method :y, :after? true}
+           (mf3 {:type :y})
+           (mf4 {:type :y}))
+        "defmethod should affect the actual var if the one it is called on is 'imported' (e.g. with Potemkin import-vars)"))

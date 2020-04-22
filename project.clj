@@ -1,4 +1,4 @@
-(defproject methodical "0.9.5-alpha-SNAPSHOT"
+(defproject methodical "0.9.6-alpha-SNAPSHOT"
   :description ""
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
@@ -38,7 +38,7 @@
    {:dependencies
     [[org.clojure/clojure "1.10.1"]
      [criterium "0.4.5"]
-     [pjstadig/humane-test-output "0.9.0"]]
+     [pjstadig/humane-test-output "0.10.0"]]
 
     :injections
     [(require 'pjstadig.humane-test-output)
@@ -56,17 +56,15 @@
 
    :cloverage
    {:dependencies
-    ;; 1. Cloverage dependency is normally injected when the plugin is ran. By explicitly specifying it here we can
+    ;; Cloverage dependency is normally injected when the plugin is ran. By explicitly specifying it here we can
     ;; cache it in CI
-    ;;
-    ;; 2. I forked Cloverage to add support for `deftype`; when that's merged upstream we can stop using my fork
-    [[camsaul/cloverage "1.1.2"]
+    [[cloverage "1.1.2"]
      ;; Required by both Potemkin and Cloverage, but Potemkin uses an older version that breaks Cloverage's ablity to
      ;; understand certain forms. Explicitly specify newer version here.
      [riddley "0.1.14"]]
 
     :plugins
-    [[camsaul/lein-cloverage "1.1.2"]]
+    [[lein-cloverage "1.1.2"]]
 
     ;; don't count ./dev stuff for code coverage calcualations.
     :source-paths ^:replace ["src"]
