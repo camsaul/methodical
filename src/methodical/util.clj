@@ -151,61 +151,71 @@
 
 ;;;; #### Low-level destructive operations
 
+(defn alter-var-root+
+  "Like `alter-var-root`, but handles vars that are aliases of other vars, e.g. ones that have been imported via
+  Potemkin `import-vars`."
+  [multifn-var f & args]
+  (let [{var-ns :ns, var-name :name} (meta multifn-var)
+        varr                         (if (and var-ns var-name)
+                                       (ns-resolve var-ns var-name)
+                                       multifn-var)]
+    (apply alter-var-root varr f args)))
+
 (defn add-primary-method!
   "Destructive version of `add-primary-method`. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-val f]
-  (alter-var-root multifn-var i/add-primary-method dispatch-val f))
+  (alter-var-root+ multifn-var i/add-primary-method dispatch-val f))
 
 (defn remove-primary-method!
   "Destructive version of `remove-primary-method`. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-val]
-  (alter-var-root multifn-var i/remove-primary-method dispatch-val))
+  (alter-var-root+ multifn-var i/remove-primary-method dispatch-val))
 
 (defn remove-all-primary-methods!
   "Destructive version of `remove-all-primary-methods`. Operates on a var defining a Methodical multifn."
   [multifn-var]
-  (alter-var-root multifn-var remove-all-primary-methods))
+  (alter-var-root+ multifn-var remove-all-primary-methods))
 
 (defn add-aux-method!
   "Destructive version of `add-aux-method`. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
-  (alter-var-root multifn-var i/add-aux-method qualifier dispatch-val f))
+  (alter-var-root+ multifn-var i/add-aux-method qualifier dispatch-val f))
 
 (defn remove-aux-method!
   "Destructive version of `remove-aux-method`. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
-  (alter-var-root multifn-var i/remove-aux-method qualifier dispatch-val f))
+  (alter-var-root+ multifn-var i/remove-aux-method qualifier dispatch-val f))
 
 (defn remove-all-aux-methods!
   "Destructive version of `remove-all-aux-methods`. Operates on a var defining a Methodical multifn."
   ([multifn-var]
-   (alter-var-root multifn-var remove-all-aux-methods))
+   (alter-var-root+ multifn-var remove-all-aux-methods))
 
   ([multifn-var qualifier]
-   (alter-var-root multifn-var remove-all-aux-methods qualifier))
+   (alter-var-root+ multifn-var remove-all-aux-methods qualifier))
 
   ([multifn-var qualifier dispatch-val]
-   (alter-var-root multifn-var remove-all-aux-methods qualifier dispatch-val)))
+   (alter-var-root+ multifn-var remove-all-aux-methods qualifier dispatch-val)))
 
 (defn remove-all-aux-methods-for-dispatch-val!
   "Destructive version of `remove-all-aux-methods-for-dispatch-val`. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-value]
-  (alter-var-root multifn-var remove-all-aux-methods-for-dispatch-val dispatch-value))
+  (alter-var-root+ multifn-var remove-all-aux-methods-for-dispatch-val dispatch-value))
 
 (defn add-aux-method-with-unique-key!
   "Destructive version of `add-aux-method-with-unique-key`. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f unique-key]
-  (alter-var-root multifn-var add-aux-method-with-unique-key qualifier dispatch-val f unique-key))
+  (alter-var-root+ multifn-var add-aux-method-with-unique-key qualifier dispatch-val f unique-key))
 
 (defn remove-aux-method-with-unique-key!
   "Destructive version of `remove-aux-method-with-unique-key`. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val unique-key]
-  (alter-var-root multifn-var remove-aux-method-with-unique-key qualifier dispatch-val unique-key))
+  (alter-var-root+ multifn-var remove-aux-method-with-unique-key qualifier dispatch-val unique-key))
 
 (defn remove-all-methods!
   "Destructive version of `remove-all-methods`. Operates on a var defining a Methodical multifn."
   [multifn-var]
-  (alter-var-root multifn-var remove-all-methods))
+  (alter-var-root+ multifn-var remove-all-methods))
 
 (defn prefer-method!
   "Destructive version of `prefer-method`. Operates on a var defining a Methodical multifn.
@@ -214,4 +224,4 @@
   Methodical equivalent of that function. `prefer-method!` is used by Methodical to differentiate the operation from
   our nondestructive `prefer-method`, which returns a copy of the multifn with an altered dispatch table."
   [multifn-var dispatch-val-x dispatch-val-y]
-  (alter-var-root multifn-var i/prefer-method dispatch-val-x dispatch-val-y))
+  (alter-var-root+ multifn-var i/prefer-method dispatch-val-x dispatch-val-y))
