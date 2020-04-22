@@ -64,11 +64,12 @@
   (assoc m :method :y))
 
 (t/deftest defmethod-test
-  (t/is (identical? mf3 mf4))
-  (t/is (= (mf3 {:type :x})
-           {:type :x, :after? true, :method :x})
-        "We should be able to define new primary & aux methods using `defmethod`")
-  (t/is (= {:type :y, :method :y, :after? true}
-           (mf3 {:type :y})
-           (mf4 {:type :y}))
-        "defmethod should affect the actual var if the one it is called on is 'imported' (e.g. with Potemkin import-vars)"))
+  (t/testing "We should be able to define new primary & aux methods using `defmethod`"
+    (t/is (identical? mf3 mf4))
+    (t/is (= (mf3 {:type :x})
+             {:type :x, :after? true, :method :x})))
+
+  (t/testing "`defmethod` should alter the actual var if the one it is called on is 'imported' (e.g. with Potemkin)"
+    (t/is (= {:type :y, :method :y, :after? true}
+             (mf3 {:type :y})
+             (mf4 {:type :y})))))

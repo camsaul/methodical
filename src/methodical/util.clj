@@ -159,7 +159,6 @@
         varr                         (if (and var-ns var-name)
                                        (ns-resolve var-ns var-name)
                                        multifn-var)]
-    (printf "Altering var: %s\n" varr)
     (apply alter-var-root varr f args)))
 
 (defn add-primary-method!
