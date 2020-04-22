@@ -1,5 +1,4 @@
-(defproject methodical "0.9.6-alpha"
-  :description ""
+(defproject methodical "0.10.0-alpha"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
@@ -26,7 +25,7 @@
                                 ["docstring-checker"]]}
 
   :dependencies
-  [[pretty "1.0.0"]
+  [[pretty "1.0.4"]
    [potemkin "0.4.5"]]
 
   :aot [methodical.interface methodical.impl.standard]
@@ -61,7 +60,7 @@
     [[cloverage "1.1.2"]
      ;; Required by both Potemkin and Cloverage, but Potemkin uses an older version that breaks Cloverage's ablity to
      ;; understand certain forms. Explicitly specify newer version here.
-     [riddley "0.1.14"]]
+     [riddley "0.2.0"]]
 
     :plugins
     [[lein-cloverage "1.1.2"]]

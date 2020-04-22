@@ -10,7 +10,8 @@
              [threaded :as combo.threaded]]
             [methodical.impl.dispatcher
              [everything :as dispatcher.everything]
-             [standard :as dispatcher.standard]]
+             [standard :as dispatcher.standard]
+             [multi-default :as dispatcher.multi-default]]
             [methodical.impl.method-table
              [clojure :as method-table.clojure]
              [standard :as method-table.standard]]
@@ -145,6 +146,17 @@
                          prefers   {}}}]
   (dispatcher.everything/->EverythingDispatcher hierarchy prefers))
 
+(defn multi-default-dispatcher
+  "Like the standard dispatcher, with one big improvement: when dispatching on multiple values, it supports default
+  methods that specialize on some args and use the default for others. (e.g. `[String :default]`)"
+  {:style/indent 1}
+  ^Dispatcher [dispatch-fn & {:keys [hierarchy default-value prefers]
+                              :or   {hierarchy     #'clojure.core/global-hierarchy
+                                     default-value :default
+                                     prefers       {}}}]
+  {:pre [(ifn? dispatch-fn) (var? hierarchy) (map? prefers)]}
+  (dispatcher.multi-default/->MultiDefaultDispatcher dispatch-fn hierarchy default-value prefers))
+
 
 ;;;; ### Method Tables
 
@@ -202,7 +214,7 @@
   ^MultiFnImpl [dispatch-fn & dispatcher-options]
   (standard-multifn-impl
    (thread-last-method-combination)
-   (apply standard-dispatcher dispatch-fn dispatcher-options)
+   (apply multi-default-dispatcher dispatch-fn dispatcher-options)
    (standard-method-table)))
 
 (defn clojure-multifn-impl

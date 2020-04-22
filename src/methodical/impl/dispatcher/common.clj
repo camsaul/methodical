@@ -2,7 +2,9 @@
   "Utility functions for implementing Dispatchers.")
 
 (defn add-preference
-  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`."
+  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`. `isa?*` is
+  used to determine whether a relationship between `x` and `y` that precludes this preference already exists; it can
+  be `clojure.core/isa?`, perhaps partially bound with a hierarchy, or some other 2-arg predicate function."
   [isa?* prefs x y]
   (when (= x y)
     (throw (IllegalStateException. (format "Cannot prefer dispatch value %s over itself." x))))
@@ -59,3 +61,16 @@
   are both equally-specific ancestors."
   [hierarchy prefs dispatch-value dispatch-val-x dispatch-val-y]
   (zero? ((domination-comparitor hierarchy prefs dispatch-value) dispatch-val-x dispatch-val-y)))
+
+(defn distinct-by
+  "Like `distinct`, but uses value of `(f item)` to determine whether to keep each `item` in the resulting collection."
+  [f coll]
+  (first
+   (reduce
+    (fn [[items already-seen? :as acc] item]
+      (let [v (f item)]
+        (if (already-seen? v)
+          acc
+          [(conj items item) (conj already-seen? v)])))
+    [[] #{}]
+    coll)))

@@ -10,9 +10,11 @@
     remove-all-methods
     prefer-method
     prefers])
-  (:require [potemkin :as p]))
+  (:require [methodical impl interface macros util]
+            [potemkin :as p]))
 
-(require '[methodical macros impl interface util])
+;; fool cljr-clean-ns and the namespace linter so it doesn't remove these automatically
+(comment methodical.macros/keep-me methodical.impl/keep-me methodical.interface/keep-me methodical.util/keep-me)
 
 (p/import-vars
  [methodical.macros
@@ -62,6 +64,7 @@
   ;; dispatchers
   standard-dispatcher
   everything-dispatcher
+  multi-default-dispatcher
   ;; method tables
   clojure-method-table
   standard-method-table
