@@ -12,14 +12,13 @@
   finalized (which, of course, may actually be never -- but worst-case is that some unneeded calls to `clear-cache!`
   get made)."
   (:require [methodical.interface :as i]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import java.lang.ref.WeakReference
            methodical.interface.Cache))
 
 (declare add-watches remove-watches)
 
-(p.types/deftype+ WatchingCache [^Cache cache watch-key refs]
+(deftype WatchingCache [^Cache cache watch-key refs]
   PrettyPrintable
   (pretty [_]
     (concat ['watching-cache cache 'watching] refs))
@@ -29,18 +28,18 @@
     (remove-watches this))
 
   Cache
-  (cached-method [_ dispatch-value]
-    (.cached-method cache dispatch-value))
+  (cachedMethod [_ dispatch-value]
+    (.cachedMethod cache dispatch-value))
 
-  (cache-method! [this dispatch-value method]
-    (.cache-method! cache dispatch-value method)
+  (cacheMethodBang [this dispatch-value method]
+    (.cacheMethodBang cache dispatch-value method)
     this)
 
-  (clear-cache! [this]
-    (.clear-cache! cache)
+  (clearCacheBang [this]
+    (.clearCacheBang cache)
     this)
 
-  (empty-copy [this]
+  (emptyCopy [this]
     (add-watches (i/empty-copy cache) refs)))
 
 (defn- cache-watch-fn [cache]

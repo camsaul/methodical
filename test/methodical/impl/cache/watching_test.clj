@@ -9,7 +9,7 @@
   [& [num-times-cleared]]
   (reify
     Cache
-    (clear-cache! [_]
+    (clearCacheBang [_]
       (some-> num-times-cleared (swap! inc)))
 
     PrettyPrintable

@@ -38,7 +38,6 @@
       ...)"
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 
@@ -152,7 +151,7 @@
 
 ;;;; ### `OperatorMethodCombination`
 
-(p.types/deftype+ OperatorMethodCombination [operator-name]
+(deftype OperatorMethodCombination [operator-name]
   PrettyPrintable
   (pretty [_]
     (list 'operator-method-combination operator-name))
@@ -163,15 +162,15 @@
          (= operator-name (.operator-name ^OperatorMethodCombination another))))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     #{nil :around})
 
-  (combine-methods [_ primary-methods {:keys [around]}]
+  (combineMethods [_ primary-methods {:keys [around]}]
     (when (seq primary-methods)
       (-> ((operator operator-name) primary-methods)
           (combo.common/apply-around-methods around))))
 
-  (transform-fn-tail [_ qualifier fn-tail]
+  (transformFnTail [_ qualifier fn-tail]
     (if (= qualifier :around)
       (combo.common/add-implicit-next-method-args qualifier fn-tail)
       fn-tail)))

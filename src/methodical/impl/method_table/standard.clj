@@ -1,9 +1,8 @@
 (ns methodical.impl.method-table.standard
-  (:require [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+  (:require [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodTable))
 
-(p.types/deftype+ StandardMethodTable [primary aux]
+(deftype StandardMethodTable [primary aux]
   PrettyPrintable
   (pretty [_]
     (cons
@@ -24,25 +23,25 @@
          (= aux (.aux ^StandardMethodTable another))))
 
   MethodTable
-  (primary-methods [_]
+  (primaryMethods [_]
     primary)
 
-  (aux-methods [_]
+  (auxMethods [_]
     aux)
 
-  (add-primary-method [this dispatch-val method]
+  (addPrimaryMethod [this dispatch-val method]
     (let [new-primary (assoc primary dispatch-val method)]
       (if (= primary new-primary)
         this
         (StandardMethodTable. new-primary aux))))
 
-  (remove-primary-method [this dispatch-val]
+  (removePrimaryMethod [this dispatch-val]
     (let [new-primary (dissoc primary dispatch-val)]
       (if (= primary new-primary)
         this
         (StandardMethodTable. new-primary aux))))
 
-  (add-aux-method [this qualifier dispatch-value method]
+  (addAuxMethod [this qualifier dispatch-value method]
     (let [new-aux (update-in aux [qualifier dispatch-value] (fn [existing-methods]
                                                               (if (contains? (set existing-methods) method)
                                                                 existing-methods
@@ -51,7 +50,7 @@
         this
         (StandardMethodTable. primary new-aux))))
 
-  (remove-aux-method [this qualifier dispatch-value method]
+  (removeAuxMethod [this qualifier dispatch-value method]
     (let [xforms  [(fn [aux]
                      (update-in aux [qualifier dispatch-value] (fn [defined-methods]
                                                                  (remove #(= % method) defined-methods))))

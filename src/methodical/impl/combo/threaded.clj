@@ -1,7 +1,6 @@
 (ns methodical.impl.combo.threaded
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 
@@ -70,25 +69,24 @@
           (apply method (conj butlast* last*)))]))))
 
 
-(p.types/deftype+ ThreadingMethodCombination [threading-type]
+(deftype ThreadingMethodCombination [threading-type]
   PrettyPrintable
   (pretty [_]
     (list 'threading-method-combination threading-type))
 
-  MethodCombination
   Object
   (equals [_ another]
     (and (instance? ThreadingMethodCombination another)
          (= threading-type (.threading-type ^ThreadingMethodCombination another))))
 
   MethodCombination
-  (allowed-qualifiers [_]
+  (allowedQualifiers [_]
     #{nil :before :after :around})
 
-  (combine-methods [_ primary-methods aux-methods]
+  (combineMethods [_ primary-methods aux-methods]
     (combine-with-threader (threading-invoker threading-type) primary-methods aux-methods))
 
-  (transform-fn-tail [_ qualifier fn-tail]
+  (transformFnTail [_ qualifier fn-tail]
     (combo.common/add-implicit-next-method-args qualifier fn-tail)))
 
 (defn threading-method-combination

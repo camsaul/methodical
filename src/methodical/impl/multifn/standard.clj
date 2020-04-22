@@ -1,7 +1,6 @@
 (ns methodical.impl.multifn.standard
   "Standard Methodical MultiFn impl, which "
   (:require [methodical.interface :as i]
-            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
@@ -13,9 +12,9 @@
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
     (i/combine-methods method-combination primary-methods aux-methods)))
 
-(p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
-                                       ^Dispatcher dispatcher
-                                       ^MethodTable method-table]
+(deftype StandardMultiFnImpl [^MethodCombination combo
+                              ^Dispatcher dispatcher
+                              ^MethodTable method-table]
   PrettyPrintable
   (pretty [_]
     (list 'standard-multifn-impl combo dispatcher method-table))
@@ -29,24 +28,24 @@
                 (= method-table (.method-table another))))))
 
   MultiFnImpl
-  (method-combination [_]
+  (methodCombination [_]
     combo)
 
   (dispatcher [_]
     dispatcher)
 
-  (with-dispatcher [this new-dispatcher]
+  (withDispatcher [this new-dispatcher]
     (if (= dispatcher new-dispatcher)
       this
       (StandardMultiFnImpl. combo new-dispatcher method-table)))
 
-  (method-table [_]
+  (methodTable [_]
     method-table)
 
-  (with-method-table [this new-method-table]
+  (withMethodTable [this new-method-table]
     (if (= method-table new-method-table)
       this
       (StandardMultiFnImpl. combo dispatcher new-method-table)))
 
-  (effective-method [_ dispatch-value]
+  (effectiveMethod [_ dispatch-value]
     (standard-effective-method combo dispatcher method-table dispatch-value)))

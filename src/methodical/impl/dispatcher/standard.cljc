@@ -4,9 +4,12 @@
   (:refer-clojure :exclude [prefers prefer-method])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
-  (:import methodical.interface.Dispatcher))
+            #?(:clj [pretty.core :refer [PrettyPrintable]])
+            #?(:cljs [methodical.interface :refer [Dispatcher]])
+            #?(:cljs [goog.string :refer [format]]))
+  #?(:clj (:import methodical.interface.Dispatcher)))
+
+#?(:cljs (def ^:private IllegalArgumentException js/Error))
 
 (defn- matching-primary-pairs-excluding-default
   "Return a sequence of pairs of `[dispatch-value method]` for all applicable dispatch values, excluding the default
@@ -87,20 +90,23 @@
                  :when       (seq pairs)]
              [qualifier (map second pairs)])))
 
+(deftype StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
+  #?@(:clj
+      [PrettyPrintable
+       (pretty [_]
+               (concat ['standard-dispatcher dispatch-fn]
+                       (when (not= hierarchy-var #'clojure.core/global-hierarchy)
+                         [:hierarchy hierarchy-var])
+                       (when (not= default-value :default)
+                         [:default-value default-value])
+                       (when (seq prefs)
+                         [:prefers prefs])))])
 
-(p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
-  PrettyPrintable
-  (pretty [_]
-    (concat ['standard-dispatcher dispatch-fn]
-            (when (not= hierarchy-var #'clojure.core/global-hierarchy)
-              [:hierarchy hierarchy-var])
-            (when (not= default-value :default)
-              [:default-value default-value])
-            (when (seq prefs)
-              [:prefers prefs])))
+  #?(:clj  Object
+     :cljs IEquiv)
+  ;; todo: hashcode
 
-  Object
-  (equals [_ another]
+  (#?(:clj equals, :cljs -equiv) [_ another]
     (and
      (instance? StandardDispatcher another)
      (let [^StandardDispatcher another another]
@@ -110,27 +116,29 @@
         (= default-value (.default-value another))
         (= prefs (.prefs another))))))
 
-  Dispatcher
-  (dispatch-value [_]              (dispatch-fn))
-  (dispatch-value [_ a]            (dispatch-fn a))
-  (dispatch-value [_ a b]          (dispatch-fn a b))
-  (dispatch-value [_ a b c]        (dispatch-fn a b c))
-  (dispatch-value [_ a b c d]      (dispatch-fn a b c d))
-  (dispatch-value [_ a b c d more] (apply dispatch-fn a b c d more))
+  #?(:clj Dispatcher :cljs Object)
+  (dispatchValue [_]              (dispatch-fn))
+  (dispatchValue [_ a]            (dispatch-fn a))
+  (dispatchValue [_ a b]          (dispatch-fn a b))
+  (dispatchValue [_ a b c]        (dispatch-fn a b c))
+  (dispatchValue [_ a b c d]      (dispatch-fn a b c d))
+  (dispatchValue [_ a b c d more] (apply dispatch-fn a b c d more))
 
-  (matching-primary-methods [_ method-table dispatch-value]
+  (matchingPrimaryMethods [_ method-table dispatch-value]
     (matching-primary-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
 
-  (matching-aux-methods [_ method-table dispatch-value]
+  (matchingAuxMethods [_ method-table dispatch-value]
     (matching-aux-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
 
-  (default-dispatch-value [_]
+  (defaultDispatchValue [_]
     default-value)
 
   (prefers [_]
     prefs)
 
-  (prefer-method [this x y]
+  (preferMethod [this x y]
+    ;; var-get is not implemented in cljs
+    ;; https://github.com/camsaul/methodical/issues/29
     (let [new-prefs (dispatcher.common/add-preference (partial isa? (var-get hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
