@@ -102,7 +102,7 @@
          (dispatcher.common/distinct-by first)
          (map second))))
 
-(defn aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
+(defn- aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
   (let [comparitor (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value)]
     (distinct
      (sort-by
@@ -115,7 +115,7 @@
             :when          (isa? hierarchy dispatch-value dv)]
         dv)))))
 
-(defn matching-aux-methods*
+(defn- matching-aux-methods*
   [qualifier {:keys [method-table] :as opts}]
   (let [method-map (i/aux-methods method-table)]
     (for [dispatch-value (aux-dispatch-values qualifier opts)
@@ -123,6 +123,7 @@
       m)))
 
 (defn matching-aux-methods
+  "Impl of `Dispatcher` `matching-aux-methods` for the multi-default dispatcher."
   [{:keys [method-table] :as opts}]
   (into {} (for [[qualifier] (i/aux-methods method-table)]
              [qualifier (matching-aux-methods* qualifier opts)])))

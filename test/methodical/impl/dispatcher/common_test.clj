@@ -48,6 +48,7 @@
   (t/is (= [:a :b :c :d]
            (dispatcher.common/distinct-by identity (list :a :b :c :b :d :d))))
   (t/is (= [[:a 1] [:b 3] [:c 4] [:d 8]]
-           (dispatcher.common/distinct-by first (list [:a 1] [:a 2] [:b 3] [:c 4] [:c 5] [:b 6] [:a 7] [:d 8] [:d 9])))))
+           (dispatcher.common/distinct-by first
+                                          (list [:a 1] [:a 2] [:b 3] [:c 4] [:c 5] [:b 6] [:a 7] [:d 8] [:d 9])))))
 
-;; TODO - where are the tests for `dominates?`, `domination-comparitor`, and `ambiguous?`?
+;; TODO - add tests for `dominates?`, `domination-comparitor`, and `ambiguous?`?

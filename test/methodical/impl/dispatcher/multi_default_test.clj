@@ -1,7 +1,7 @@
 (ns methodical.impl.dispatcher.multi-default-test
-  (:require [methodical.impl.dispatcher.multi-default :as multi-default]
+  (:require [clojure.test :as t]
             [methodical.core :as m]
-            [clojure.test :as t])
+            [methodical.impl.dispatcher.multi-default :as multi-default])
   (:import methodical.interface.MethodTable))
 
 (t/deftest partially-specialized-default-dispatch-values-test
@@ -119,7 +119,7 @@
                                     (format " \\[:large-beak %s\\] and \\[:eats-fruit %s\\], and neither is preferred."
                                             (pr-str default) (pr-str default))))
                    (invoke-with-prefs nil [:toucan 100]))))
-          (t/testing "Even if some default methods are ambiguous we should still be able to use unambiguous non-defaults"
+          (t/testing "Even if some default methods are ambiguous we should be able to use unambiguous non-defaults"
             (t/is (= :shape
                      (invoke-with-prefs nil [:toucan :circle]))))
           (t/testing "Should be able to define prefs to get around ambiguity"
@@ -163,7 +163,8 @@
                                                        (derive :Y :y)
                                                        (derive :x :letter)
                                                        (derive :y :letter))]]
-    (t/testing (format "method-type = %s default value = %s dispatch value = %s" method-type default (pr-str dispatch-value))
+    (t/testing (format "method-type = %s default value = %s dispatch value = %s"
+                       method-type default (pr-str dispatch-value))
       (t/is (= {method-type expected-methods}
                (multi-default/matching-aux-methods
                 {:hierarchy      h

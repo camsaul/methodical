@@ -10,8 +10,8 @@
              [threaded :as combo.threaded]]
             [methodical.impl.dispatcher
              [everything :as dispatcher.everything]
-             [standard :as dispatcher.standard]
-             [multi-default :as dispatcher.multi-default]]
+             [multi-default :as dispatcher.multi-default]
+             [standard :as dispatcher.standard]]
             [methodical.impl.method-table
              [clojure :as method-table.clojure]
              [standard :as method-table.standard]]

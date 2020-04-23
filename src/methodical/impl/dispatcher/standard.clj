@@ -62,7 +62,9 @@
                 (not (contains? (set (map first pairs)) default-value)))
        [default-method]))))
 
-(defn matching-aux-pairs-excluding-default
+(defn- matching-aux-pairs-excluding-default
+  "Return pairs of `[dispatch-value method]` of applicable aux methods, *excluding* default aux methods. Pairs are
+  ordered from most-specific to least-specific."
   [qualifier {:keys [hierarchy prefs method-table dispatch-value]}]
   {:pre [(map? hierarchy)]}
   (let [pairs           (for [[dv methods] (get (i/aux-methods method-table) qualifier)
@@ -72,6 +74,8 @@
     (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) pairs)))
 
 (defn matching-aux-pairs
+  "Return pairs of `[dispatch-value method]` of applicable aux methods, *including* default aux methods. Pairs are
+  ordered from most-specific to least-specific."
   [qualifier {:keys [default-value method-table dispatch-value], :as opts}]
   (let [pairs           (matching-aux-pairs-excluding-default qualifier opts)
         default-methods (when-not (contains? (set (map first pairs)) dispatch-value)
