@@ -63,7 +63,7 @@
        [default-method]))))
 
 (defn matching-aux-pairs-excluding-default
-  [qualifier {:keys [hierarchy prefs default-value method-table dispatch-value]}]
+  [qualifier {:keys [hierarchy prefs method-table dispatch-value]}]
   {:pre [(map? hierarchy)]}
   (let [pairs           (for [[dv methods] (get (i/aux-methods method-table) qualifier)
                               :when        (isa? hierarchy dispatch-value dv)

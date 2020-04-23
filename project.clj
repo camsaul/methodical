@@ -48,7 +48,7 @@
     :source-paths ["dev"]}
 
    :repl
-   {:injections [(set! *warn-on-reflection* true)]}
+   {:global-vars {*warn-on-reflection* true}}
 
    :test
    {}
@@ -84,14 +84,12 @@
 
      :exclude-namespaces [:test-paths]
 
-     :remove-linters
-     ;;disabled for now until I figure out how to disable it in the one place it's popping up
-     [:unused-ret-vals]
+     ;; disabled for now until I figure out how to disable it in the one place it's popping up
+     #_:remove-linters
+     #_[:unused-ret-vals]
 
      :add-linters
      [:unused-private-vars
-      :unused-namespaces
-      #_:unused-fn-args ; disabled for now since it gives false positives that can't be disabled
       :unused-locals]}}
 
    :bikeshed

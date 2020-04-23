@@ -2,12 +2,12 @@
   "A single-hierarchy dispatcher similar to the standard dispatcher, with one big improvement: when dispatching on
   multiple values, it supports default methods that specialize on some args and use the default for others. (e.g.
   `[String :default]`"
-  (:require [methodical.impl.dispatcher.standard :as dispatcher.standard]
-            [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]]
-            [methodical.impl.dispatcher.common :as dispatcher.common]
+  (:require [methodical.impl.dispatcher
+             [common :as dispatcher.common]
+             [standard :as dispatcher.standard]]
             [methodical.interface :as i]
-            [methodical.util :as u])
+            [potemkin.types :as p.types]
+            [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.Dispatcher))
 
 (defn- partially-specialized-default-dispatch-values* [dispatch-value default-value]
@@ -77,7 +77,7 @@
   "Return a lazy sequence of applicable priamry methods for `dispatch-value`, sorted from most-specific to
   least-specific. Similar to the implementation in `methodical.impl.dispatcher.standard`, but supports
   partially-specialized default methods; see explaination in ns docstring."
-  [{:keys [hierarchy prefs default-value method-table dispatch-value unambiguous-pairs-seq-fn]
+  [{:keys [default-value method-table unambiguous-pairs-seq-fn]
     :or   {unambiguous-pairs-seq-fn dispatcher.standard/unambiguous-pairs-seq}
     :as   opts}]
   {:pre [(some? method-table)]}
@@ -102,26 +102,7 @@
          (dispatcher.common/distinct-by first)
          (map second))))
 
-#_(defn matching-aux-default-pairs
-  [qualifier {:keys [hierarchy prefs default-value method-table dispatch-value], :as opts}]
-  (let [method-map            (get (i/aux-methods method-table) qualifier)
-        default-dispatch-vals (concat (partially-specialized-default-dispatch-values dispatch-value default-value)
-                                      [default-value])]
-    (mapcat
-     (fn [dispatch-value]
-       (let [pairs (dispatcher.standard/matching-aux-pairs-excluding-default qualifier
-                                                                             (assoc opts :dispatch-value dispatch-value))]
-         (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) pairs)))
-     default-dispatch-vals)))
-
-#_(defn matching-aux-pairs
-  [qualifier {:keys [default-value method-table dispatch-value], :as opts}]
-  (let [pairs         (dispatcher.standard/matching-aux-pairs-excluding-default qualifier opts)
-        default-pairs (matching-aux-default-pairs qualifier opts)
-        pairs         (concat pairs default-pairs)]
-    (dispatcher.common/distinct-by first pairs)))
-
-(defn aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs], :as opts}]
+(defn aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
   (let [comparitor (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value)]
     (distinct
      (sort-by

@@ -16,7 +16,7 @@
 (t/deftest macros-test
   (t/is (= mf1 (let [impl    (impl/standard-multifn-impl
                               (impl/thread-last-method-combination)
-                              (impl/standard-dispatcher :type)
+                              (impl/multi-default-dispatcher :type)
                               (impl/standard-method-table))
                      multifn (impl/multifn impl nil (impl/watching-cache
                                                      (impl/simple-cache)
