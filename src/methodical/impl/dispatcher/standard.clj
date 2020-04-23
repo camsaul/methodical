@@ -8,10 +8,11 @@
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.Dispatcher))
 
-(defn- matching-primary-pairs-excluding-default
+(defn matching-primary-pairs-excluding-default
   "Return a sequence of pairs of `[dispatch-value method]` for all applicable dispatch values, excluding the default
   method (if any); pairs are sorted in order from most-specific to least-specific."
-  [hierarchy prefs method-map dispatch-value]
+  [{:keys [hierarchy prefs method-map dispatch-value]}]
+  {:pre [(map? method-map)]}
   (let [matches        (for [[a-dispatch-val method] method-map
                              :when                   (isa? hierarchy dispatch-value a-dispatch-val)]
                          [a-dispatch-val method])]
@@ -25,37 +26,34 @@
       (format "Multiple methods match dispatch value: %s -> %s and %s, and neither is preferred."
               dispatch-val this-dispatch-val next-dispatch-val)))))
 
-(defn- unambiguous-pairs-seq
+(defn unambiguous-pairs-seq
   "Given a sequence of `[dispatch-value primary-method]` pairs, return a sequence that replaces the method in each pair
   with one that will throw an Exception if the dispatch value in the *following* pair is equally specific."
-  [hierarchy prefs dispatch-val [[this-dispatch-val this-method]
-                                 [next-dispatch-val :as next-pair]
-                                 & more-pairs :as pairs]]
+  [{:keys [hierarchy prefs dispatch-value ambiguous-fn]
+    :or   {ambiguous-fn dispatcher.common/ambiguous?}
+    :as   opts}
+   [[this-dispatch-val this-method]
+    [next-dispatch-val :as next-pair]
+    & more-pairs :as pairs]]
   {:pre [(every? sequential? pairs)]}
   (when (seq pairs)
     (let [this-pair [this-dispatch-val
                      (if (and next-pair
-                              (dispatcher.common/ambiguous? hierarchy prefs dispatch-val
-                                                            this-dispatch-val next-dispatch-val))
-                       (ambiguous-error-fn dispatch-val this-dispatch-val next-dispatch-val)
+                              (ambiguous-fn hierarchy prefs dispatch-value this-dispatch-val next-dispatch-val))
+                       (ambiguous-error-fn dispatch-value this-dispatch-val next-dispatch-val)
                        this-method)]]
       (cons this-pair (when next-pair
-                        (unambiguous-pairs-seq hierarchy prefs dispatch-val (cons next-pair more-pairs)))))))
+                        (unambiguous-pairs-seq opts (cons next-pair more-pairs)))))))
 
 (defn matching-primary-methods
   "Return a lazy sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to
   least-specific. Replaces methods whose dispatch value is ambiguously specific with the next matching method with
   ones that throw Exceptions when invoked."
-  [hierarchy prefs default-value method-table dispatch-value]
-  {:pre [(map? hierarchy)]}
-  (let [pairs          (unambiguous-pairs-seq
-                        hierarchy
-                        prefs
-                        dispatch-value
-                        (matching-primary-pairs-excluding-default hierarchy
-                                                                  prefs
-                                                                  (i/primary-methods method-table)
-                                                                  dispatch-value))
+  {:arglists '([{:keys [hierarchy prefs default-value method-table dispatch-value]}])}
+  [{:keys [hierarchy default-value method-table dispatch-value], :as opts}]
+  {:pre [(map? hierarchy) (some? method-table)]}
+  (let [opts           (assoc opts :method-map (i/primary-methods method-table))
+        pairs          (unambiguous-pairs-seq opts (matching-primary-pairs-excluding-default opts))
         default-method (when (not= dispatch-value default-value)
                          (get (i/primary-methods method-table) default-value))]
     (concat
@@ -64,29 +62,36 @@
                 (not (contains? (set (map first pairs)) default-value)))
        [default-method]))))
 
-(defn- matching-aux-pairs
-  [hierarchy prefs default-value method-table qualifier dispatch-value]
+(defn- matching-aux-pairs-excluding-default
+  "Return pairs of `[dispatch-value method]` of applicable aux methods, *excluding* default aux methods. Pairs are
+  ordered from most-specific to least-specific."
+  [qualifier {:keys [hierarchy prefs method-table dispatch-value]}]
+  {:pre [(map? hierarchy)]}
   (let [pairs           (for [[dv methods] (get (i/aux-methods method-table) qualifier)
                               :when        (isa? hierarchy dispatch-value dv)
                               method       methods]
-                          [dv method])
-        sorted          (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) pairs)
+                          [dv method])]
+    (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) pairs)))
+
+(defn matching-aux-pairs
+  "Return pairs of `[dispatch-value method]` of applicable aux methods, *including* default aux methods. Pairs are
+  ordered from most-specific to least-specific."
+  [qualifier {:keys [default-value method-table dispatch-value], :as opts}]
+  (let [pairs           (matching-aux-pairs-excluding-default qualifier opts)
         default-methods (when-not (contains? (set (map first pairs)) dispatch-value)
-                          (get-in (i/aux-methods method-table) [qualifier default-value]))]
-    (concat sorted (for [method default-methods]
-                     [default-value method]))))
+                          (get-in (i/aux-methods method-table) [qualifier default-value]))
+        default-pairs   (for [method default-methods]
+                          [default-value method])]
+    (concat pairs default-pairs)))
 
 (defn matching-aux-methods
   "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
   most-specific to least-specific."
-  [hierarchy prefs default-value method-table dispatch-value]
-  {:pre [(map? hierarchy)]}
+  [{:keys [method-table] :as opts}]
   (into {} (for [[qualifier] (i/aux-methods method-table)
-                 :let        [pairs (matching-aux-pairs hierarchy prefs default-value
-                                                        method-table qualifier dispatch-value)]
+                 :let        [pairs (matching-aux-pairs qualifier opts)]
                  :when       (seq pairs)]
              [qualifier (map second pairs)])))
-
 
 (p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
   PrettyPrintable
@@ -105,10 +110,10 @@
      (instance? StandardDispatcher another)
      (let [^StandardDispatcher another another]
        (and
-        (= dispatch-fn (.dispatch-fn another))
+        (= dispatch-fn   (.dispatch-fn another))
         (= hierarchy-var (.hierarchy-var another))
         (= default-value (.default-value another))
-        (= prefs (.prefs another))))))
+        (= prefs         (.prefs another))))))
 
   Dispatcher
   (dispatch-value [_]              (dispatch-fn))
@@ -119,10 +124,20 @@
   (dispatch-value [_ a b c d more] (apply dispatch-fn a b c d more))
 
   (matching-primary-methods [_ method-table dispatch-value]
-    (matching-primary-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
+    (matching-primary-methods
+     {:hierarchy      (var-get hierarchy-var)
+      :prefs          prefs
+      :default-value  default-value
+      :method-table   method-table
+      :dispatch-value dispatch-value}))
 
   (matching-aux-methods [_ method-table dispatch-value]
-    (matching-aux-methods (var-get hierarchy-var) prefs default-value method-table dispatch-value))
+    (matching-aux-methods
+     {:hierarchy      (var-get hierarchy-var)
+      :prefs          prefs
+      :default-value  default-value
+      :method-table   method-table
+      :dispatch-value dispatch-value}))
 
   (default-dispatch-value [_]
     default-value)

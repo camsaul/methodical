@@ -11,7 +11,7 @@
                      (cached-multifn-impl
                       (standard-multifn-impl
                        (threading-method-combination :thread-last)
-                       (standard-dispatcher dispatch-fn)
+                       (multi-default-dispatcher dispatch-fn)
                        (standard-method-table))
                       (simple-cache))))
            (pr-str (impl/multifn (impl/default-multifn-impl 'dispatch-fn))))
@@ -139,7 +139,7 @@
   (let [dispatch-fn (constantly :key)
         f           (impl.standard/->StandardMultiFn (m/default-multifn-impl dispatch-fn) nil)]
     (t/testing "dispatcher"
-      (t/is (= (m/standard-dispatcher dispatch-fn)
+      (t/is (= (m/multi-default-dispatcher dispatch-fn)
                (i/dispatcher f))))
 
     (t/testing "with-dispatcher"

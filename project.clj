@@ -1,5 +1,4 @@
-(defproject methodical "0.9.6-alpha"
-  :description ""
+(defproject methodical "0.10.0-alpha"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
@@ -11,7 +10,7 @@
    ;; run lein deps with all dependencies from all the various profiles merged in. Useful for CI so we can cache
    ;; everything
    "deploy"                    ["with-profile" "+deploy" "deploy"]
-   "all-deps"                  ["with-profiles" "-user,+all-profiles" "deps"]
+   "all-deps"                  ["with-profile" "-user,+all-profiles" "deps"]
    "test"                      ["with-profile" "+test" "test"]
    "cloverage"                 ["with-profile" "+cloverage" "cloverage"]
    "profile"                   ["with-profile" "+profile" "run"]
@@ -26,7 +25,7 @@
                                 ["docstring-checker"]]}
 
   :dependencies
-  [[pretty "1.0.0"]
+  [[pretty "1.0.4"]
    [potemkin "0.4.5"]]
 
   :aot [methodical.interface methodical.impl.standard]
@@ -49,7 +48,7 @@
     :source-paths ["dev"]}
 
    :repl
-   {:injections [(set! *warn-on-reflection* true)]}
+   {:global-vars {*warn-on-reflection* true}}
 
    :test
    {}
@@ -61,7 +60,7 @@
     [[cloverage "1.1.2"]
      ;; Required by both Potemkin and Cloverage, but Potemkin uses an older version that breaks Cloverage's ablity to
      ;; understand certain forms. Explicitly specify newer version here.
-     [riddley "0.1.14"]]
+     [riddley "0.2.0"]]
 
     :plugins
     [[lein-cloverage "1.1.2"]]
@@ -70,14 +69,14 @@
     :source-paths ^:replace ["src"]
 
     :cloverage
-    {:fail-threshold 90}}
+    {:fail-threshold 92}}
 
    :profile
    {:main ^:skip-aot methodical.profile}
 
    :eastwood
    {:plugins
-    [[jonase/eastwood "0.3.5" :exclusions [org.clojure/clojure]]]
+    [[jonase/eastwood "0.3.11" :exclusions [org.clojure/clojure]]]
 
     :eastwood
     {:config-files
@@ -85,20 +84,18 @@
 
      :exclude-namespaces [:test-paths]
 
-     :remove-linters
-     ;;disabled for now until I figure out how to disable it in the one place it's popping up
-     [:unused-ret-vals]
+     ;; disabled for now until I figure out how to disable it in the one place it's popping up
+     #_:remove-linters
+     #_[:unused-ret-vals]
 
      :add-linters
      [:unused-private-vars
-      :unused-namespaces
-      #_:unused-fn-args ; disabled for now since it gives false positives that can't be disabled
       :unused-locals]}}
 
    :bikeshed
    {:dependencies
     ;; use latest tools.namespace instead of older version so we only need to fetch it once for all plugins.
-    [[org.clojure/tools.namespace "0.2.11"]]
+    [[org.clojure/tools.namespace "1.0.0"]]
 
     :plugins
     [[lein-bikeshed "0.5.2"
@@ -106,7 +103,7 @@
 
    :kibit
    {:plugins
-    [[lein-kibit "0.1.7"
+    [[lein-kibit "0.1.8"
       :exclusions [org.clojure/clojure]]]}
 
    :check-namespace-decls

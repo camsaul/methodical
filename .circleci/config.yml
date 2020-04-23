@@ -97,7 +97,7 @@ workflows:
           name: deps
           requires:
             - checkout
-          lein-command: all-deps
+          lein-command: deps
           after-steps:
             - save_cache:
                 key: deps-{{ checksum "project.clj" }}

@@ -27,7 +27,7 @@
   [name-symb dispatch-fn & {:keys [hierarchy dispatcher], :as options}]
   (let [dispatcher    (or dispatcher
                           (let [dispatcher-options (select-keys options [:hierarchy :default-value :prefers])]
-                            `(impl/standard-dispatcher ~dispatch-fn ~@(apply concat dispatcher-options))))
+                            `(impl/multi-default-dispatcher ~dispatch-fn ~@(apply concat dispatcher-options))))
         other-options (dissoc options :hierarchy :dispatcher :default-value :prefers)]
     `(defmulti*** ~name-symb ~dispatcher
        ~@(when-not (contains? options :dispatcher)
@@ -43,12 +43,14 @@
         [attr-map & args]             (if (map? (first args))
                                         args
                                         (cons nil args))
-        [dispatch-fn & {:as options}] args
+        [dispatch-fn & {:as options}] (if (even? (count args))
+                                        (cons nil args)
+                                        args)
         metadata                      (merge {:tag methodical.impl.standard.StandardMultiFn}
                                              (when docstring {:doc docstring})
                                              attr-map)
         name-symb                     (vary-meta name-symb merge metadata)]
-    (assert dispatch-fn "Missing dispatch function!")
+    (assert (or dispatch-fn (:dispatcher options)) "Missing dispatch function!")
     `(defmulti** ~name-symb ~dispatch-fn ~@(apply concat options))))
 
 (defmacro defmulti
@@ -57,17 +59,21 @@
   usual `:default` and `:hierarchy` options, you many specifiy:
 
   * `:combo` - The method combination to use for this multimethods. Method combinations define how multiple applicable
-    methods are combined; which auxiliary methods, e.g. `:before` or `:after` methods, are supported; and whether other
-    advanced facilities, such as `next-method`, are available. There are over a dozen method combinations that ship as
-    part of Methodical; many are inspired by their equivalents in the Common Lisp Object System. The default method
-    combination is the thread-last method combination.
+     methods are combined; which auxiliary methods, e.g. `:before` or `:after` methods, are supported; and whether other
+     advanced facilities, such as `next-method`, are available. There are over a dozen method combinations that ship as
+     part of Methodical; many are inspired by their equivalents in the Common Lisp Object System. The default method
+     combination is the thread-last method combination.
 
   * `:dispatcher` - The dispatcher handles dispatch values when invoking a multimethod, and whether one dispatch value
-     (and thus, whetherits corresponding method is considered to be more-specific) or otherwise preferred over another
+     (and thus, whether its corresponding method) is considered to be more-specific or otherwise preferred over another
      dispatch value. The default dispatcher largely mimics the behavior of the Clojure dispatcher, using a single
-     hierarchy augmented by a `prefers` table to control dispatch. Note that the `:hierarchy` and `:default-value` are
-     provided as conveniences for creating a default dispatcher; if you pass `:dispatcher` instead, those options will
-     be ignored.)
+     hierarchy augmented by a `prefers` table to control dispatch, with one big improvement: when dispatching on
+     multiple values, it supports default methods that specialize on some args and use the default for others.
+     (e.g. `[String :default]`)
+
+     Note that the `:hierarchy`, `:default-value` and the positional `dispatch-fn` are provided as conveniences for
+     creating a default dispatcher; if you pass a `:dispatcher` arg instead, those arguments are not required and will
+     be ignored.
 
   *  `:cache` - controls caching behavior for effective methods. The default simple cache mimics the behavior of vanilla
       Clojure multimethods.
@@ -86,8 +92,7 @@
     make such minor tweaks as changing the dispatch function."
   {:arglists     '([name-symb docstring? attr-map? dispatch-fn
                     & {:keys [hierarchy default-value prefers combo method-table cache]}]
-                   ;; `dispatch-fn` is ignored if you pass a `:dispatcher` key
-                   [name-symb docstring? attr-map? _ & {:keys [dispatcher combo method-table cache]}])
+                   [name-symb docstring? attr-map? & {:keys [dispatcher combo method-table cache]}])
    :style/indent :defn}
   [name-symb & args]
   (let [varr         (ns-resolve *ns* name-symb)

@@ -168,8 +168,8 @@
 
   (combine-methods [_ primary-methods {:keys [around]}]
     (when (seq primary-methods)
-      (-> ((operator operator-name) primary-methods)
-          (combo.common/apply-around-methods around))))
+      (combo.common/apply-around-methods ((operator operator-name) primary-methods)
+                                         around)))
 
   (transform-fn-tail [_ qualifier fn-tail]
     (if (= qualifier :around)

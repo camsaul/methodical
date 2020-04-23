@@ -92,11 +92,7 @@
   given `qualifier` (e.g. `:before`). With three args, remove all auxiliary methods for a given `qualifier` and
   `dispatch-value`. "
   ([multifn]
-   (reduce
-    (fn [multifn qualifier]
-      (remove-all-aux-methods multifn qualifier))
-    multifn
-    (keys (i/aux-methods multifn))))
+   (reduce remove-all-aux-methods multifn (keys (i/aux-methods multifn))))
 
   ([multifn qualifier]
    (reduce
