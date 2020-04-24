@@ -502,7 +502,7 @@ There is still room for even more performance improvement!
 
 ## License
 
-Code, documentation, and artwork copyright © 2019 Cam Saul.
+Code, documentation, and artwork copyright © 2019-2020 [Cam Saul](https://camsaul.com).
 
 Distributed under the [Eclipse Public
-License](https://raw.githubusercontent.com/metabase/camsaul/methodical/LICENSE.txt), same as Clojure.
+License](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE), same as Clojure.

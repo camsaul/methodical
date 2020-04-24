@@ -1,4 +1,4 @@
-(defproject methodical "0.10.0-alpha"
+(defproject methodical "0.10.1-alpha-SNAPSHOT"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
@@ -10,7 +10,7 @@
    ;; run lein deps with all dependencies from all the various profiles merged in. Useful for CI so we can cache
    ;; everything
    "deploy"                    ["with-profile" "+deploy" "deploy"]
-   "all-deps"                  ["with-profile" "-user,+all-profiles" "deps"]
+   "deps"                      ["with-profile" "+all-profiles" "deps"]
    "test"                      ["with-profile" "+test" "test"]
    "cloverage"                 ["with-profile" "+cloverage" "cloverage"]
    "profile"                   ["with-profile" "+profile" "run"]
