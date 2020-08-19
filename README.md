@@ -3,9 +3,13 @@
 [![Circle CI](https://circleci.com/gh/camsaul/methodical.svg?style=svg)](https://circleci.com/gh/camsaul/methodical)
 [![codecov](https://codecov.io/gh/camsaul/methodical/branch/master/graph/badge.svg)](https://codecov.io/gh/camsaul/methodical)
 [![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE.txt)
-[![cljdoc badge](https://cljdoc.org/badge/methodical/methodical)](https://cljdoc.org/d/methodical/methodical/CURRENT)
+[![cljdoc badge](https://cljdoc.org/badge/methodical)](https://cljdoc.org/d/methodical/methodical/CURRENT)
 
 [![Clojars Project](https://clojars.org/methodical/latest-version.svg)](http://clojars.org/methodical)
+
+#### New: The Clojure/north 2020 talk is up!
+
+[<img src="https://img.youtube.com/vi/If3GT8zSHfE/maxresdefault.jpg" width="40%">](https://youtu.be/If3GT8zSHfE)
 
 # Methodical
 
