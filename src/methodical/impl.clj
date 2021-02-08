@@ -18,7 +18,8 @@
             [methodical.impl.multifn
              [cached :as multifn.cached]
              [standard :as multifn.standard]]
-            [methodical.impl.standard :as impl.standard])
+            [methodical.impl.standard :as impl.standard]
+            methodical.interface)
   (:import methodical.impl.standard.StandardMultiFn
            [methodical.interface Cache Dispatcher MethodCombination MethodTable MultiFnImpl]))
 

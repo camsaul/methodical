@@ -1,6 +1,6 @@
 (ns methodical.impl.dispatcher.multi-default-test
   (:require [clojure.test :as t]
-            [methodical.core :as m]
+            [methodical [core :as m] interface]
             [methodical.impl.dispatcher.multi-default :as multi-default])
   (:import methodical.interface.MethodTable))
 
