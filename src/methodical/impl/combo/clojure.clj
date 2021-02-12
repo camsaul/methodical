@@ -1,7 +1,8 @@
 (ns methodical.impl.combo.clojure
   "Simple method combination strategy that mimics the way vanilla Clojure multimethods combine methods; that is, to say,
   not at all. Like vanilla Clojure multimethods, this method combination only supports primary methods."
-  (:require [potemkin.types :as p.types]
+  (:require methodical.interface
+            [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
 

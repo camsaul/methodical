@@ -38,6 +38,7 @@
       ...)"
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
+            methodical.interface
             [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))

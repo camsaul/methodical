@@ -28,8 +28,6 @@
   [[pretty "1.0.4"]
    [potemkin "0.4.5"]]
 
-  :aot [methodical.interface methodical.impl.standard]
-
   :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
 
   :profiles
@@ -110,7 +108,8 @@
    {:plugins               [[lein-check-namespace-decls "1.0.2"
                              :exclusions [org.clojure/clojure]]]
     :source-paths          ["test"]
-    :check-namespace-decls {:prefix-rewriting true}}
+    :check-namespace-decls {:prefix-rewriting true
+                            :prune-ns-form    false}}
 
    :docstring-checker
    {:plugins

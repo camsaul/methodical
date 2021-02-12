@@ -4,6 +4,7 @@
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
   (:require [methodical.impl.combo.common :as combo.common]
+            methodical.interface
             [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
