@@ -196,7 +196,13 @@
       (u/remove-all-aux-methods-for-dispatch-val! #'remove-all-aux-methods-for-dispatch-val-multifn String)
       (t/is (= {:before {Object ['m2]}
                 :after  {Object ['m2 'm4]}}
-               (m/aux-methods remove-all-aux-methods-for-dispatch-val-multifn))))))
+               (m/aux-methods remove-all-aux-methods-for-dispatch-val-multifn))))
+
+    (t/testing "matching-aux-methods"
+      (t/is (= {:before '[m1 m2]
+                :after  '[m2 m3 m2 m4]}
+               (u/matching-aux-methods f String)
+               (u/matching-aux-methods f f String))))))
 
 (t/deftest aux-methods-unique-key-test
   (t/testing "non-destructive operations")

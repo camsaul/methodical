@@ -34,8 +34,6 @@
   remove-aux-method
   ;; Dispatcher
   dispatch-value
-  matching-primary-methods
-  matching-aux-methods
   default-dispatch-value
   prefers
   prefer-method
@@ -84,9 +82,11 @@
 
  [methodical.util
   primary-method
+  matching-primary-methods
   applicable-primary-method
   effective-primary-method
   aux-methods
+  matching-aux-methods
   default-primary-method
   default-aux-methods
   default-effective-method
