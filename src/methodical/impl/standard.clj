@@ -88,6 +88,9 @@
   (prefer-method [this dispatch-val-x dispatch-val-y]
     (i/with-dispatcher this (i/prefer-method (.dispatcher impl) dispatch-val-x dispatch-val-y)))
 
+  (dominates? [this dispatch-val-x dispatch-val-y]
+    (i/dominates? (.dispatcher impl) dispatch-val-x dispatch-val-y))
+
   MethodTable
   (primary-methods [_]
     (i/primary-methods (i/method-table impl)))

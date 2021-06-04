@@ -57,10 +57,11 @@
         default-method (when (not= dispatch-value default-value)
                          (get (i/primary-methods method-table) default-value))]
     (concat
-     (map second pairs)
+     (for [[dispatch-value method] pairs]
+       (vary-meta method assoc :dispatch-value dispatch-value))
      (when (and default-method
                 (not (contains? (set (map first pairs)) default-value)))
-       [default-method]))))
+       [(vary-meta default-method assoc :dispatch-value default-value)]))))
 
 (defn- matching-aux-pairs-excluding-default
   "Return pairs of `[dispatch-value method]` of applicable aux methods, *excluding* default aux methods. Pairs are
@@ -91,7 +92,8 @@
   (into {} (for [[qualifier] (i/aux-methods method-table)
                  :let        [pairs (matching-aux-pairs qualifier opts)]
                  :when       (seq pairs)]
-             [qualifier (map second pairs)])))
+             [qualifier (for [[dispatch-value method] pairs]
+                          (vary-meta method assoc :dispatch-value dispatch-value))])))
 
 (p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
   PrettyPrintable
@@ -149,4 +151,7 @@
     (let [new-prefs (dispatcher.common/add-preference (partial isa? (var-get hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
-        (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs)))))
+        (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
+
+  (dominates? [_ x y]
+    (dispatcher.common/dominates? (var-get hierarchy-var) prefs x y)))

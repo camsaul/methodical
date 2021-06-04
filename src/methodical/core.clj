@@ -37,6 +37,7 @@
   default-dispatch-value
   prefers
   prefer-method
+  dominates?
   ;; MultiFnImpl
   method-combination
   dispatcher
@@ -91,6 +92,7 @@
   default-aux-methods
   default-effective-method
   dispatch-fn
+  effective-dispatch-value
   remove-all-primary-methods
   remove-all-aux-methods
   remove-all-aux-methods-for-dispatch-val

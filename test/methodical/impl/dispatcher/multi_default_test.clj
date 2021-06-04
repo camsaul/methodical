@@ -1,6 +1,6 @@
 (ns methodical.impl.dispatcher.multi-default-test
   (:require [clojure.test :as t]
-            [methodical [core :as m] interface]
+            [methodical.core :as m]
             [methodical.impl.dispatcher.multi-default :as multi-default])
   (:import methodical.interface.MethodTable))
 
@@ -39,6 +39,14 @@
                  (multi-default/partially-specialized-default-dispatch-values [x y] [default x]))
               "If the default value is sequential, we shouldn't calculate partial default dispatch values")))))
 
+(defn- test-method-symbol->dispatch-value [default symb]
+  (if (= symb 'd)
+    default
+    (for [k (map (comp keyword str) (seq (name symb)))]
+      (if (= k :d)
+        default
+        k))))
+
 (t/deftest matching-primary-methods-test
   ;; Conisder what the correct behavior for `:letter` should be
   (doseq [default                           [:default ::default nil #_:letter]
@@ -75,15 +83,20 @@
                                                        (derive :Y :y)
                                                        (derive :x :letter)
                                                        (derive :y :letter))]]
-    (t/testing (format "default value = %s dispatch value = %s" default (pr-str dispatch-value))
-      (t/is (= expected-methods
-               (multi-default/matching-primary-methods
-                {:hierarchy                h
-                 :prefs                    nil
-                 :default-value            default
-                 :method-table             table
-                 :dispatch-value           dispatch-value
-                 :unambiguous-pairs-seq-fn (fn [& args] (last args))}))))))
+    (t/testing (format "default value = %s dispatch value = %s" (pr-str default) (pr-str dispatch-value))
+      (let [matching-methods (multi-default/matching-primary-methods
+                              {:hierarchy                h
+                               :prefs                    nil
+                               :default-value            default
+                               :method-table             table
+                               :dispatch-value           dispatch-value
+                               :unambiguous-pairs-seq-fn (fn [& args] (last args))})]
+        (t/is (= expected-methods
+                 matching-methods))
+        (t/testing "should return ^:dispatch-value metadata"
+          (t/is (= (for [dv (map (partial test-method-symbol->dispatch-value default) expected-methods)]
+                     {:dispatch-value dv})
+                   (map meta matching-methods))))))))
 
 (t/deftest ambiguity-test
   (doseq [default [:default :thing nil]]
@@ -165,13 +178,19 @@
                                                        (derive :y :letter))]]
     (t/testing (format "method-type = %s default value = %s dispatch value = %s"
                        method-type default (pr-str dispatch-value))
-      (t/is (= {method-type expected-methods}
-               (multi-default/matching-aux-methods
-                {:hierarchy      h
-                 :prefs          nil #_prefs
-                 :default-value  default
-                 :method-table   table
-                 :dispatch-value dispatch-value}))))))
+      (let [matching-methods (multi-default/matching-aux-methods
+                              {:hierarchy      h
+                               :prefs          nil #_prefs
+                               :default-value  default
+                               :method-table   table
+                               :dispatch-value dispatch-value})]
+        (t/is (= {method-type expected-methods}
+                 matching-methods))
+        (t/testing "should return ^:dispatch-value metadata"
+          (t/is (= {method-type (for [dv (map (partial test-method-symbol->dispatch-value default) expected-methods)]
+                                  {:dispatch-value dv})}
+                   (into {} (for [[qualifier fns] matching-methods]
+                              [qualifier (map meta fns)])))))))))
 
 (def ^:private hierarchy (-> (make-hierarchy)
                              (derive :X :x)))

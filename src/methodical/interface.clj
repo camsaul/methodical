@@ -14,7 +14,7 @@
 
   (combine-methods [method-combination primary-methods aux-methods]
     "Combine a sequence of matching `primary-methods` with `aux-methods` (a map of qualifier -> sequence of methods)
-    into a single effective method.")
+    into a single effective method. Method includes effective `^:dispatch-value` metadata.")
 
   (transform-fn-tail [method-combination qualifier fn-tail]
     "Make appropriate transformations to the `fn-tail` of a `defmethod` macro expansion for a primary
@@ -60,12 +60,14 @@
 
   (matching-primary-methods [dispatcher method-table dispatch-value]
     "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to
-    least-specific. The standard dispatcher also checks to make sure methods in the sequence are not
-    ambiguously specific, replacing ambiguous methods with ones that will throw an Exception when invoked.")
+    least-specific. Methods should have the `^:dispatch-value` with which they were defined as metadata. The standard
+    dispatcher also checks to make sure methods in the sequence are not ambiguously specific, replacing ambiguous
+    methods with ones that will throw an Exception when invoked.")
 
   (matching-aux-methods [dispatcher method-table dispatch-value]
     "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
-    most-specific to least-specific.")
+    most-specific to least-specific. Methods should have the `^:dispatch-value` with which they were defined as
+    metadata.")
 
   (default-dispatch-value [dispatcher]
     "Default dispatch value to use if no other dispatch value matches.")
@@ -74,24 +76,26 @@
     "Return a map of preferred dispatch value -> set of other dispatch values.")
 
   (prefer-method [dispatcher dispatch-val-x dispatch-val-y]
-    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."))
+    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations.")
 
+  (dominates? [dispatcher dispatch-val-x dispatch-val-y]
+    "Is `dispatch-val-x` considered more specific than `dispatch-val-y`?"))
 
 (p.types/definterface+ MultiFnImpl
   (^methodical.interface.MethodCombination method-combination [multifn]
-    "Get the method combination associated with this multifn.")
+   "Get the method combination associated with this multifn.")
 
   (^methodical.interface.Dispatcher dispatcher [multifn]
-    "Get the dispatcher associated with this multifn.")
+   "Get the dispatcher associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
-    "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
+   "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
 
   (^methodical.interface.MethodTable method-table [multifn]
-    "Get the method table associated with this multifn.")
+   "Get the method table associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
-    "Return a copy of this multifn using `new-method-table` as its method table.")
+   "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]
     "Return the effective method for `dispatch-value`. The effective method is a combined primary method and

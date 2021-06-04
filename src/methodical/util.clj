@@ -22,7 +22,10 @@
   (get (i/primary-methods multifn) dispatch-value))
 
 (defn matching-primary-methods
-  "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to least-specific."
+  "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to least-specific.
+  Methods include the `^:dispatch-value` with which they were defined as metadata. The standard dispatcher also checks
+  to make sure methods in the sequence are not ambiguously specific, replacing ambiguous methods with ones that will
+  throw an Exception when invoked."
   ([multifn dispatch-value]
    (i/matching-primary-methods multifn multifn dispatch-value))
   ([dispatcher method-table dispatch-value]
@@ -38,7 +41,8 @@
 
 (defn effective-primary-method
   "Build and effective method equivalent that would be used for this `dispatch-value` if it had no applicable auxiliary
-  methods. Implicit args (such as `next-method`) will be bound appropriately."
+  methods. Implicit args (such as `next-method`) will be bound appropriately. Method has `^:dispatch-value` metadata
+  for the dispatch value with which the most-specific primary method was defined."
   [multifn dispatch-value]
   (i/combine-methods multifn (matching-primary-methods multifn dispatch-value) nil))
 
@@ -66,7 +70,8 @@
 
 (defn matching-aux-methods
   "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
-  most-specific to least-specific."
+  most-specific to least-specific. Methods should have the `^:dispatch-value` with which they were defined as
+  metadata."
   ([multifn dispatch-value]
    (i/matching-aux-methods multifn multifn dispatch-value))
   ([dispatcher method-table dispatch-value]
@@ -86,6 +91,24 @@
   "Return the effective (combined) method for the default dispatch value, if one can be computed."
   [multifn]
   (i/effective-method multifn (i/default-dispatch-value multifn)))
+
+(defn effective-dispatch-value
+  "Return the least-specific dispatch value that would return the same effective method as `dispatch-value`. e.g. if
+  `dispatch-value` is `Integer` and the effective method is a result of combining a `Object` primary method and a
+  `Number` aux method, the effective dispatch value is `Number`, since `Number` is the most specific thing out of the
+  primary and aux methods and would get the same effective method as `Integer`."
+  [multifn dispatch-value]
+  (let [[most-specific-primary-method] (matching-primary-methods multifn dispatch-value)
+        most-specific-aux-methods      (map first (vals (matching-aux-methods multifn dispatch-value)))
+        dispatch-values                (->> (cons most-specific-primary-method most-specific-aux-methods)
+                                            (map meta)
+                                            (map :dispatch-value)
+                                            (filter some?))]
+    (first
+     (sort-by
+      identity
+      (comparator (partial i/dominates? multifn))
+      dispatch-values))))
 
 (defn dispatch-fn
   "Return a function that can be used to calculate dispatch values of given arg(s)."
