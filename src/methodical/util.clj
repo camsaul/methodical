@@ -21,19 +21,26 @@
   [multifn dispatch-value]
   (get (i/primary-methods multifn) dispatch-value))
 
+(defn matching-primary-methods
+  "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to least-specific."
+  ([multifn dispatch-value]
+   (i/matching-primary-methods multifn multifn dispatch-value))
+  ([dispatcher method-table dispatch-value]
+   (i/matching-primary-methods dispatcher method-table dispatch-value)))
+
 (defn applicable-primary-method
   "Return the primary method that would be use for `dispatch-value`, including ones from ancestor dispatch values or the
   default dipsatch value.
 
   Like `primary-method`, the method returned will not have any implicit args (such as `next-method`) bound."
   [multifn dispatch-value]
-  (first (i/matching-primary-methods multifn multifn dispatch-value)))
+  (first (matching-primary-methods multifn dispatch-value)))
 
 (defn effective-primary-method
   "Build and effective method equivalent that would be used for this `dispatch-value` if it had no applicable auxiliary
   methods. Implicit args (such as `next-method`) will be bound appropriately."
   [multifn dispatch-value]
-  (i/combine-methods multifn (i/matching-primary-methods multifn multifn dispatch-value) nil))
+  (i/combine-methods multifn (matching-primary-methods multifn dispatch-value) nil))
 
 (defn aux-methods
   "Get all auxiliary methods *explicitly specified* for `dispatch-value`. This function does not include methods that
@@ -56,6 +63,14 @@
 
   ([multifn qualifier dispatch-value]
    (get-in (i/aux-methods multifn) [qualifier dispatch-value])))
+
+(defn matching-aux-methods
+  "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
+  most-specific to least-specific."
+  ([multifn dispatch-value]
+   (i/matching-aux-methods multifn multifn dispatch-value))
+  ([dispatcher method-table dispatch-value]
+   (i/matching-aux-methods dispatcher method-table dispatch-value)))
 
 (defn default-primary-method
   "Get the default primary method associated with this `mutlifn`, if one exists."

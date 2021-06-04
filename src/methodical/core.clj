@@ -1,15 +1,6 @@
 (ns methodical.core
   "Combined interface to everything in Methodical you'd normally want to use."
-  (:refer-clojure
-   :exclude
-   [defmulti
-    defmethod
-    methods
-    get-method
-    remove-method
-    remove-all-methods
-    prefer-method
-    prefers])
+  (:refer-clojure :exclude [defmulti defmethod methods get-method remove-method remove-all-methods prefer-method prefers])
   (:require [methodical impl interface macros util]
             [potemkin :as p]))
 
@@ -34,8 +25,6 @@
   remove-aux-method
   ;; Dispatcher
   dispatch-value
-  matching-primary-methods
-  matching-aux-methods
   default-dispatch-value
   prefers
   prefer-method
@@ -84,13 +73,16 @@
 
  [methodical.util
   primary-method
+  matching-primary-methods
   applicable-primary-method
   effective-primary-method
   aux-methods
+  matching-aux-methods
   default-primary-method
   default-aux-methods
   default-effective-method
   dispatch-fn
+  effective-dispatch-value
   remove-all-primary-methods
   remove-all-aux-methods
   remove-all-aux-methods-for-dispatch-val
