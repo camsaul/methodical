@@ -31,8 +31,8 @@
             "`primary-method` should not return default or parent primary methods -- just the exact match."))
 
     (t/testing "applicable-primary-method"
-      (t/is (= m1
-               (u/applicable-primary-method f String))
+      (t/is (= (m1 nil)
+               ((u/applicable-primary-method f String) nil))
             "applicable-primary-method should give you the primary method that will be used for a dispatch value."))
 
     (t/testing "effective-primary-method"
@@ -91,9 +91,37 @@
         (t/is (= {:before ['m4 'm5]}
                  (u/default-aux-methods f')))))
 
-    (t/testing "default-effective-method")
-    (t/is (= [:default]
-             ((u/default-effective-method f) nil)))))
+    (t/testing "default-effective-method"
+      (t/is (= [:default]
+               ((u/default-effective-method f) nil))))))
+
+(t/deftest effective-dispatch-value-test
+  (doseq [default-method? [true false]]
+    (t/testing (format "default method? %s" default-method?)
+      (let [f1 (cond-> (m/default-multifn class)
+                 default-method? (m/add-primary-method :default (fn [_])))]
+        (t/is (= (when default-method? :default)
+                 (u/effective-dispatch-value f1 Object)
+                 (u/effective-dispatch-value f1 nil)))
+        (let [f2 (m/add-primary-method f1 Object (fn [_]))]
+          (t/is (= Object
+                   (u/effective-dispatch-value f2 Object)
+                   (u/effective-dispatch-value f2 Integer)))
+          (t/is (= (when default-method? :default)
+                   (u/effective-dispatch-value f2 nil)))
+          (let [f3 (-> f2
+                       (m/add-aux-method :before Number (fn [_]))
+                       (m/add-aux-method :around CharSequence (fn [_]))
+                       (m/add-primary-method String (fn [_])))]
+            (t/is (= Object
+                     (u/effective-dispatch-value f3 java.util.Map)))
+            (t/testing "primary method is more specific than aux method(s)"
+              (t/is (= String
+                       (u/effective-dispatch-value f3 String))))
+            (t/testing "aux method(s) are more specific than primary method"
+              (t/is (= Number
+                       (u/effective-dispatch-value f3 Number)
+                       (u/effective-dispatch-value f3 Integer))))))))))
 
 (t/deftest dispatch-fn-test
   (t/testing "dispatch-fn"
