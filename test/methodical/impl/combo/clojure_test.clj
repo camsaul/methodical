@@ -1,8 +1,9 @@
 (ns methodical.impl.combo.clojure-test
   (:require [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl.combo.clojure :as combo.clojure]
-            [methodical.interface :as i]))
+            [methodical
+             [core :as m]
+             [interface :as i]]
+            [methodical.impl.combo.clojure :as combo.clojure]))
 
 (t/deftest aux-methods-test
   (t/is (thrown-with-msg?

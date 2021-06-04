@@ -1,6 +1,7 @@
 (ns methodical.impl.dispatcher.everything-test
-  (:require [clojure.string :as str]
-            [clojure.test :as t]
+  (:require [clojure
+             [string :as str]
+             [test :as t]]
             [methodical.core :as m]))
 
 (def ^:private f
