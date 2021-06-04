@@ -55,13 +55,13 @@
 (defn domination-comparitor
   "Given a `hierarchy` and `prefs` return a function that can be used to sort dispatch values from most-specific to
   least-specific."
-  ([dominates?]
+  ([dominates?-pred]
    (fn [x y]
      (cond
-       (= x y)          0
-       (dominates? x y) -1
-       (dominates? y x) 1
-       :else            0)))
+       (= x y)               0
+       (dominates?-pred x y) -1
+       (dominates?-pred y x) 1
+       :else                 0)))
 
   ([hierarchy prefs]
    (domination-comparitor (partial dominates? hierarchy prefs)))
