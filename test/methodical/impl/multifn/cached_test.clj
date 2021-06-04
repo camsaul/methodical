@@ -24,7 +24,8 @@
   k)
 
 (t/deftest dont-create-new-functions-for-the-same-effective-dispatch-value
-  (t/testing "Reuse existing methods rather than creating new ones when dispatch values have the same effective dispatch value (#39)"
+  (t/testing (str "Reuse existing methods rather than creating new ones when dispatch values have the same effective "
+                  "dispatch value (#39)")
     (t/testing "if less-specific method is cached first"
       (let [f (-> (m/default-multifn identity)
                   (m/add-primary-method :default identity))]
