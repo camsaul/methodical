@@ -1,6 +1,15 @@
 (ns methodical.core
   "Combined interface to everything in Methodical you'd normally want to use."
-  (:refer-clojure :exclude [defmulti defmethod methods get-method remove-method remove-all-methods prefer-method prefers])
+  (:refer-clojure
+   :exclude
+   [defmulti
+    defmethod
+    methods
+    get-method
+    remove-method
+    remove-all-methods
+    prefer-method
+    prefers])
   (:require [methodical impl interface macros util]
             [potemkin :as p]))
 
