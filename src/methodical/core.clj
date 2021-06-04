@@ -82,7 +82,6 @@
   default-aux-methods
   default-effective-method
   dispatch-fn
-  effective-dispatch-value
   remove-all-primary-methods
   remove-all-aux-methods
   remove-all-aux-methods-for-dispatch-val
