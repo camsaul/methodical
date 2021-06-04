@@ -1,9 +1,10 @@
 (ns methodical.util-test
   (:require [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl :as impl]
-            [methodical.interface :as i]
-            [methodical.util :as u]))
+            [methodical
+             [core :as m]
+             [impl :as impl]
+             [interface :as i]
+             [util :as u]]))
 
 (t/deftest multifn?-test
   (t/is (= false
