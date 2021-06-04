@@ -186,4 +186,4 @@
         (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
 
   (dominates? [_ x y]
-    (dispatcher.common/dominates? (var-get hierarchy-var) prefs x y)))
+    (dispatcher.common/dominates? (var-get hierarchy-var) prefs default-value x y)))

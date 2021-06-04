@@ -1,6 +1,7 @@
 (ns methodical.impl.multifn.standard
   "Standard Methodical MultiFn impl, which "
-  (:require [methodical.interface :as i]
+  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
+            [methodical.interface :as i]
             [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
@@ -15,7 +16,7 @@
     (first
      (sort-by
       identity
-      (comparator (partial i/dominates? dispatcher))
+      (dispatcher.common/domination-comparitor (partial i/dominates? dispatcher))
       dispatch-values))))
 
 (defn standard-effective-method

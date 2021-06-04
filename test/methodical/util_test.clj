@@ -122,7 +122,21 @@
             (t/testing "aux method(s) are more specific than primary method"
               (t/is (= Number
                        (u/effective-dispatch-value f3 Number)
-                       (u/effective-dispatch-value f3 Integer))))))))))
+                       (u/effective-dispatch-value f3 Integer)))))))))
+  (t/testing "keyword aux methods"
+    (derive ::parrot ::bird)
+    (derive ::parakeet ::parrot)
+    (let [f (-> (m/default-multifn :type)
+                (m/add-primary-method :default (fn [_]))
+                (m/add-aux-method :after ::bird (fn [_]))
+                (m/add-aux-method :after ::parrot (fn [_])))]
+      (doseq [[dv expected] {::dog :default
+                             ::bird ::bird
+                             ::parrot ::parrot
+                             ::parakeet ::parrot}]
+        (t/testing dv
+          (t/is (= expected
+                   (m/effective-dispatch-value f dv))))))))
 
 (t/deftest dispatch-fn-test
   (t/testing "dispatch-fn"

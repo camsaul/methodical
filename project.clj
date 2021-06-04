@@ -32,6 +32,7 @@
   {:dev
    {:dependencies
     [[org.clojure/clojure "1.10.3"]
+     [org.clojure/math.combinatorics "0.1.6"]
      [criterium "0.4.6"]
      [pjstadig/humane-test-output "0.11.0"]]
 
