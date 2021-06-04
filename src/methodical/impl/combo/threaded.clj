@@ -70,6 +70,26 @@
         (fn [method last*]
           (apply method (conj butlast* last*)))]))))
 
+(defmethod threading-invoker :second
+  [_]
+  (fn
+    ([a b]            [b (fn [method b*] (method a b*))])
+    ([a b c]          [b (fn [method b*] (method a b* c))])
+    ([a b c d]        [b (fn [method b*] (method a b* c d))])
+    ([a b c d & more] [b (fn [method b*] (apply method a b* c d more))])))
+
+(defmethod threading-invoker :third
+  [_]
+  (fn
+    ([a b c]          [c (fn [method c*] (method a b c*))])
+    ([a b c d]        [c (fn [method c*] (method a b c* d))])
+    ([a b c d & more] [c (fn [method c*] (apply method a b c* d more))])))
+
+(defmethod threading-invoker :fourth
+  [_]
+  (fn
+    ([a b c d]        [d (fn [method d*] (method a b c d*))])
+    ([a b c d & more] [d (fn [method d*] (apply method a b c d* more))])))
 
 (p.types/deftype+ ThreadingMethodCombination [threading-type]
   PrettyPrintable
@@ -93,8 +113,8 @@
     (combo.common/add-implicit-next-method-args qualifier fn-tail)))
 
 (defn threading-method-combination
-  "Create a new `ThreadingMethodCombination` using the keyword `threading-type` strategy, e.g. `:thread-first` or
-  `:thread-last`."
+  "Create a new `ThreadingMethodCombination` using the keyword `threading-type` strategy, e.g. `:thread-first`,
+  `:thread-last`, `:second`, `:third`, or `:fourth`."
   [threading-type]
   {:pre [(get-method threading-invoker threading-type)]}
   (ThreadingMethodCombination. threading-type))
