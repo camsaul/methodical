@@ -1,4 +1,4 @@
-(defproject methodical "0.10.1-alpha"
+(defproject methodical "0.11.0-SNAPSHOT"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
@@ -25,17 +25,15 @@
                                 ["docstring-checker"]]}
 
   :dependencies
-  [[pretty "1.0.4"]
+  [[pretty "1.0.5"]
    [potemkin "0.4.5"]]
-
-  :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
 
   :profiles
   {:dev
    {:dependencies
-    [[org.clojure/clojure "1.10.1"]
-     [criterium "0.4.5"]
-     [pjstadig/humane-test-output "0.10.0"]]
+    [[org.clojure/clojure "1.10.3"]
+     [criterium "0.4.6"]
+     [pjstadig/humane-test-output "0.11.0"]]
 
     :injections
     [(require 'pjstadig.humane-test-output)
@@ -55,13 +53,13 @@
    {:dependencies
     ;; Cloverage dependency is normally injected when the plugin is ran. By explicitly specifying it here we can
     ;; cache it in CI
-    [[cloverage "1.1.2"]
+    [[cloverage "1.2.2"]
      ;; Required by both Potemkin and Cloverage, but Potemkin uses an older version that breaks Cloverage's ablity to
      ;; understand certain forms. Explicitly specify newer version here.
      [riddley "0.2.0"]]
 
     :plugins
-    [[lein-cloverage "1.1.2"]]
+    [[lein-cloverage "1.2.2"]]
 
     ;; don't count ./dev stuff for code coverage calcualations.
     :source-paths ^:replace ["src"]
@@ -93,7 +91,7 @@
    :bikeshed
    {:dependencies
     ;; use latest tools.namespace instead of older version so we only need to fetch it once for all plugins.
-    [[org.clojure/tools.namespace "1.0.0"]]
+    [[org.clojure/tools.namespace "1.1.0"]]
 
     :plugins
     [[lein-bikeshed "0.5.2"
@@ -105,10 +103,10 @@
       :exclusions [org.clojure/clojure]]]}
 
    :check-namespace-decls
-   {:plugins               [[lein-check-namespace-decls "1.0.2"
+   {:plugins               [[lein-check-namespace-decls "1.0.3"
                              :exclusions [org.clojure/clojure]]]
     :source-paths          ["test"]
-    :check-namespace-decls {:prefix-rewriting true
+    :check-namespace-decls {:prefix-rewriting false
                             :prune-ns-form    false}}
 
    :docstring-checker
@@ -128,7 +126,7 @@
     {}]
 
    :deploy
-   {:dependencies [[org.clojure/clojure "1.10.1"]]}}
+   {:dependencies [[org.clojure/clojure "1.10.3"]]}}
 
   :deploy-repositories
   [["clojars"
