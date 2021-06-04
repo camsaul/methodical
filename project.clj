@@ -65,7 +65,7 @@
     :source-paths ^:replace ["src"]
 
     :cloverage
-    {:fail-threshold 92}}
+    {:fail-threshold 90}}
 
    :profile
    {:main ^:skip-aot methodical.profile}
@@ -106,7 +106,7 @@
    {:plugins               [[lein-check-namespace-decls "1.0.3"
                              :exclusions [org.clojure/clojure]]]
     :source-paths          ["test"]
-    :check-namespace-decls {:prefix-rewriting false
+    :check-namespace-decls {:prefix-rewriting true
                             :prune-ns-form    false}}
 
    :docstring-checker
