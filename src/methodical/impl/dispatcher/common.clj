@@ -36,25 +36,43 @@
 (defn dominates?
   "True if dispatch value `x` should be considered more specific for purposes of method combination over dispatch value
   `y`, e.g. because `x` derives from `y`, or because `x` (or one of its ancestors) has been explicitly preferred over
-  `y` (or one of its ancestors)."
-  [hierarchy prefs x y]
-  (and
-   (not= x y)
-   (or (prefers? hierarchy prefs x y)
-       (isa? hierarchy x y))))
+  `y` (or one of its ancestors).
+
+  4-arity version does not take the `default-dispatch-value` into account, but 5-arity version does."
+  ([hierarchy prefs x y]
+   (assert (:parents hierarchy) (format "Not a valid hierarchy: %s" (pr-str hierarchy)))
+   (and
+    (not= x y)
+    (or (prefers? hierarchy prefs x y)
+        (isa? hierarchy x y))))
+
+  ([hierarchy prefs default-dispatch-value x y]
+   (or (dominates? hierarchy prefs x y)
+       (and (not= x y)
+            (not= x default-dispatch-value)
+            (= y default-dispatch-value)))))
 
 (defn domination-comparitor
-  "Given a `hierarchy prefs` return a function that can be used to sort dispatch values from most-specific to
+  "Given a `hierarchy` and `prefs` return a function that can be used to sort dispatch values from most-specific to
   least-specific."
-  [hierarchy prefs dispatch-value]
-  (fn [x y]
-    (cond
-      (= x y)                           0
-      (= x dispatch-value)             -2
-      (= y dispatch-value)              2
-      (dominates? hierarchy prefs x y) -1
-      (dominates? hierarchy prefs y x)  1
-      :else                             0)))
+  ([dominates?-pred]
+   (fn [x y]
+     (cond
+       (= x y)               0
+       (dominates?-pred x y) -1
+       (dominates?-pred y x) 1
+       :else                 0)))
+
+  ([hierarchy prefs]
+   (domination-comparitor (partial dominates? hierarchy prefs)))
+
+  ([hierarchy prefs dispatch-value]
+   (let [f (domination-comparitor hierarchy prefs)]
+     (fn [x y]
+       (condp = dispatch-value
+         x -2
+         y 2
+         (f x y))))))
 
 (defn ambiguous?
   "True if neither `dispatch-val-x` nor `dispatch-val-y` dominate one another, e.g. because they are the same value or

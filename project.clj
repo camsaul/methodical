@@ -1,4 +1,4 @@
-(defproject methodical "0.11.0"
+(defproject methodical "0.11.1"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
@@ -32,6 +32,7 @@
   {:dev
    {:dependencies
     [[org.clojure/clojure "1.10.3"]
+     [org.clojure/math.combinatorics "0.1.6"]
      [criterium "0.4.6"]
      [pjstadig/humane-test-output "0.11.0"]]
 

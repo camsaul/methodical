@@ -51,4 +51,37 @@
            (dispatcher.common/distinct-by first
                                           (list [:a 1] [:a 2] [:b 3] [:c 4] [:c 5] [:b 6] [:a 7] [:d 8] [:d 9])))))
 
-;; TODO - add tests for `dominates?`, `domination-comparitor`, and `ambiguous?`?
+(t/deftest dominates?-test
+  (derive ::parrot ::bird)
+  (derive ::parakeet ::parrot)
+  (derive ::budgie ::parakeet)
+  (derive ::love-bird ::parrot)
+  (let [h     @#'clojure.core/global-hierarchy
+        prefs {:x #{:y}}]
+    (doseq [[arity dominates?] {4 (partial dispatcher.common/dominates? h prefs)
+                                5 (partial dispatcher.common/dominates? h prefs :default)}]
+      (t/testing (format "%d-arity" arity)
+        (t/testing "No relation"
+          (t/is (not (dominates? :a :b))))
+        (t/testing "no relation, but a preference"
+          (t/is (dominates? :x :y))
+          (t/is (not (dominates? :y :x))))
+        (t/testing "default dispatch value"
+          (case (long arity)
+            4 (t/is (not (dominates? ::bird :default)))
+            5 (t/is (dominates? ::bird :default)))
+          (t/is (not (dominates? :default ::bird))))
+        (t/testing "child"
+          (t/is (dominates? ::parrot ::bird))
+          (t/is (not (dominates? ::bird ::parrot))))
+        (t/testing "indirect descendant"
+          (t/is (dominates? ::budgie ::bird))
+          (t/is (not (dominates? ::bird ::budgie))))
+        (t/testing "siblings"
+          (t/is (not (dominates? ::parakeet ::love-bird)))
+          (t/is (not (dominates? ::love-bird ::parakeet))))
+        (t/testing "same common ancestor, but not siblings"
+          (t/is (not (dominates? ::love-bird ::budgie)))
+          (t/is (not (dominates? ::budgie ::love-bird))))))))
+
+;; TODO - add tests for `domination-comparitor`, and `ambiguous?`?
