@@ -2,8 +2,9 @@
   "A single-hierarchy dispatcher similar to the standard dispatcher, with one big improvement: when dispatching on
   multiple values, it supports default methods that specialize on some args and use the default for others. (e.g.
   `[String :default]`"
-  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
-            [methodical.impl.dispatcher.standard :as dispatcher.standard]
+  (:require [methodical.impl.dispatcher
+             [common :as dispatcher.common]
+             [standard :as dispatcher.standard]]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])

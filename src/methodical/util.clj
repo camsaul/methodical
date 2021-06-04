@@ -2,10 +2,8 @@
   "Utility functions for performing additional operations on multifns and their components not specified in one of the
   interfaces. These functions are compositions of those methods."
   (:refer-clojure :exclude [prefers prefer-method remove-all-methods])
-  (:require [methodical
-             [interface :as i]
-             [util :as u]]
-            [methodical.impl.standard :as impl.standard]))
+  (:require [methodical.impl.standard :as impl.standard]
+            [methodical.interface :as i]))
 
 (defn multifn?
   "True if `x` is a Methodical multifn (i.e., if it is an instance of `StandardMultiFn`)."

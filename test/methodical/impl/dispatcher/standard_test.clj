@@ -1,7 +1,8 @@
 (ns methodical.impl.dispatcher.standard-test
   (:require [clojure.test :as t]
-            [methodical.impl :as impl]
-            [methodical.interface :as i])
+            [methodical
+             [impl :as impl]
+             [interface :as i]])
   (:import methodical.interface.MethodTable))
 
 (t/deftest equality-test
@@ -59,7 +60,10 @@
                      (i/matching-primary-methods dispatcher-with-custom-default method-table :parent)))
             (t/testing "should return ^:dispatch-value metadata"
               (t/is (= [{:dispatch-value :parent} {:dispatch-value :grandparent}]
-                       (map meta (i/matching-primary-methods dispatcher-with-custom-default method-table :parent)))))))))))
+                       (map meta (i/matching-primary-methods
+                                  dispatcher-with-custom-default
+                                  method-table
+                                  :parent)))))))))))
 
 (t/deftest matching-aux-methods-test
   (t/testing "default aux methods"
