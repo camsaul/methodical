@@ -5,13 +5,27 @@
             [pretty.core :refer [PrettyPrintable]])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
+(defn- effective-dispatch-value
+  [dispatcher [most-specific-primary-method] aux-methods]
+  (let [most-specific-aux-methods (map first (vals aux-methods))
+        dispatch-values           (->> (cons most-specific-primary-method most-specific-aux-methods)
+                                       (map meta)
+                                       (map :dispatch-value)
+                                       (filter some?))]
+    (first
+     (sort-by
+      identity
+      (comparator (partial i/dominates? dispatcher))
+      dispatch-values))))
+
 (defn standard-effective-method
   "Build an effective method using the 'standard' technique, taking the dispatch-value-method pairs in the
   `method-table`, finiding applicable ones using `dispatcher`, and combining them using `method-combination`."
   [method-combination dispatcher method-table dispatch-value]
   (let [primary-methods (i/matching-primary-methods dispatcher method-table dispatch-value)
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
-    (i/combine-methods method-combination primary-methods aux-methods)))
+    (some-> (i/combine-methods method-combination primary-methods aux-methods)
+            (with-meta {:dispatch-value (effective-dispatch-value dispatcher primary-methods aux-methods)}))))
 
 (p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
                                        ^Dispatcher dispatcher

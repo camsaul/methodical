@@ -41,6 +41,21 @@
   (effective-method [_ dispatch-value]
     (or
      (.cached-method cache dispatch-value)
-     (let [method (i/effective-method impl dispatch-value)]
+     ;; just like vanilla multimethods, we will add a new entry for every unique dispatch value we encounter, so
+     ;; there's an implicit assumption that dispatch values are bounded
+     ;;
+     ;; build the effective method for dispatch value. We may end up throwing this out, but we currently need to build
+     ;; it to determine the effective dispatch value.
+     (let [method                     (i/effective-method impl dispatch-value)
+           effective-dispatch-value   (:dispatch-value (meta method))
+           ;; If a method with the same effective dispatch value is already cached, add the existing method to the
+           ;; cache for dispatch value. This way we don't end up with a bunch of duplicate methods impls for various
+           ;; dispatch values that have the same effective dispatch value
+           cached-effective-dv-method (.cached-method cache effective-dispatch-value)
+           method                     (or cached-effective-dv-method method)]
+       ;; Make sure the method was cached for the effective dispatch value as well, that way if some less-specific
+       ;; dispatch value comes along with the same effective dispatch value we can use the existing method
+       (when-not cached-effective-dv-method
+         (i/cache-method! cache effective-dispatch-value method))
        (i/cache-method! cache dispatch-value method)
        method))))
