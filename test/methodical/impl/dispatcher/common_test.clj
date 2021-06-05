@@ -59,8 +59,11 @@
   (let [h     @#'clojure.core/global-hierarchy
         prefs {:x #{:y}}]
     (doseq [[arity dominates?] {4 (partial dispatcher.common/dominates? h prefs)
-                                5 (partial dispatcher.common/dominates? h prefs :default)}]
+                                5 (partial dispatcher.common/dominates? h prefs ::default)}]
       (t/testing (format "%d-arity" arity)
+        (t/testing "The same"
+          (t/is (not (dominates? :a :b)))
+          (t/is (not (dominates? ::bird ::bird))))
         (t/testing "No relation"
           (t/is (not (dominates? :a :b))))
         (t/testing "no relation, but a preference"
@@ -68,9 +71,9 @@
           (t/is (not (dominates? :y :x))))
         (t/testing "default dispatch value"
           (case (long arity)
-            4 (t/is (not (dominates? ::bird :default)))
-            5 (t/is (dominates? ::bird :default)))
-          (t/is (not (dominates? :default ::bird))))
+            4 (t/is (not (dominates? ::bird ::default)))
+            5 (t/is (dominates? ::bird ::default)))
+          (t/is (not (dominates? ::default ::bird))))
         (t/testing "child"
           (t/is (dominates? ::parrot ::bird))
           (t/is (not (dominates? ::bird ::parrot))))
@@ -82,6 +85,24 @@
           (t/is (not (dominates? ::love-bird ::parakeet))))
         (t/testing "same common ancestor, but not siblings"
           (t/is (not (dominates? ::love-bird ::budgie)))
-          (t/is (not (dominates? ::budgie ::love-bird))))))))
+          (t/is (not (dominates? ::budgie ::love-bird))))
+        (t/testing "composite dispatch value"
+          (t/testing "The same"
+            (t/is (not (dominates? [Object ::parrot] [Object ::parrot]))))
+          (t/testing "first value more specific"
+            (t/is (dominates? [String ::parrot] [Object ::parrot]))
+            (t/is (not (dominates? [Object ::parrot] [String ::parrot]))))
+          (t/testing "second value more specific"
+            (t/is (dominates? [Object ::parrot] [Object ::bird]))
+            (t/is (not (dominates? [Object ::bird] [Object ::parrot])))
+            (t/is (not (dominates? [Object ::parrot] [Object ::parrot]))))
+          (t/testing "Mixed-specificity -- neither dispatch value should dominate."
+            (t/is (not (dominates? [String ::bird] [Object ::parrot])))
+            (t/is (not (dominates? [Object ::parrot] [String ::bird]))))
+          (t/testing "Default dispatch value"
+            (case (long arity)
+              4 (t/is (not (dominates? [String ::bird] ::default)))
+              5 (t/is (dominates? [String ::bird] ::default)))
+            (t/is (not (dominates? ::default [Object ::parrot])))))))))
 
 ;; TODO - add tests for `domination-comparitor`, and `ambiguous?`?

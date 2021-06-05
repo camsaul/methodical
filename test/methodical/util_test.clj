@@ -130,13 +130,38 @@
                 (m/add-primary-method :default (fn [_]))
                 (m/add-aux-method :after ::bird (fn [_]))
                 (m/add-aux-method :after ::parrot (fn [_])))]
-      (doseq [[dv expected] {::dog :default
-                             ::bird ::bird
-                             ::parrot ::parrot
+      (doseq [[dv expected] {::dog      :default
+                             ::bird     ::bird
+                             ::parrot   ::parrot
                              ::parakeet ::parrot}]
         (t/testing dv
           (t/is (= expected
-                   (m/effective-dispatch-value f dv))))))))
+                   (m/effective-dispatch-value f dv)))))))
+  (t/testing "composite dispatch value"
+    (let [f (-> (m/default-multifn (fn [x y] [x (:type y)]))
+                (m/add-primary-method :default (fn [_ _ m] m))
+                (m/add-aux-method :before [:default ::bird] (fn [_ m] (assoc m :bird? true)))
+                (m/add-aux-method :before [Object :default] (fn [_ m] (assoc m :object? true))))]
+      (t/is (= [Object :default]
+               (m/effective-dispatch-value f [Object ::shoe])
+               (m/effective-dispatch-value f [Object :default])))
+      (t/is (= [Object ::bird]
+               (m/effective-dispatch-value f [Object ::parrot])
+               (m/effective-dispatch-value f [String ::parrot])
+               (m/effective-dispatch-value f [Object ::parakeet])
+               (m/effective-dispatch-value f [String ::parakeet])))
+      (t/is (= [:default ::bird]
+               (m/effective-dispatch-value f [nil ::parrot])
+               (m/effective-dispatch-value f [:default ::parrot])
+               (m/effective-dispatch-value f [nil ::parakeet])
+               (m/effective-dispatch-value f [:default ::parakeet])))
+      (t/is (= :default
+               (m/effective-dispatch-value f :default)
+               (m/effective-dispatch-value f [nil :default])
+               (m/effective-dispatch-value f [:default nil])
+               (m/effective-dispatch-value f [:default :default])
+               (m/effective-dispatch-value f [:default ::shoe])
+               (m/effective-dispatch-value f [nil ::shoe]))))))
 
 (t/deftest dispatch-fn-test
   (t/testing "dispatch-fn"
