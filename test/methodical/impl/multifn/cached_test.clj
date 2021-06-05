@@ -33,19 +33,17 @@
 
     (t/testing "\nCaching should work correctly regardless of what order methods are invoked"
       (derive ::parrot ::bird)
-      (derive ::parakeet ::parrot)
-      (doseq [permutation (combo/permutations [::bird ::parrot ::parakeet ::dog])]
-        (let [f (-> (m/default-multifn :type)
-                    (m/add-primary-method :default (fn [_ m] m))
-                    (m/add-aux-method :after ::bird #(assoc % :bird? true))
-                    (m/add-aux-method :after ::parrot #(assoc % :parrot? true)))]
-          (t/testing (format "\norder = %s" (mapv name permutation))
-            (doseq [v permutation]
-              (t/testing (format "\n dispatch value = %s" (name v))
-                (let [expected (case v
-                                 ::bird     {:type ::bird, :bird? true}
-                                 ::parrot   {:type ::parrot, :bird? true, :parrot? true}
-                                 ::parakeet {:type ::parakeet, :bird? true, :parrot? true}
-                                 ::dog      {:type ::dog})]
+      (doseq [dv1-permutation (combo/permutations [nil Object Number])
+              dv2-permutation (combo/permutations [::bird ::parrot ::dog])]
+        (let [f (-> (m/default-multifn (fn [x y] [x (:type y)]))
+                    (m/add-primary-method :default (fn [_ _ m] m))
+                    (m/add-aux-method :before [:default ::bird] (fn [_ m] (assoc m :bird? true)))
+                    (m/add-aux-method :before [Object :default] (fn [_ m] (assoc m :object? true))))]
+          (t/testing (format "\norder = %s %s" (pr-str dv1-permutation) (pr-str dv2-permutation))
+            (doseq [[dv1 dv2 :as dv] (map vector dv1-permutation dv2-permutation)]
+              (t/testing (format "\n dispatch value = %s" (pr-str dv))
+                (let [expected (cond-> {:type dv2}
+                                 (isa? dv1 Object) (assoc :object? true)
+                                 (isa? dv2 ::bird) (assoc :bird? true))]
                   (t/is (= expected
-                           (f {:type v}))))))))))))
+                           (f dv1 {:type dv2}))))))))))))
