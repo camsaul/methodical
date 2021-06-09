@@ -73,3 +73,30 @@
     (t/is (= {:type :y, :method :y, :after? true}
              (mf3 {:type :y})
              (mf4 {:type :y})))))
+
+(m/defmulti multi-arity
+  {:arglists '([x] [x y])}
+  (fn
+    ([x]
+     (keyword x))
+    ([x _]
+     (keyword x))))
+
+(m/defmethod multi-arity ::wow
+  ([x]
+   {:x x})
+  ([x y]
+   {:x x, :y y}))
+
+(m/defmethod multi-arity :after :default
+  ([m]
+   (assoc m :after? true))
+  ([x m]
+   (assoc m :after? x)))
+
+(t/deftest multi-arity-test
+  (t/testing "defmulti and defmethod with multi-arity methods (#57)"
+    (t/is (= {:x ::wow, :after? true}
+             (multi-arity ::wow)))
+    (t/is (= {:x ::wow, :y 100, :after? ::wow}
+             (multi-arity ::wow 100)))))
