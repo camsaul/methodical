@@ -89,7 +89,7 @@
   (t/testing "Throw Exception on invalid fn tails"
     (t/is (thrown-with-msg?
            AssertionError
-           #"Assert failed: \(sequential\? fn-tail\)"
+           #"Assert failed:.*\(sequential\? fn-tail\)"
            (combo.common/add-implicit-next-method-args nil nil)))
     (t/is (thrown-with-msg?
            clojure.lang.ExceptionInfo
