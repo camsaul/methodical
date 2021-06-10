@@ -115,15 +115,22 @@
 (defn- dispatch-val-name
   "Generate a name based on a dispatch value. Used by `method-fn-name` below."
   [dispatch-val]
-  (cond
-    (sequential? dispatch-val)
-    (str/join "-" (map dispatch-val-name dispatch-val))
+  (let [s (cond
+            (sequential? dispatch-val)
+            (str/join "-" (map dispatch-val-name dispatch-val))
 
-    (keyword? dispatch-val)
-    (name dispatch-val)
+            (and (instance? clojure.lang.Named dispatch-val)
+                 (namespace dispatch-val))
+            (str (namespace dispatch-val) "-" (name dispatch-val))
 
-    :else
-    (str/replace (munge (str dispatch-val)) #"\." "_")))
+            (instance? clojure.lang.Named dispatch-val)
+            (name dispatch-val)
+
+            :else
+            (munge (str dispatch-val)))]
+    (-> s
+        (str/replace #"\s+" "-")
+        (str/replace  #"\." "-"))))
 
 (defn- method-fn-name
   "Generate a nice name for a primary or auxiliary method's implementing function. Named functions are used rather than
