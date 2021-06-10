@@ -7,6 +7,40 @@
              [util :as u]]
             [potemkin.namespaces :as p.namespaces]))
 
+(t/deftest method-fn-name-test
+  (letfn [(method-fn-name [dispatch-value]
+            (#'m/method-fn-name 'my-multimethod "primary" dispatch-value))]
+    (t/testing "Keyword dispatch value"
+      (t/is (= 'my-multimethod-primary-method-something
+               (method-fn-name :something))))
+    (t/testing "Symbol dispatch value"
+      (t/is (= 'my-multimethod-primary-method-String
+               (method-fn-name 'String)))
+      (t/testing "with namespace"
+        (t/is (= 'my-multimethod-primary-method-somewhere-something-cool
+                 (method-fn-name 'somewhere/something.cool)))))
+    (t/testing "String dispatch value"
+      (t/is (= 'my-multimethod-primary-method-Wow-OK
+               (method-fn-name "Wow OK"))))
+    (t/testing "Composite dispatch value"
+      (t/is (= 'my-multimethod-primary-method-k1-String
+               (method-fn-name [:k1 'String]))))
+    (t/testing "Arbitrary expression dispatch value"
+      (t/is (= 'my-multimethod-primary-method-if-true-String-Integer
+               (method-fn-name '[(if true String Integer)]))))
+    (t/testing "Munged function name should include keyword namespaces"
+      (t/is (= 'my-multimethod-primary-method-somewhere-something
+               (method-fn-name :somewhere/something))))
+    (t/testing "Munged function name should replace periods in keywords (#60)"
+      (t/testing "Munged function name should include keyword namespaces"
+        (t/is (= 'my-multimethod-primary-method-somewhere-else-something
+                 (method-fn-name :somewhere.else/something)))
+        (t/is (= 'my-multimethod-primary-method-somewhere-something-else
+                 (method-fn-name :somewhere/something-else)))))
+    (t/testing "Illegal characters"
+      (t/is (= 'my-multimethod-primary-method-can_SINGLEQUOTE_t-use-this
+               (method-fn-name "can't use this"))))))
+
 (m/defmulti ^:private mf1 :type)
 
 (m/define-primary-method mf1 :x
