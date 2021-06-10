@@ -33,7 +33,8 @@
 
 (defn applicable-primary-method
   "Return the primary method that would be use for `dispatch-value`, including ones from ancestor dispatch values or the
-  default dipsatch value.
+  default dipsatch value. Method includes `^:dispatch-value` metadata indicating the actual dispatch value for which
+  the applicable method was defined.
 
   Like `primary-method`, the method returned will not have any implicit args (such as `next-method`) bound."
   [multifn dispatch-value]
@@ -44,7 +45,9 @@
   methods. Implicit args (such as `next-method`) will be bound appropriately. Method has `^:dispatch-value` metadata
   for the dispatch value with which the most-specific primary method was defined."
   [multifn dispatch-value]
-  (i/combine-methods multifn (matching-primary-methods multifn dispatch-value) nil))
+  (let [[most-specific-primary-method :as primary-methods] (matching-primary-methods multifn dispatch-value)]
+    (some-> (i/combine-methods multifn primary-methods nil)
+            (with-meta (meta most-specific-primary-method)))))
 
 (defn aux-methods
   "Get all auxiliary methods *explicitly specified* for `dispatch-value`. This function does not include methods that

@@ -98,8 +98,7 @@
                                 (unambiguous-pairs-seq-fn opts standard-pairs)
                                 partial-default-pairs
                                 (when default-pair [default-pair]))]
-    (for [[dispatch-value method] (dispatcher.common/distinct-by first pairs)]
-      (vary-meta method assoc :dispatch-value dispatch-value))))
+    (map second (dispatcher.common/distinct-by first pairs))))
 
 (defn- aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
   (let [comparitor (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value)]
@@ -119,7 +118,7 @@
   (let [method-map (i/aux-methods method-table)]
     (for [dispatch-value (aux-dispatch-values qualifier opts)
           m              (get-in method-map [qualifier dispatch-value])]
-      (vary-meta m assoc :dispatch-value dispatch-value))))
+      m)))
 
 (defn matching-aux-methods
   "Impl of `Dispatcher` `matching-aux-methods` for the multi-default dispatcher."
