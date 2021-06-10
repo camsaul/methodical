@@ -66,23 +66,24 @@
                                               nil       '[d]}
                                              {[default nil] '[dd d]}
                                              {[nil default] '[dd d]})
-          :let                              [table (reify MethodTable
-                                                     (primary-methods [_]
-                                                       {[:X :Y]           (with-meta 'XY {:dispatch-value [:X :Y]})
-                                                        [:X :y]           (with-meta 'Xy {:dispatch-value [:X :y]})
-                                                        [:x :Y]           (with-meta 'xY {:dispatch-value [:x :Y]})
-                                                        [:x :y]           (with-meta 'xy {:dispatch-value [:x :y]})
-                                                        [:X default]      (with-meta 'Xd {:dispatch-value [:X default]})
-                                                        [:x default]      (with-meta 'xd {:dispatch-value [:x default]})
-                                                        [default :Y]      (with-meta 'dY {:dispatch-value [default :Y]})
-                                                        [default :y]      (with-meta 'dy {:dispatch-value [default :y]})
-                                                        [default default] (with-meta 'dd {:dispatch-value [default default]})
-                                                        default           (with-meta 'd {:dispatch-value default})}))
-                                             h     (-> (make-hierarchy)
-                                                       (derive :X :x)
-                                                       (derive :Y :y)
-                                                       (derive :x :letter)
-                                                       (derive :y :letter))]]
+          :let
+          [table (reify MethodTable
+                   (primary-methods [_]
+                     {[:X :Y]           (with-meta 'XY {:dispatch-value [:X :Y]})
+                      [:X :y]           (with-meta 'Xy {:dispatch-value [:X :y]})
+                      [:x :Y]           (with-meta 'xY {:dispatch-value [:x :Y]})
+                      [:x :y]           (with-meta 'xy {:dispatch-value [:x :y]})
+                      [:X default]      (with-meta 'Xd {:dispatch-value [:X default]})
+                      [:x default]      (with-meta 'xd {:dispatch-value [:x default]})
+                      [default :Y]      (with-meta 'dY {:dispatch-value [default :Y]})
+                      [default :y]      (with-meta 'dy {:dispatch-value [default :y]})
+                      [default default] (with-meta 'dd {:dispatch-value [default default]})
+                      default           (with-meta 'd {:dispatch-value default})}))
+           h     (-> (make-hierarchy)
+                     (derive :X :x)
+                     (derive :Y :y)
+                     (derive :x :letter)
+                     (derive :y :letter))]]
     (t/testing (format "default value = %s dispatch value = %s" (pr-str default) (pr-str dispatch-value))
       (let [matching-methods (multi-default/matching-primary-methods
                               {:hierarchy                h
