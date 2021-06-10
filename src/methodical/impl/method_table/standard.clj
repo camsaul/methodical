@@ -32,7 +32,7 @@
     aux)
 
   (add-primary-method [this dispatch-val method]
-    (let [new-primary (assoc primary dispatch-val method)]
+    (let [new-primary (assoc primary dispatch-val (vary-meta method assoc :dispatch-value dispatch-val))]
       (if (= primary new-primary)
         this
         (StandardMethodTable. new-primary aux))))
@@ -44,10 +44,13 @@
         (StandardMethodTable. new-primary aux))))
 
   (add-aux-method [this qualifier dispatch-value method]
-    (let [new-aux (update-in aux [qualifier dispatch-value] (fn [existing-methods]
-                                                              (if (contains? (set existing-methods) method)
-                                                                existing-methods
-                                                                (conj (vec existing-methods) method))))]
+    (let [new-aux (update-in aux
+                             [qualifier dispatch-value]
+                             (fn [existing-methods]
+                               (if (contains? (set existing-methods) method)
+                                 existing-methods
+                                 (conj (vec existing-methods)
+                                       (vary-meta method assoc :dispatch-value dispatch-value)))))]
       (if (= aux new-aux)
         this
         (StandardMethodTable. primary new-aux))))

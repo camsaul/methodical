@@ -16,31 +16,56 @@
   (t/is (= true
            (u/multifn? (m/default-multifn keyword)))))
 
+(defn- test-multifn []
+  (let [m1 'm1
+        m2 'm2]
+    (-> (m/default-multifn class)
+        (m/add-primary-method CharSequence m1)
+        (m/add-primary-method :default m2)
+        (m/add-aux-method :around :default (fn [next-method x] (next-method x))))))
+
 (t/deftest primary-method-test
-  (let [m1 (constantly [:char-sequence])
-        m2 (constantly [:default])
-        f  (-> (m/default-multifn class)
-               (m/add-primary-method CharSequence m1)
-               (m/add-primary-method :default m2))]
+  (let [f (test-multifn)]
     (t/testing "primary-method"
-      (t/is (= m1
-               (u/primary-method f CharSequence))
-            "primary-method should return primary methods with exactly the same dispatch value.")
+      (t/testing "primary-method should return primary methods with exactly the same dispatch value."
+        (t/is (= 'm1
+                 (u/primary-method f CharSequence))))
+      (t/testing "`primary-method` should not return default or parent primary methods -- just the exact match."
+        (t/is (= nil
+                 (u/primary-method f String))))
+      (t/testing "Should return identical methods for multiple calls"
+        (t/is (identical? (u/primary-method f CharSequence)
+                          (u/primary-method f CharSequence)))))))
 
-      (t/is (= nil
-               (u/primary-method f String))
-            "`primary-method` should not return default or parent primary methods -- just the exact match."))
+(t/deftest applicable-primary-method-test
+  (let [f (test-multifn)]
+    (t/testing "applicable-primary-method should give you the primary method that will be used for a dispatch value."
+      (t/is (= 'm1
+               (u/applicable-primary-method f String)))
+      (t/testing "Should include dispatch value metadata"
+        (t/is (= {:dispatch-value CharSequence}
+                 (meta (u/applicable-primary-method f String))))
+        (t/is (= {:dispatch-value :default}
+                 (meta (u/applicable-primary-method f Integer)))))
+      (t/testing "Should return identical methods for multiple calls"
+        (t/is (identical? (u/applicable-primary-method f String)
+                          (u/applicable-primary-method f CharSequence)))))))
 
-    (t/testing "applicable-primary-method"
-      (t/is (= (m1 nil)
-               ((u/applicable-primary-method f String) nil))
-            "applicable-primary-method should give you the primary method that will be used for a dispatch value."))
-
-    (t/testing "effective-primary-method"
+(t/deftest effective-primary-method-test
+  (let [f (test-multifn)]
+    (t/testing "effective-primary-method should give you the combined effective primary method."
       (let [f (m/add-aux-method f :before Object (fn [x] (conj x :before)))]
-        (t/is (= [:char-sequence]
-                 ((u/effective-primary-method f String) nil))
-              "effective-primary-method should give you the combined effective primary method.")))))
+        ;; ('m1 next-method ::not-found) -> ::not-found
+        (t/is (= ::not-found
+                 ((u/effective-primary-method f String) ::not-found)))))
+    (t/testing "Should include dispatch value metadata"
+      (t/is (= {:dispatch-value :default}
+               (meta (u/effective-primary-method f Integer))))
+      (t/is (= {:dispatch-value CharSequence}
+               (meta (u/effective-primary-method f String))))))
+  (t/testing "no matching effective method"
+    (t/is (= nil
+             (u/effective-primary-method (m/default-multifn class) :wow)))))
 
 ;; aux-methods
 (t/deftest aux-methods-test
@@ -80,9 +105,9 @@
                (m/add-primary-method CharSequence m1)
                (m/add-primary-method :default m2))]
     (t/testing "default-primary-method"
-      (t/is (= m2
-               (u/default-primary-method f))
-            "should be able to get the default primary method"))
+      (t/testing "should be able to get the default primary method"
+        (t/is (= [:default]
+                 ((u/default-primary-method f))))))
 
     (t/testing "default-aux-methods"
       (let [f' (-> f
