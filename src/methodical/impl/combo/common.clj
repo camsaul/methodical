@@ -8,7 +8,7 @@
   (when (seq primary-methods)
     (reduce
      (fn [next-method primary-method]
-       (partial primary-method next-method))
+       (with-meta (partial primary-method next-method) (meta primary-method)))
      nil
      (reverse primary-methods))))
 
@@ -19,7 +19,7 @@
   [combined-method around-methods]
   (reduce
    (fn [combined-method around-method]
-     (partial around-method combined-method))
+     (with-meta (partial around-method combined-method) (meta around-method)))
    combined-method
    around-methods))
 

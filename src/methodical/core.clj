@@ -11,10 +11,16 @@
     prefer-method
     prefers])
   (:require [methodical impl interface macros util]
+            methodical.util.trace
             [potemkin :as p]))
 
 ;; fool cljr-clean-ns and the namespace linter so it doesn't remove these automatically
-(comment methodical.macros/keep-me methodical.impl/keep-me methodical.interface/keep-me methodical.util/keep-me)
+(comment
+  methodical.impl/keep-me
+  methodical.interface/keep-me
+  methodical.macros/keep-me
+  methodical.util.trace/keep-me
+  methodical.util/keep-me)
 
 (p/import-vars
  [methodical.macros
@@ -110,4 +116,7 @@
   add-aux-method-with-unique-key!
   remove-aux-method-with-unique-key!
   remove-all-methods!
-  prefer-method!])
+  prefer-method!]
+
+ [methodical.util.trace
+  trace])
