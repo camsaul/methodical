@@ -1,9 +1,12 @@
 (ns methodical.impl.combo.threaded
   (:refer-clojure :exclude [methods])
   (:require [methodical.impl.combo.common :as combo.common]
+            methodical.interface
             [potemkin.types :as p.types]
             [pretty.core :refer [PrettyPrintable]])
   (:import methodical.interface.MethodCombination))
+
+(comment methodical.interface/keep-me)
 
 (defn reducer-fn
   "Reduces a series of before/combined-primary/after methods, threading the resulting values to the next method by

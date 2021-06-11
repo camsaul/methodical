@@ -480,8 +480,7 @@ following summarizes all component implementations that currently ship with Meth
 
 ### Debugging
 
-Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility
-added in 0.11.4:
+Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility:
 
 ![Trace](assets/tracing.png)
 
