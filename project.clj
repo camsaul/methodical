@@ -1,4 +1,4 @@
-(defproject methodical "0.12.0"
+(defproject methodical "0.12.1-SNAPSHOT"
   :url "https://github.com/camsaul/methodical"
   :min-lein-version "2.5.0"
 
