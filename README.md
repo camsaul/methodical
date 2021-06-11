@@ -13,7 +13,7 @@
 
 # Methodical
 
-![Methodical](https://github.com/camsaul/methodical/blob/master/assets/logo.png)
+![Methodical](assets/logo.png)
 
 Methodical is a library that provides drop-in replacements for Clojure multimethods and adds several advanced features.
 
@@ -171,7 +171,7 @@ the next method. `:around` methods are invoked from least-specific to most-speci
 (m/defmethod around-example :default
   [x acc]
   (conj acc :default))
-  
+
 (around-example {:type String} [])
 ;; -> [:object-before :string-before :default :string-after :object-after]
 ```
@@ -295,8 +295,8 @@ them:
 
 *  The *method combination*, which defines the way applicable primary and auxiliary methods are combined into a single
    *effective method*. The default method combination, `thread-last-method-combination`, binds implicit `next-method`
-   args for primary and `:around` methods, and implements logic to thread the result of each method into the last argument    of the next. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are 
-   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit 
+   args for primary and `:around` methods, and implements logic to thread the result of each method into the last argument    of the next. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are
+   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit
    `next-method` arg). Method combinations implement the `MethodCombination` interface.
 
 *  The *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
@@ -478,10 +478,18 @@ following summarizes all component implementations that currently ship with Meth
 
 *  `cached-multifn-impl` -- wraps another multifn impl and an instance of `Cache` to implement caching.
 
+### Debugging
+
+Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility
+added in 0.11.4:
+
+![Trace](assets/trace.png)
+
 ## Performance
 
 Methodical is built with performance in mind. Although it is written entirely in Clojure, and supports many more
-features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with [Criterium](https://github.com/hugoduncan/criterium/) show Methodical performing up to 20% faster in some cases:
+features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with
+[Criterium](https://github.com/hugoduncan/criterium/) show Methodical performing up to 20% faster in some cases:
 
 ```
 ;;; Vanilla clojure

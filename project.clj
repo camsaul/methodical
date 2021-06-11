@@ -25,7 +25,8 @@
                                 ["docstring-checker"]]}
 
   :dependencies
-  [[pretty "1.0.5"]
+  [[mvxcvi/puget "1.3.1"]
+   [pretty "1.0.5"]
    [potemkin "0.4.5"]]
 
   :profiles
