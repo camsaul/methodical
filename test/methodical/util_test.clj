@@ -147,7 +147,9 @@
         (t/is (= [:a :b]
                  (u/dispatch-value f :a :b)))
         (t/is (= [:a :b :c]
-                 (u/dispatch-value f :a :b :c)))))
+                 (u/dispatch-value f :a :b :c)))
+        (t/is (= [:a :b :c :d]
+                 (u/dispatch-value f :a :b :c :d)))))
     (t/testing "> 4 args"
       (t/is [::x clojure.lang.Keyword :c :d :e]
             (u/dispatch-value lots-of-args-multifn ::x :b :c :d :e :f)))))
