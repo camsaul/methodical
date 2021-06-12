@@ -303,14 +303,15 @@ them:
    `standard-method-table`, uses simple Clojure immutable maps, but there is nothing stopping you from creating an
    implementation that ignores requests to store new methods, or dynamically generates and returns a set of methods based on outside factors. Method tables implement the `MethodTable` interface.
 
-*  The *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary
-   and auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods
+*  The *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary and
+   auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods
    should be applied in -- which methods are most specific, and which are the least specific (e.g., `String` is
-   more-specific than `Object`.) The default implementation, `standard-dispatcher`, mimics the behavior of Clojure
-   multimethods, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers` map to
-   determine which methods are applicable. You could easily create your own implementation that uses multiple
-   hierarchies, or one that uses no hierarchies at all. Dispatchers implement
-   the `Dispatcher` interface.
+   more-specific than `Object`.) The default implementation, `multi-default-dispatcher`, mostly mimics the behavior of
+   Clojure multimethods, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers`
+   map to determine which methods are applicable, but supports partial-default methods, e.g, `[:default String]`. (See
+   [this blog post](https://camsaul.com/methodical/2020/04/22/methodical-now-supports-partial-default-methods.html)
+   for more information about partial-default dispatch.) You could easily create your own implementation that uses
+   multiple hierarchies, or one that uses no hierarchies at all. Dispatchers implement the `Dispatcher` interface.
 
 *  A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on every
    invocation. Caches implement the `Cache` interface. Depending on whether you create a multimethod via `defmulti` or
