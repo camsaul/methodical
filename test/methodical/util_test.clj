@@ -16,8 +16,7 @@
   (t/is (= true
            (u/multifn? (m/default-multifn keyword)))))
 
-(defn- test-multifn []
-  (let [m1 'm1
+(defn- test-multifn []  (let [m1 'm1
         m2 'm2]
     (-> (m/default-multifn class)
         (m/add-primary-method CharSequence m1)
@@ -121,6 +120,40 @@
       (t/is (= [:default]
                ((u/default-effective-method f) nil))))))
 
+(def ^:private lots-of-args-multifn
+  (-> (m/default-multifn
+       (fn [a b c d e f] [a (class b) c d e]))
+      (m/add-primary-method :default
+                            (fn [_ a _ _ _ _ f] {:a a, :f f}))
+      (m/add-primary-method [::x :default :default :default :default]
+                            (fn [_ a _ _ _ _ f] {:x a, :f f}))))
+
+(t/deftest lots-of-args-test
+  (t/is (= {:a :a, :f :f}
+           (lots-of-args-multifn :a :b :c :d :e :f)))
+  (t/is (= {:x ::x, :f :f}
+           (lots-of-args-multifn ::x :b :c :d :e :f))))
+
+(t/deftest dispatch-value-test
+  (t/testing "dispatch-value should return the dispatch value of arg(s)"
+    (let [f (m/default-multifn keyword)]
+      (t/is (= :wow
+               (u/dispatch-value f "wow"))))
+    (t/testing "2-4 args"
+      (let [f (-> (m/default-multifn vector)
+                  (m/add-primary-method :default (fn [& args] (vec args))))]
+        (t/is (= [:a]
+                 (u/dispatch-value f :a)))
+        (t/is (= [:a :b]
+                 (u/dispatch-value f :a :b)))
+        (t/is (= [:a :b :c]
+                 (u/dispatch-value f :a :b :c)))
+        (t/is (= [:a :b :c :d]
+                 (u/dispatch-value f :a :b :c :d)))))
+    (t/testing "> 4 args"
+      (t/is [::x clojure.lang.Keyword :c :d :e]
+            (u/dispatch-value lots-of-args-multifn ::x :b :c :d :e :f)))))
+
 (t/deftest effective-dispatch-value-test
   (doseq [default-method? [true false]]
     (t/testing (format "default method? %s" default-method?)
@@ -186,14 +219,20 @@
                (m/effective-dispatch-value f [:default nil])
                (m/effective-dispatch-value f [:default :default])
                (m/effective-dispatch-value f [:default ::shoe])
-               (m/effective-dispatch-value f [nil ::shoe]))))))
+               (m/effective-dispatch-value f [nil ::shoe])))))
+  (t/testing "> 4 args"
+    (t/is [::x :default :default :default :default]
+          (->> (u/dispatch-value lots-of-args-multifn ::x :b :c :d :e :f)
+               (u/effective-dispatch-value lots-of-args-multifn)))))
 
 (t/deftest dispatch-fn-test
-  (t/testing "dispatch-fn"
+  (t/testing "dispatch-fn should return a function that can be used to get the dispatch value of arg(s)"
     (let [f (m/default-multifn keyword)]
       (t/is (= :wow
-               ((u/dispatch-fn f) "wow"))
-            "dispatch-fn should return a function that can be used to get the dispatch value of arg(s)"))))
+               ((u/dispatch-fn f) "wow"))))
+    (t/testing "> 4 args"
+      (t/is [::x clojure.lang.Keyword :c :d :e]
+            ((u/dispatch-fn lots-of-args-multifn) ::x :b :c :d :e :f)))))
 
 (t/deftest primary-methods-test
   (let [m1 (constantly [:char-sequence])

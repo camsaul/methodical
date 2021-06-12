@@ -98,7 +98,7 @@
   "Function version of `trace` macro. The only difference is this doesn't capture the form of `multifn` passed to
   `trace`, and thus can't usually generate a pretty description for the top-level form."
   [multifn & args]
-  (let [dispatch-value  (apply i/dispatch-value multifn args)
+  (let [dispatch-value  (apply u/dispatch-value multifn args)
         primary-methods (trace-primary-methods (u/matching-primary-methods multifn dispatch-value))
         aux-methods     (trace-aux-methods (u/matching-aux-methods multifn dispatch-value))
         combined        (-> (i/combine-methods multifn primary-methods aux-methods)

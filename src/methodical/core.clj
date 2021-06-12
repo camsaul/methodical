@@ -39,7 +39,6 @@
   add-aux-method
   remove-aux-method
   ;; Dispatcher
-  dispatch-value
   default-dispatch-value
   prefers
   prefer-method
@@ -98,6 +97,7 @@
   default-aux-methods
   default-effective-method
   dispatch-fn
+  dispatch-value
   effective-dispatch-value
   remove-all-primary-methods
   remove-all-aux-methods

@@ -77,3 +77,28 @@
             "  1> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"
             "0> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"]
            (trace-output my-multimethod 1 {:type :parrot}))))
+
+(def ^:private lots-of-args-multifn
+  (-> (m/default-multifn
+       (fn [a b c d e f] [a (class b) c d e]))
+      (m/add-primary-method :default
+                            (fn [_ a _ _ _ _ f] {:a a, :f f}))
+      (m/add-primary-method [::x :default :default :default :default]
+                            (fn [_ a _ _ _ _ f] {:x a, :f f}))))
+
+(t/deftest lots-of-args-test
+  (t/testing "> 4 args"
+    (t/is (= {:x ::x, :f :f}
+             (lots-of-args-multifn ::x :b :c :d :e :f)))
+    (t/is (= ["0: (lots-of-args-multifn :methodical.util.trace-test/x :b :c :d :e :f)"
+              "  1: (#primary-method<[:methodical.util.trace-test/x :default :default :default :default]>"
+              "      #primary-method<:default>"
+              "      :methodical.util.trace-test/x"
+              "      :b"
+              "      :c"
+              "      :d"
+              "      :e"
+              "      :f)"
+              "  1> {:f :f, :x :methodical.util.trace-test/x}"
+              "0> {:f :f, :x :methodical.util.trace-test/x}"]
+             (trace-output lots-of-args-multifn ::x :b :c :d :e :f)))))
