@@ -7,6 +7,10 @@
 (comment clojure.core/keep-me)
 
 (defprotocol MethodCombination
+  "A *method combination* defines the way applicable primary and auxiliary methods are combined into a single *effective
+  method*. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are
+  allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit
+  `next-method` arg)."
   (allowed-qualifiers [method-combination]
     "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
@@ -27,6 +31,8 @@
     return a Clojure form.)"))
 
 (defprotocol MethodTable
+  "A *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
+   `standard-method-table`, uses simple Clojure immutable maps."
   (primary-methods [method-table]
     "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
 
@@ -52,6 +58,10 @@
     In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
 
 (defprotocol Dispatcher
+  "A *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary and
+  auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods should
+  be applied in -- which methods are most specific, and which are the least specific (e.g., `String` is more-specific
+  than `Object`)."
   (dispatch-value
     [dispatcher]
     [dispatcher a]
@@ -86,6 +96,13 @@
     "Is `dispatch-val-x` considered more specific than `dispatch-val-y`?"))
 
 (defprotocol MultiFnImpl
+  "Protocol for a complete Methodical multimethod, excluding the optional cache (multimethods with caching wrap a
+  `MultiFnImpl`). Methodical multimethods are divided into four components: a *method combination*, which
+  implements [[methodical.interface/MethodCombination]]; a *method table*, which
+  implements [[methodical.interface/MethodTable]]; a *dispatcher*, which
+  implements [[methodical.interface/Dispatcher]]; and, optionally, a *cache*, which
+  implements [[methodical.interface/Cache]]. The methods in *this* protocol are used to access or modify the various
+  constituent parts of a methodical multimethod, and to use them in concert to create an *effective method*."
   (^methodical.interface.MethodCombination method-combination [multifn]
    "Get the method combination associated with this multifn.")
 
@@ -108,6 +125,8 @@
     be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
 
 (defprotocol Cache
+  "A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on
+  every invocation."
   (cached-method [cache dispatch-value]
     "Return cached effective method for `dispatch-value`, if it exists in the cache.")
 
