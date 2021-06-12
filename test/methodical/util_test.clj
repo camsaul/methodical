@@ -139,6 +139,15 @@
     (let [f (m/default-multifn keyword)]
       (t/is (= :wow
                (u/dispatch-value f "wow"))))
+    (t/testing "2-4 args"
+      (let [f (-> (m/default-multifn vector)
+                  (m/add-primary-method :default (fn [& args] (vec args))))]
+        (t/is (= [:a]
+                 (u/dispatch-value f :a)))
+        (t/is (= [:a :b]
+                 (u/dispatch-value f :a :b)))
+        (t/is (= [:a :b :c]
+                 (u/dispatch-value f :a :b :c)))))
     (t/testing "> 4 args"
       (t/is [::x clojure.lang.Keyword :c :d :e]
             (u/dispatch-value lots-of-args-multifn ::x :b :c :d :e :f)))))
