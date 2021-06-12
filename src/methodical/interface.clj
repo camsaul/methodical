@@ -1,8 +1,12 @@
 (ns methodical.interface
   (:refer-clojure :exclude [isa? prefers prefer-method])
-  (:require [potemkin.types :as p.types]))
+  (:require clojure.core))
 
-(p.types/definterface+ MethodCombination
+;; this is a dummy dependency until Cloverage 1.3.0 is released -- see
+;; https://github.com/cloverage/cloverage/issues/318
+(comment clojure.core/keep-me)
+
+(defprotocol MethodCombination
   (allowed-qualifiers [method-combination]
     "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
@@ -22,7 +26,7 @@
     `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
     return a Clojure form.)"))
 
-(p.types/definterface+ MethodTable
+(defprotocol MethodTable
   (primary-methods [method-table]
     "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
 
@@ -47,7 +51,7 @@
 
     In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
 
-(p.types/definterface+ Dispatcher
+(defprotocol Dispatcher
   (dispatch-value
     [dispatcher]
     [dispatcher a]
@@ -81,7 +85,7 @@
   (dominates? [dispatcher dispatch-val-x dispatch-val-y]
     "Is `dispatch-val-x` considered more specific than `dispatch-val-y`?"))
 
-(p.types/definterface+ MultiFnImpl
+(defprotocol MultiFnImpl
   (^methodical.interface.MethodCombination method-combination [multifn]
    "Get the method combination associated with this multifn.")
 
@@ -103,7 +107,7 @@
     to `get-method` in vanilla Clojure multimethods; a different name is used here because I felt `get-method` would
     be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
 
-(p.types/definterface+ Cache
+(defprotocol Cache
   (cached-method [cache dispatch-value]
     "Return cached effective method for `dispatch-value`, if it exists in the cache.")
 
