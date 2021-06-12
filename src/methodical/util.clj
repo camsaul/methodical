@@ -103,10 +103,21 @@
   [multifn dispatch-value]
   (:dispatch-value (meta (i/effective-method multifn dispatch-value))))
 
+(defn dispatch-value
+  "Calculate the dispatch value that `multifn` will use given `args`."
+  ;; since protocols can't define varargs, we have to wrap the `dispatch-value` method from the protocol and apply
+  ;; varargs for > 4 args. The various < 4 args arities are there as an optimization because it's a little faster than
+  ;; calling apply every time.
+  ([multifn a]              (i/dispatch-value multifn a))
+  ([multifn a b]            (i/dispatch-value multifn a b))
+  ([multifn a b c]          (i/dispatch-value multifn a b c))
+  ([multifn a b c d]        (i/dispatch-value multifn a b c d))
+  ([multifn a b c d & more] (i/dispatch-value multifn a b c d more)))
+
 (defn dispatch-fn
   "Return a function that can be used to calculate dispatch values of given arg(s)."
   [multifn]
-  (partial i/dispatch-value multifn))
+  (partial dispatch-value multifn))
 
 (defn remove-all-primary-methods
   "Remove all primary methods, for all dispatch values (including the default value), for this `multifn` or method
