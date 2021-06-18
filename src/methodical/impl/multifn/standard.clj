@@ -3,7 +3,7 @@
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
 ;; "composite dispatch value" below just means a dispatch value consisting of multiple parts e.g. `[:x :y]` as opposed
@@ -69,7 +69,7 @@
 (p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
                                        ^Dispatcher dispatcher
                                        ^MethodTable method-table]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'standard-multifn-impl combo dispatcher method-table))
 

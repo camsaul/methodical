@@ -1,7 +1,7 @@
 (ns methodical.impl.standard
   (:require [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
 (defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
@@ -28,7 +28,7 @@
    (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)))
 
 (p.types/deftype+ StandardMultiFn [^MultiFnImpl impl mta]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'multifn impl))
 
@@ -88,7 +88,7 @@
   (prefer-method [this dispatch-val-x dispatch-val-y]
     (i/with-dispatcher this (i/prefer-method (.dispatcher impl) dispatch-val-x dispatch-val-y)))
 
-  (dominates? [this dispatch-val-x dispatch-val-y]
+  (dominates? [_ dispatch-val-x dispatch-val-y]
     (i/dominates? (.dispatcher impl) dispatch-val-x dispatch-val-y))
 
   MethodTable

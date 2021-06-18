@@ -13,14 +13,14 @@
   get made)."
   (:require [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import java.lang.ref.WeakReference
            methodical.interface.Cache))
 
 (declare add-watches remove-watches)
 
 (p.types/deftype+ WatchingCache [^Cache cache watch-key refs]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (concat ['watching-cache cache 'watching] refs))
 
@@ -40,14 +40,14 @@
     (.clear-cache! cache)
     this)
 
-  (empty-copy [this]
+  (empty-copy [_]
     (add-watches (i/empty-copy cache) refs)))
 
 (defn- cache-watch-fn [cache]
   (let [cache-weak-ref (WeakReference. cache)]
-    (fn [_ _ old new]
+    (fn [_ _ old-value new-value]
       (when-let [cache (.get cache-weak-ref)]
-        (when-not (= old new)
+        (when-not (= old-value new-value)
           (i/clear-cache! cache))))))
 
 (defn- new-cache-with-watches

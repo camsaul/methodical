@@ -1,11 +1,9 @@
 (ns methodical.impl.combo.clos-test
-  (:require [clojure
-             [string :as str]
-             [test :as t]]
-            [methodical
-             [core :as m]
-             [interface :as i]]
-            [methodical.impl.combo.clos :as combo.clos]))
+  (:require [clojure.string :as str]
+            [clojure.test :as t]
+            [methodical.core :as m]
+            [methodical.impl.combo.clos :as combo.clos]
+            [methodical.interface :as i]))
 
 (defn- combine-methods [primary-methods aux-methods]
   (i/combine-methods (combo.clos/->CLOSStandardMethodCombination) primary-methods aux-methods))

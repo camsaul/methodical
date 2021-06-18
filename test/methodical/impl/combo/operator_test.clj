@@ -1,11 +1,9 @@
 (ns methodical.impl.combo.operator-test
-  (:require [clojure
-             [string :as str]
-             [test :as t]]
-            [methodical
-             [core :as m]
-             [interface :as i]]
-            [methodical.impl.combo.operator :as combo.operator]))
+  (:require [clojure.string :as str]
+            [clojure.test :as t]
+            [methodical.core :as m]
+            [methodical.impl.combo.operator :as combo.operator]
+            [methodical.interface :as i]))
 
 (t/deftest primary-test
   (t/are [operator] (t/testing operator

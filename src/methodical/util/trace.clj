@@ -1,8 +1,7 @@
 (ns methodical.util.trace
   (:require [clojure.string :as str]
-            [methodical
-             [interface :as i]
-             [util :as u]]
+            [methodical.interface :as i]
+            [methodical.util :as u]
             [puget.printer :as puget]))
 
 (def ^:dynamic *color*

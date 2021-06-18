@@ -1,0 +1,16 @@
+{:linters
+ {:missing-docstring            {:level :warning}
+  :refer                        {:level :warning}
+  :unsorted-required-namespaces {:level :warning}
+  :single-key-in                {:level :warning}
+  :shadowed-var                 {:level :warning}
+  :unresolved-symbol            {:exclude [(methodical.impl.combo.operator/defoperator [methods invoke])]}}
+
+ :lint-as
+ {potemkin.types/deftype+     clojure.core/deftype
+  methodical.macros/defmulti  clojure.core/defmulti
+  methodical.core/defmulti    clojure.core/defmulti
+  methodical.macros/defmethod clj-kondo.lint-as/def-catch-all
+  methodical.core/defmethod   clj-kondo.lint-as/def-catch-all}
+
+ :skip-comments true}

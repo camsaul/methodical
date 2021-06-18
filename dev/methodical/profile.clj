@@ -1,8 +1,7 @@
 (ns methodical.profile
   (:require [criterium.core :as criterium]
-            [methodical
-             [core :as m]
-             [impl :as impl]]))
+            [methodical.core :as m]
+            [methodical.impl :as impl]))
 
 (m/defmulti ^:private methodical-multifn
   :type)

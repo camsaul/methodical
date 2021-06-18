@@ -1,11 +1,11 @@
 (ns methodical.impl.multifn.cached
   (:require [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import [methodical.interface Cache MultiFnImpl]))
 
 (p.types/deftype+ CachedMultiFnImpl [^MultiFnImpl impl, ^Cache cache]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'cached-multifn-impl impl cache))
 

@@ -2,10 +2,9 @@
   "Methodical versions of vanilla Clojure `defmulti` and `defmethod` macros."
   (:refer-clojure :exclude [defmulti defmethod])
   (:require [clojure.string :as str]
-            [methodical
-             [impl :as impl]
-             [interface :as i]
-             [util :as u]]
+            [methodical.impl :as impl]
+            [methodical.interface :as i]
+            [methodical.util :as u]
             [pretty.core :as pretty])
   (:import methodical.impl.standard.StandardMultiFn))
 

@@ -1,10 +1,9 @@
 (ns methodical.macros-test
   (:require [clojure.test :as t]
-            [methodical
-             [impl :as impl]
-             [interface :as i]
-             [macros :as m]
-             [util :as u]]
+            [methodical.impl :as impl]
+            [methodical.interface :as i]
+            [methodical.macros :as m]
+            [methodical.util :as u]
             [potemkin.namespaces :as p.namespaces]))
 
 (t/deftest method-fn-name-test

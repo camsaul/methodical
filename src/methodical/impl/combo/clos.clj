@@ -6,8 +6,10 @@
   (:require [methodical.impl.combo.common :as combo.common]
             methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
+
+(comment methodical.interface/keep-me)
 
 ;; TODO - I'm 90% sure we can leverage the `reducing-operator` stuff in `combo.operator` to implemet this
 (defn- apply-befores [combined-method befores]
@@ -47,15 +49,15 @@
 (defn- apply-afters [combined-method afters]
   (if (empty? afters)
     combined-method
-    (let [afters       (reverse afters)
-          apply-afters (fn [result]
-                         (doseq [f afters]
-                           (f result))
-                         result)]
-      (comp apply-afters combined-method))))
+    (let [afters          (reverse afters)
+          apply-after-fns (fn [result]
+                            (doseq [f afters]
+                              (f result))
+                            result)]
+      (comp apply-after-fns combined-method))))
 
 (p.types/deftype+ CLOSStandardMethodCombination []
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     '(clos-method-combination))
 

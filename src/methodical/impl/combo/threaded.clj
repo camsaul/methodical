@@ -3,7 +3,7 @@
   (:require [methodical.impl.combo.common :as combo.common]
             methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
 
 (comment methodical.interface/keep-me)
@@ -75,7 +75,7 @@
 
 
 (p.types/deftype+ ThreadingMethodCombination [threading-type]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'threading-method-combination threading-type))
 
