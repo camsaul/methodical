@@ -1,0 +1,10 @@
+name: Linters
+on: [push]
+jobs:
+  Clj-Kondo:
+    steps:
+    - uses: actions/checkout@v1
+    - uses: DeLaGuardo/clojure-lint-action@master
+      with:
+        clj-kondo-args: --lint src
+        github_token: ${{ secrets.GITHUB_TOKEN }}
