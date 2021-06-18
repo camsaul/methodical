@@ -23,5 +23,5 @@
     (reset! atomm {})
     this)
 
-  (empty-copy [this]
+  (empty-copy [_]
     (SimpleCache. (atom {}))))

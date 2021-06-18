@@ -1,0 +1,1 @@
+{:lint-as {potemkin.types/deftype+ clojure.core/deftype}}

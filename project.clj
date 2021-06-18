@@ -105,7 +105,7 @@
       :exclusions [org.clojure/clojure]]]}
 
    :check-namespace-decls
-   {:plugins               [[lein-check-namespace-decls "1.0.3"
+   {:plugins               [[lein-check-namespace-decls "1.0.4"
                              :exclusions [org.clojure/clojure]]]
     :source-paths          ["test"]
     :check-namespace-decls {:prefix-rewriting true
