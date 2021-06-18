@@ -1,8 +1,7 @@
 (ns methodical.impl.dispatcher.standard-test
   (:require [clojure.test :as t]
-            [methodical
-             [impl :as impl]
-             [interface :as i]])
+            [methodical.impl :as impl]
+            [methodical.interface :as i])
   (:import methodical.interface.MethodTable))
 
 (t/deftest equality-test

@@ -1,8 +1,11 @@
 (ns methodical.impl.dispatcher.multi-default-test
   (:require [clojure.test :as t]
             [methodical.core :as m]
-            [methodical.impl.dispatcher.multi-default :as multi-default])
+            [methodical.impl.dispatcher.multi-default :as multi-default]
+            methodical.interface)
   (:import methodical.interface.MethodTable))
+
+(comment methodical.interface/keep-me)
 
 (t/deftest partially-specialized-default-dispatch-values-test
   (doseq [x       [:x ::x nil]

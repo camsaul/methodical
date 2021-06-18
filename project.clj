@@ -108,7 +108,7 @@
    {:plugins               [[lein-check-namespace-decls "1.0.4"
                              :exclusions [org.clojure/clojure]]]
     :source-paths          ["test"]
-    :check-namespace-decls {:prefix-rewriting true
+    :check-namespace-decls {:prefix-rewriting false
                             :prune-ns-form    false}}
 
    :docstring-checker

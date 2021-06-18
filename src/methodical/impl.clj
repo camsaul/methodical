@@ -1,27 +1,25 @@
 (ns methodical.impl
   "Convenience constructors for various implementations of the different component parts of a Methodical multifn."
-  (:require [methodical.impl.cache
-             [simple :as cache.simple]
-             [watching :as cache.watching]]
-            [methodical.impl.combo
-             [clojure :as combo.clojure]
-             [clos :as combo.clos]
-             [operator :as combo.operator]
-             [threaded :as combo.threaded]]
-            [methodical.impl.dispatcher
-             [everything :as dispatcher.everything]
-             [multi-default :as dispatcher.multi-default]
-             [standard :as dispatcher.standard]]
-            [methodical.impl.method-table
-             [clojure :as method-table.clojure]
-             [standard :as method-table.standard]]
-            [methodical.impl.multifn
-             [cached :as multifn.cached]
-             [standard :as multifn.standard]]
+  (:refer-clojure :exclude [prefers])
+  (:require [methodical.impl.cache.simple :as cache.simple]
+            [methodical.impl.cache.watching :as cache.watching]
+            [methodical.impl.combo.clojure :as combo.clojure]
+            [methodical.impl.combo.clos :as combo.clos]
+            [methodical.impl.combo.operator :as combo.operator]
+            [methodical.impl.combo.threaded :as combo.threaded]
+            [methodical.impl.dispatcher.everything :as dispatcher.everything]
+            [methodical.impl.dispatcher.multi-default :as dispatcher.multi-default]
+            [methodical.impl.dispatcher.standard :as dispatcher.standard]
+            [methodical.impl.method-table.clojure :as method-table.clojure]
+            [methodical.impl.method-table.standard :as method-table.standard]
+            [methodical.impl.multifn.cached :as multifn.cached]
+            [methodical.impl.multifn.standard :as multifn.standard]
             [methodical.impl.standard :as impl.standard]
             methodical.interface)
   (:import methodical.impl.standard.StandardMultiFn
            [methodical.interface Cache Dispatcher MethodCombination MethodTable MultiFnImpl]))
+
+(comment methodical.interface/keep-me)
 
 ;;;; ### Method Combinations
 

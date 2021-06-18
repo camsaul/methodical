@@ -1,7 +1,6 @@
 (ns methodical.util.trace-test
-  (:require [clojure
-             [string :as str]
-             [test :as t]]
+  (:require [clojure.string :as str]
+            [clojure.test :as t]
             [methodical.core :as m]
             [methodical.util.trace :as trace]))
 

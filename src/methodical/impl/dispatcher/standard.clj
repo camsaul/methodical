@@ -1,11 +1,11 @@
 (ns methodical.impl.dispatcher.standard
   "A single-hierarchy dispatcher that behaves similarly to the way multimethod dispatch is done by vanilla Clojure
   multimethods, but with added support for auxiliary methods."
-  (:refer-clojure :exclude [prefers prefer-method])
+  (:refer-clojure :exclude [prefers prefer-method methods])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
 (defn matching-primary-pairs-excluding-default
@@ -96,7 +96,7 @@
                           (vary-meta method assoc :dispatch-value dispatch-value))])))
 
 (p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (concat ['standard-dispatcher dispatch-fn]
             (when (not= hierarchy-var #'clojure.core/global-hierarchy)

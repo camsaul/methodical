@@ -1,12 +1,13 @@
 (ns methodical.impl.dispatcher.everything
+  (:refer-clojure :exclude [methods])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
 (p.types/deftype+ EverythingDispatcher [hierarchy-var prefs]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (cons
      'everything-dispatcher

@@ -1,9 +1,8 @@
 (ns methodical.clojure-test
   "Tests to ensure we can replicate the basic behavior of vanilla Clojure multimethods."
   (:require [clojure.test :as t]
-            [methodical
-             [impl :as impl]
-             [interface :as i]]))
+            [methodical.impl :as impl]
+            [methodical.interface :as i]))
 
 (defn- clojure-multifn [dispatch-fn & options]
   (impl/multifn (apply impl/clojure-multifn-impl dispatch-fn options)))

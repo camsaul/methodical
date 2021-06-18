@@ -1,9 +1,12 @@
 (ns methodical.impl.cache.watching-test
   (:require [clojure.test :as t]
             [methodical.impl.cache.watching :as cache.watching]
-            [pretty.core :refer [PrettyPrintable]])
+            methodical.interface
+            [pretty.core :as pretty])
   (:import methodical.impl.cache.watching.WatchingCache
            methodical.interface.Cache))
+
+(comment methodical.interface/keep-me)
 
 (defn- cache
   [& [num-times-cleared]]
@@ -12,7 +15,7 @@
     (clear-cache! [_]
       (some-> num-times-cleared (swap! inc)))
 
-    PrettyPrintable
+    pretty/PrettyPrintable
     (pretty [_]
       '(a-cache))))
 

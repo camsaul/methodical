@@ -4,11 +4,13 @@
   caching mechanism in vanilla Clojure."
   (:require methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.Cache))
 
+(comment methodical.interface/keep-me)
+
 (p.types/deftype+ SimpleCache [atomm]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     '(simple-cache))
 

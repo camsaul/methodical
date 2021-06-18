@@ -40,8 +40,10 @@
   (:require [methodical.impl.combo.common :as combo.common]
             methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
+
+(comment methodical.interface/keep-me)
 
 (defmulti operator
   "Define a new operator that can be used as part of an `OperatorMethodCombination`. See examples below for more
@@ -154,7 +156,7 @@
 ;;;; ### `OperatorMethodCombination`
 
 (p.types/deftype+ OperatorMethodCombination [operator-name]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'operator-method-combination operator-name))
 
