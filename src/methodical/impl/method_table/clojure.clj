@@ -1,11 +1,13 @@
 (ns methodical.impl.method-table.clojure
   (:require methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodTable))
 
+(comment methodical.interface/keep-me)
+
 (p.types/deftype+ ClojureMethodTable [m]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (if (seq m)
       (list 'clojure-method-table (count m) 'primary)

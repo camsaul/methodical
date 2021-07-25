@@ -1,0 +1,12 @@
+name: Linters
+on: [push]
+jobs:
+  Clj-Kondo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v1
+    - uses: DeLaGuardo/clojure-lint-action@master
+      with:
+        clj-kondo-args: --lint src --parallel
+        github_token: ${{ secrets.GITHUB_TOKEN }}

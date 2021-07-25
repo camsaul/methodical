@@ -1,10 +1,9 @@
 (ns methodical.impl.standard-test
   (:require [clojure.test :as t]
-            [methodical
-             [core :as m]
-             [impl :as impl]
-             [interface :as i]]
-            [methodical.impl.standard :as impl.standard]))
+            [methodical.core :as m]
+            [methodical.impl :as impl]
+            [methodical.impl.standard :as impl.standard]
+            [methodical.interface :as i]))
 
 (t/deftest print-test
   (t/is (= (pr-str '(multifn
@@ -154,9 +153,9 @@
               "with-dispatcher should return a copy")
 
         (t/testing "optimizations"
-          (if (= f'
-                 (i/with-dispatcher f' (m/standard-dispatcher dispatch-fn-2)))
-            "with-dispatcher should only return a new object if the dispatcher is not="))
+          (t/testing "with-dispatcher should only return a new object if the dispatcher is not="
+            (t/is (= f'
+                     (i/with-dispatcher f' (m/standard-dispatcher dispatch-fn-2))))))
 
         (t/testing "preconditions"
           (t/is (thrown-with-msg? AssertionError #"Assert failed" (i/with-dispatcher f (fn [])))

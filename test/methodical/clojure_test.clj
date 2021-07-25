@@ -1,9 +1,8 @@
 (ns methodical.clojure-test
   "Tests to ensure we can replicate the basic behavior of vanilla Clojure multimethods."
   (:require [clojure.test :as t]
-            [methodical
-             [impl :as impl]
-             [interface :as i]]))
+            [methodical.impl :as impl]
+            [methodical.interface :as i]))
 
 (defn- clojure-multifn [dispatch-fn & options]
   (impl/multifn (apply impl/clojure-multifn-impl dispatch-fn options)))
@@ -196,12 +195,15 @@
         multifn        (-> (clojure-multifn keyword)
                            (add-methods {:a       a-method
                                          :default default-method}))]
-    (t/is (= a-method (i/effective-method multifn :a))
-          "For Clojure-style multifns, `effective-method` should work just like vanilla `get-method`.")
-    (t/is (= default-method (i/effective-method multifn :b))
-          "The default method should be returned if no matching method is found.")
+    (t/testing "For Clojure-style multifns, `effective-method` should work just like vanilla `get-method`."
+      (t/is (= (a-method :x)
+               ((i/effective-method multifn :a) :x))))
+    (t/testing "The default method should be returned if no matching method is found."
+      (t/is (= (default-method :x)
+               ((i/effective-method multifn :b) :x))))
     (let [multifn (i/remove-primary-method multifn :default)]
-      (t/is (= nil (i/effective-method multifn :b))
-            "If no default method exists, `effective-method` should return nil if no methods match."))))
+      (t/testing "If no default method exists, `effective-method` should return nil if no methods match."
+        (t/is (= nil
+                 (i/effective-method multifn :b)))))))
 
 ;; TODO - test other methods not available in vanilla Clojure, e.g. `dominates?` and `aux-methods`

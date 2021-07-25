@@ -13,7 +13,7 @@
 
 # Methodical
 
-![Methodical](https://github.com/camsaul/methodical/blob/master/assets/logo.png)
+![Methodical](assets/logo.png)
 
 Methodical is a library that provides drop-in replacements for Clojure multimethods and adds several advanced features.
 
@@ -171,7 +171,7 @@ the next method. `:around` methods are invoked from least-specific to most-speci
 (m/defmethod around-example :default
   [x acc]
   (conj acc :default))
-  
+
 (around-example {:type String} [])
 ;; -> [:object-before :string-before :default :string-after :object-after]
 ```
@@ -295,22 +295,23 @@ them:
 
 *  The *method combination*, which defines the way applicable primary and auxiliary methods are combined into a single
    *effective method*. The default method combination, `thread-last-method-combination`, binds implicit `next-method`
-   args for primary and `:around` methods, and implements logic to thread the result of each method into the last argument    of the next. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are 
-   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit 
+   args for primary and `:around` methods, and implements logic to thread the result of each method into the last argument    of the next. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are
+   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit
    `next-method` arg). Method combinations implement the `MethodCombination` interface.
 
 *  The *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
    `standard-method-table`, uses simple Clojure immutable maps, but there is nothing stopping you from creating an
    implementation that ignores requests to store new methods, or dynamically generates and returns a set of methods based on outside factors. Method tables implement the `MethodTable` interface.
 
-*  The *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary
-   and auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods
+*  The *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary and
+   auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods
    should be applied in -- which methods are most specific, and which are the least specific (e.g., `String` is
-   more-specific than `Object`.) The default implementation, `standard-dispatcher`, mimics the behavior of Clojure
-   multimethods, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers` map to
-   determine which methods are applicable. You could easily create your own implementation that uses multiple
-   hierarchies, or one that uses no hierarchies at all. Dispatchers implement
-   the `Dispatcher` interface.
+   more-specific than `Object`.) The default implementation, `multi-default-dispatcher`, mostly mimics the behavior of
+   Clojure multimethods, using a dispatch function to determine dispatch values, and a single hierarchy and `prefers`
+   map to determine which methods are applicable, but supports partial-default methods, e.g, `[:default String]`. (See
+   [this blog post](https://camsaul.com/methodical/2020/04/22/methodical-now-supports-partial-default-methods.html)
+   for more information about partial-default dispatch.) You could easily create your own implementation that uses
+   multiple hierarchies, or one that uses no hierarchies at all. Dispatchers implement the `Dispatcher` interface.
 
 *  A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on every
    invocation. Caches implement the `Cache` interface. Depending on whether you create a multimethod via `defmulti` or
@@ -478,10 +479,17 @@ following summarizes all component implementations that currently ship with Meth
 
 *  `cached-multifn-impl` -- wraps another multifn impl and an instance of `Cache` to implement caching.
 
+### Debugging
+
+Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility:
+
+![Trace](assets/tracing.png)
+
 ## Performance
 
 Methodical is built with performance in mind. Although it is written entirely in Clojure, and supports many more
-features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with [Criterium](https://github.com/hugoduncan/criterium/) show Methodical performing up to 20% faster in some cases:
+features, its performance is similar or better to vanilla Clojure multimethods in many cases. Profiling results with
+[Criterium](https://github.com/hugoduncan/criterium/) show Methodical performing up to 20% faster in some cases:
 
 ```
 ;;; Vanilla clojure
@@ -506,7 +514,7 @@ There is still room for even more performance improvement!
 
 ## License
 
-Code, documentation, and artwork copyright © 2019 Cam Saul.
+Code, documentation, and artwork copyright © 2019-2021 Cam Saul.
 
 Distributed under the [Eclipse Public
 License](https://raw.githubusercontent.com/metabase/camsaul/methodical/LICENSE.txt), same as Clojure.

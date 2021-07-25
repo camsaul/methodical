@@ -1,8 +1,16 @@
 (ns methodical.interface
   (:refer-clojure :exclude [isa? prefers prefer-method])
-  (:require [potemkin.types :as p.types]))
+  (:require clojure.core))
 
-(p.types/definterface+ MethodCombination
+;; this is a dummy dependency until Cloverage 1.3.0 is released -- see
+;; https://github.com/cloverage/cloverage/issues/318
+(comment clojure.core/keep-me)
+
+(defprotocol MethodCombination
+  "A *method combination* defines the way applicable primary and auxiliary methods are combined into a single *effective
+  method*. Method combinations also specify which auxiliary method *qualifiers* (e.g. `:before` or `:around`) are
+  allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit
+  `next-method` arg)."
   (allowed-qualifiers [method-combination]
     "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
@@ -14,7 +22,7 @@
 
   (combine-methods [method-combination primary-methods aux-methods]
     "Combine a sequence of matching `primary-methods` with `aux-methods` (a map of qualifier -> sequence of methods)
-    into a single effective method.")
+    into a single effective method. Method includes effective `^:dispatch-value` metadata.")
 
   (transform-fn-tail [method-combination qualifier fn-tail]
     "Make appropriate transformations to the `fn-tail` of a `defmethod` macro expansion for a primary
@@ -22,7 +30,9 @@
     `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
     return a Clojure form.)"))
 
-(p.types/definterface+ MethodTable
+(defprotocol MethodTable
+  "A *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
+   `standard-method-table`, uses simple Clojure immutable maps."
   (primary-methods [method-table]
     "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
 
@@ -47,7 +57,11 @@
 
     In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
 
-(p.types/definterface+ Dispatcher
+(defprotocol Dispatcher
+  "A *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary and
+  auxiliary methods from the *method table* are applicable for that dispatch value, and the order those methods should
+  be applied in -- which methods are most specific, and which are the least specific (e.g., `String` is more-specific
+  than `Object`)."
   (dispatch-value
     [dispatcher]
     [dispatcher a]
@@ -60,12 +74,14 @@
 
   (matching-primary-methods [dispatcher method-table dispatch-value]
     "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to
-    least-specific. The standard dispatcher also checks to make sure methods in the sequence are not
-    ambiguously specific, replacing ambiguous methods with ones that will throw an Exception when invoked.")
+    least-specific. Methods should have the `^:dispatch-value` with which they were defined as metadata. The standard
+    dispatcher also checks to make sure methods in the sequence are not ambiguously specific, replacing ambiguous
+    methods with ones that will throw an Exception when invoked.")
 
   (matching-aux-methods [dispatcher method-table dispatch-value]
     "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
-    most-specific to least-specific.")
+    most-specific to least-specific. Methods should have the `^:dispatch-value` with which they were defined as
+    metadata.")
 
   (default-dispatch-value [dispatcher]
     "Default dispatch value to use if no other dispatch value matches.")
@@ -74,24 +90,33 @@
     "Return a map of preferred dispatch value -> set of other dispatch values.")
 
   (prefer-method [dispatcher dispatch-val-x dispatch-val-y]
-    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."))
+    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations.")
 
+  (dominates? [dispatcher dispatch-val-x dispatch-val-y]
+    "Is `dispatch-val-x` considered more specific than `dispatch-val-y`?"))
 
-(p.types/definterface+ MultiFnImpl
+(defprotocol MultiFnImpl
+  "Protocol for a complete Methodical multimethod, excluding the optional cache (multimethods with caching wrap a
+  `MultiFnImpl`). Methodical multimethods are divided into four components: a *method combination*, which
+  implements [[methodical.interface/MethodCombination]]; a *method table*, which
+  implements [[methodical.interface/MethodTable]]; a *dispatcher*, which
+  implements [[methodical.interface/Dispatcher]]; and, optionally, a *cache*, which
+  implements [[methodical.interface/Cache]]. The methods in *this* protocol are used to access or modify the various
+  constituent parts of a methodical multimethod, and to use them in concert to create an *effective method*."
   (^methodical.interface.MethodCombination method-combination [multifn]
-    "Get the method combination associated with this multifn.")
+   "Get the method combination associated with this multifn.")
 
   (^methodical.interface.Dispatcher dispatcher [multifn]
-    "Get the dispatcher associated with this multifn.")
+   "Get the dispatcher associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
-    "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
+   "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
 
   (^methodical.interface.MethodTable method-table [multifn]
-    "Get the method table associated with this multifn.")
+   "Get the method table associated with this multifn.")
 
   (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
-    "Return a copy of this multifn using `new-method-table` as its method table.")
+   "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]
     "Return the effective method for `dispatch-value`. The effective method is a combined primary method and
@@ -99,7 +124,9 @@
     to `get-method` in vanilla Clojure multimethods; a different name is used here because I felt `get-method` would
     be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
 
-(p.types/definterface+ Cache
+(defprotocol Cache
+  "A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on
+  every invocation."
   (cached-method [cache dispatch-value]
     "Return cached effective method for `dispatch-value`, if it exists in the cache.")
 

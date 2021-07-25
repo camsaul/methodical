@@ -1,8 +1,11 @@
 (ns methodical.impl.dispatcher.multi-default-test
   (:require [clojure.test :as t]
-            [methodical [core :as m] interface]
-            [methodical.impl.dispatcher.multi-default :as multi-default])
+            [methodical.core :as m]
+            [methodical.impl.dispatcher.multi-default :as multi-default]
+            methodical.interface)
   (:import methodical.interface.MethodTable))
+
+(comment methodical.interface/keep-me)
 
 (t/deftest partially-specialized-default-dispatch-values-test
   (doseq [x       [:x ::x nil]
@@ -39,6 +42,14 @@
                  (multi-default/partially-specialized-default-dispatch-values [x y] [default x]))
               "If the default value is sequential, we shouldn't calculate partial default dispatch values")))))
 
+(defn- test-method-symbol->dispatch-value [default symb]
+  (if (= symb 'd)
+    default
+    (for [k (map (comp keyword str) (seq (name symb)))]
+      (if (= k :d)
+        default
+        k))))
+
 (t/deftest matching-primary-methods-test
   ;; Conisder what the correct behavior for `:letter` should be
   (doseq [default                           [:default ::default nil #_:letter]
@@ -58,32 +69,38 @@
                                               nil       '[d]}
                                              {[default nil] '[dd d]}
                                              {[nil default] '[dd d]})
-          :let                              [table (reify MethodTable
-                                                     (primary-methods [_]
-                                                       {[:X :Y]           'XY
-                                                        [:X :y]           'Xy
-                                                        [:x :Y]           'xY
-                                                        [:x :y]           'xy
-                                                        [:X default]      'Xd
-                                                        [:x default]      'xd
-                                                        [default :Y]      'dY
-                                                        [default :y]      'dy
-                                                        [default default] 'dd
-                                                        default           'd}))
-                                             h     (-> (make-hierarchy)
-                                                       (derive :X :x)
-                                                       (derive :Y :y)
-                                                       (derive :x :letter)
-                                                       (derive :y :letter))]]
-    (t/testing (format "default value = %s dispatch value = %s" default (pr-str dispatch-value))
-      (t/is (= expected-methods
-               (multi-default/matching-primary-methods
-                {:hierarchy                h
-                 :prefs                    nil
-                 :default-value            default
-                 :method-table             table
-                 :dispatch-value           dispatch-value
-                 :unambiguous-pairs-seq-fn (fn [& args] (last args))}))))))
+          :let
+          [table (reify MethodTable
+                   (primary-methods [_]
+                     {[:X :Y]           (with-meta 'XY {:dispatch-value [:X :Y]})
+                      [:X :y]           (with-meta 'Xy {:dispatch-value [:X :y]})
+                      [:x :Y]           (with-meta 'xY {:dispatch-value [:x :Y]})
+                      [:x :y]           (with-meta 'xy {:dispatch-value [:x :y]})
+                      [:X default]      (with-meta 'Xd {:dispatch-value [:X default]})
+                      [:x default]      (with-meta 'xd {:dispatch-value [:x default]})
+                      [default :Y]      (with-meta 'dY {:dispatch-value [default :Y]})
+                      [default :y]      (with-meta 'dy {:dispatch-value [default :y]})
+                      [default default] (with-meta 'dd {:dispatch-value [default default]})
+                      default           (with-meta 'd {:dispatch-value default})}))
+           h     (-> (make-hierarchy)
+                     (derive :X :x)
+                     (derive :Y :y)
+                     (derive :x :letter)
+                     (derive :y :letter))]]
+    (t/testing (format "default value = %s dispatch value = %s" (pr-str default) (pr-str dispatch-value))
+      (let [matching-methods (multi-default/matching-primary-methods
+                              {:hierarchy                h
+                               :prefs                    nil
+                               :default-value            default
+                               :method-table             table
+                               :dispatch-value           dispatch-value
+                               :unambiguous-pairs-seq-fn (fn [& args] (last args))})]
+        (t/is (= expected-methods
+                 matching-methods))
+        (t/testing "should return ^:dispatch-value metadata"
+          (t/is (= (for [dv (map (partial test-method-symbol->dispatch-value default) expected-methods)]
+                     {:dispatch-value dv})
+                   (map meta matching-methods))))))))
 
 (t/deftest ambiguity-test
   (doseq [default [:default :thing nil]]
@@ -146,32 +163,40 @@
                                               nil       '[d]}
                                              {[default nil] '[dd d]}
                                              {[nil default] '[dd d]})
-          :let                              [table (reify MethodTable
-                                                     (aux-methods [_]
-                                                       {method-type {[:X :Y]           ['XY]
-                                                                     [:X :y]           ['Xy]
-                                                                     [:x :Y]           ['xY]
-                                                                     [:x :y]           ['xy]
-                                                                     [:X default]      ['Xd]
-                                                                     [:x default]      ['xd]
-                                                                     [default :Y]      ['dY]
-                                                                     [default :y]      ['dy]
-                                                                     [default default] ['dd]
-                                                                     default           ['d]}}))
-                                             h     (-> (make-hierarchy)
-                                                       (derive :X :x)
-                                                       (derive :Y :y)
-                                                       (derive :x :letter)
-                                                       (derive :y :letter))]]
+          :let
+          [table (reify MethodTable
+                   (aux-methods [_]
+                     {method-type {[:X :Y]           [(with-meta 'XY {:dispatch-value [:X :Y]})]
+                                   [:X :y]           [(with-meta 'Xy {:dispatch-value [:X :y]})]
+                                   [:x :Y]           [(with-meta 'xY {:dispatch-value [:x :Y]})]
+                                   [:x :y]           [(with-meta 'xy {:dispatch-value [:x :y]})]
+                                   [:X default]      [(with-meta 'Xd {:dispatch-value [:X default]})]
+                                   [:x default]      [(with-meta 'xd {:dispatch-value [:x default]})]
+                                   [default :Y]      [(with-meta 'dY {:dispatch-value [default :Y]})]
+                                   [default :y]      [(with-meta 'dy {:dispatch-value [default :y]})]
+                                   [default default] [(with-meta 'dd {:dispatch-value [default default]})]
+                                   default           [(with-meta 'd {:dispatch-value default})]}}))
+
+           h     (-> (make-hierarchy)
+                     (derive :X :x)
+                     (derive :Y :y)
+                     (derive :x :letter)
+                     (derive :y :letter))]]
     (t/testing (format "method-type = %s default value = %s dispatch value = %s"
                        method-type default (pr-str dispatch-value))
-      (t/is (= {method-type expected-methods}
-               (multi-default/matching-aux-methods
-                {:hierarchy      h
-                 :prefs          nil #_prefs
-                 :default-value  default
-                 :method-table   table
-                 :dispatch-value dispatch-value}))))))
+      (let [matching-methods (multi-default/matching-aux-methods
+                              {:hierarchy      h
+                               :prefs          nil #_prefs
+                               :default-value  default
+                               :method-table   table
+                               :dispatch-value dispatch-value})]
+        (t/is (= {method-type expected-methods}
+                 matching-methods))
+        (t/testing "should return ^:dispatch-value metadata"
+          (t/is (= {method-type (for [dv (map (partial test-method-symbol->dispatch-value default) expected-methods)]
+                                  {:dispatch-value dv})}
+                   (into {} (for [[qualifier fns] matching-methods]
+                              [qualifier (map meta fns)])))))))))
 
 (def ^:private hierarchy (-> (make-hierarchy)
                              (derive :X :x)))

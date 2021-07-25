@@ -1,11 +1,13 @@
 (ns methodical.impl.method-table.standard
   (:require methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodTable))
 
+(comment methodical.interface/keep-me)
+
 (p.types/deftype+ StandardMethodTable [primary aux]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (cons
      'standard-method-table
@@ -32,7 +34,7 @@
     aux)
 
   (add-primary-method [this dispatch-val method]
-    (let [new-primary (assoc primary dispatch-val method)]
+    (let [new-primary (assoc primary dispatch-val (vary-meta method assoc :dispatch-value dispatch-val))]
       (if (= primary new-primary)
         this
         (StandardMethodTable. new-primary aux))))
@@ -44,10 +46,13 @@
         (StandardMethodTable. new-primary aux))))
 
   (add-aux-method [this qualifier dispatch-value method]
-    (let [new-aux (update-in aux [qualifier dispatch-value] (fn [existing-methods]
-                                                              (if (contains? (set existing-methods) method)
-                                                                existing-methods
-                                                                (conj (vec existing-methods) method))))]
+    (let [new-aux (update-in aux
+                             [qualifier dispatch-value]
+                             (fn [existing-methods]
+                               (if (contains? (set existing-methods) method)
+                                 existing-methods
+                                 (conj (vec existing-methods)
+                                       (vary-meta method assoc :dispatch-value dispatch-value)))))]
       (if (= aux new-aux)
         this
         (StandardMethodTable. primary new-aux))))

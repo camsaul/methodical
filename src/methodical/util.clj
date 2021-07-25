@@ -18,22 +18,36 @@
 
   Note that the primary method will not have any implicit args (e.g. `next-method`) bound the way it normally would
   when combined into an effective method; you will need to supply this yourself (or pass `nil` for no `next-method`)."
-  [multifn dispatch-value]
-  (get (i/primary-methods multifn) dispatch-value))
+  [multifn dispatch-val]
+  (get (i/primary-methods multifn) dispatch-val))
+
+(defn matching-primary-methods
+  "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to least-specific.
+  Methods include the `^:dispatch-valueue` with which they were defined as metadata. The standard dispatcher also checks
+  to make sure methods in the sequence are not ambiguously specific, replacing ambiguous methods with ones that will
+  throw an Exception when invoked."
+  ([multifn dispatch-val]
+   (i/matching-primary-methods multifn multifn dispatch-val))
+  ([dispatcher method-table dispatch-val]
+   (i/matching-primary-methods dispatcher method-table dispatch-val)))
 
 (defn applicable-primary-method
   "Return the primary method that would be use for `dispatch-value`, including ones from ancestor dispatch values or the
-  default dipsatch value.
+  default dipsatch value. Method includes `^:dispatch-valueue` metadata indicating the actual dispatch value for which
+  the applicable method was defined.
 
   Like `primary-method`, the method returned will not have any implicit args (such as `next-method`) bound."
-  [multifn dispatch-value]
-  (first (i/matching-primary-methods multifn multifn dispatch-value)))
+  [multifn dispatch-val]
+  (first (matching-primary-methods multifn dispatch-val)))
 
 (defn effective-primary-method
   "Build and effective method equivalent that would be used for this `dispatch-value` if it had no applicable auxiliary
-  methods. Implicit args (such as `next-method`) will be bound appropriately."
-  [multifn dispatch-value]
-  (i/combine-methods multifn (i/matching-primary-methods multifn multifn dispatch-value) nil))
+  methods. Implicit args (such as `next-method`) will be bound appropriately. Method has `^:dispatch-valueue` metadata
+  for the dispatch value with which the most-specific primary method was defined."
+  [multifn dispatch-val]
+  (let [[most-specific-primary-method :as primary-methods] (matching-primary-methods multifn dispatch-val)]
+    (some-> (i/combine-methods multifn primary-methods nil)
+            (with-meta (meta most-specific-primary-method)))))
 
 (defn aux-methods
   "Get all auxiliary methods *explicitly specified* for `dispatch-value`. This function does not include methods that
@@ -46,16 +60,25 @@
   ([multifn]
    (i/aux-methods multifn))
 
-  ([multifn dispatch-value]
-   (let [qualifier->dispatch-value->fns (i/aux-methods multifn)]
-     (when (seq qualifier->dispatch-value->fns)
-       (into {} (for [[qualifier dispatch-value->fns] qualifier->dispatch-value->fns
-                      :let                            [fns (get dispatch-value->fns dispatch-value)]
-                      :when                           (seq fns)]
+  ([multifn dispatch-val]
+   (let [qualifier->dispatch-val->fns (i/aux-methods multifn)]
+     (when (seq qualifier->dispatch-val->fns)
+       (into {} (for [[qualifier dispatch-val->fns] qualifier->dispatch-val->fns
+                      :let                          [fns (get dispatch-val->fns dispatch-val)]
+                      :when                         (seq fns)]
                   [qualifier fns])))))
 
-  ([multifn qualifier dispatch-value]
-   (get-in (i/aux-methods multifn) [qualifier dispatch-value])))
+  ([multifn qualifier dispatch-val]
+   (get-in (i/aux-methods multifn) [qualifier dispatch-val])))
+
+(defn matching-aux-methods
+  "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
+  most-specific to least-specific. Methods should have the `^:dispatch-valueue` with which they were defined as
+  metadata."
+  ([multifn dispatch-val]
+   (i/matching-aux-methods multifn multifn dispatch-val))
+  ([dispatcher method-table dispatch-val]
+   (i/matching-aux-methods dispatcher method-table dispatch-val)))
 
 (defn default-primary-method
   "Get the default primary method associated with this `mutlifn`, if one exists."
@@ -72,18 +95,37 @@
   [multifn]
   (i/effective-method multifn (i/default-dispatch-value multifn)))
 
+(defn effective-dispatch-value
+  "Return the least-specific dispatch value that would return the same effective method as `dispatch-value`. e.g. if
+  `dispatch-value` is `Integer` and the effective method is a result of combining a `Object` primary method and a
+  `Number` aux method, the effective dispatch value is `Number`, since `Number` is the most specific thing out of the
+  primary and aux methods and would get the same effective method as `Integer`."
+  [multifn dispatch-val]
+  (:dispatch-value (meta (i/effective-method multifn dispatch-val))))
+
+(defn dispatch-value
+  "Calculate the dispatch value that `multifn` will use given `args`."
+  ;; since protocols can't define varargs, we have to wrap the `dispatch-value` method from the protocol and apply
+  ;; varargs for > 4 args. The various < 4 args arities are there as an optimization because it's a little faster than
+  ;; calling apply every time.
+  ([multifn a]              (i/dispatch-value multifn a))
+  ([multifn a b]            (i/dispatch-value multifn a b))
+  ([multifn a b c]          (i/dispatch-value multifn a b c))
+  ([multifn a b c d]        (i/dispatch-value multifn a b c d))
+  ([multifn a b c d & more] (i/dispatch-value multifn a b c d more)))
+
 (defn dispatch-fn
   "Return a function that can be used to calculate dispatch values of given arg(s)."
   [multifn]
-  (partial i/dispatch-value multifn))
+  (partial dispatch-value multifn))
 
 (defn remove-all-primary-methods
   "Remove all primary methods, for all dispatch values (including the default value), for this `multifn` or method
   table."
   [multifn]
   (reduce
-   (fn [multifn dispatch-value]
-     (i/remove-primary-method multifn dispatch-value))
+   (fn [multifn dispatch-val]
+     (i/remove-primary-method multifn dispatch-val))
    multifn
    (keys (i/primary-methods multifn))))
 
@@ -96,29 +138,30 @@
 
   ([multifn qualifier]
    (reduce
-    (fn [multifn dispatch-value]
-      (remove-all-aux-methods multifn qualifier dispatch-value))
+    (fn [multifn dispatch-val]
+      (remove-all-aux-methods multifn qualifier dispatch-val))
     multifn
     (keys (get (i/aux-methods multifn) qualifier))))
 
-  ([multifn qualifier dispatch-value]
+  ([multifn qualifier dispatch-val]
    (reduce
     (fn [multifn f]
-      (i/remove-aux-method multifn qualifier dispatch-value f))
+      (i/remove-aux-method multifn qualifier dispatch-val f))
     multifn
-    (get-in (i/aux-methods multifn) [qualifier dispatch-value]))))
+    (get-in (i/aux-methods multifn) [qualifier dispatch-val]))))
 
+;; TODO -- consider renaming to `remove-all-aux-methods-for-dispatch-val` for consistency with everything else
 (defn remove-all-aux-methods-for-dispatch-val
   "Remove all auxiliary methods for `dispatch-value` for *all* qualifiers."
-  [multifn dispatch-value]
+  [multifn dispatch-val]
   (reduce
    (fn [multifn qualifier]
-     (remove-all-aux-methods multifn qualifier dispatch-value))
+     (remove-all-aux-methods multifn qualifier dispatch-val))
    multifn
    (keys (i/aux-methods multifn))))
 
 (defn remove-aux-method-with-unique-key
-  "Remove an auxiliary method that was added by `add-aux-method-with-unique-key`, if one exists. Returns multifn."
+  "Remove an auxiliary method that was added by [[add-aux-method-with-unique-key]], if one exists. Returns `multifn`."
   [multifn qualifier dispatch-val unique-key]
   {:pre [(some? multifn)]}
   (if-let [method (some
@@ -131,7 +174,7 @@
 
 (defn add-aux-method-with-unique-key
   "Adds an auxiliary method with a `unique-key` stored in its metadata. This unique key can later be used to remove the
-  auxiliary method with `remove-aux-method-with-unique-key`. If a method with this key already exists for this
+  auxiliary method with [[remove-aux-method-with-unique-key]]. If a method with this key already exists for this
   qualifier and dispatch value, replaces the original."
   [multifn qualifier dispatch-val f unique-key]
   {:pre [(some? multifn)]}
@@ -148,8 +191,8 @@
 ;;;; #### Low-level destructive operations
 
 (defn alter-var-root+
-  "Like `alter-var-root`, but handles vars that are aliases of other vars, e.g. ones that have been imported via
-  Potemkin `import-vars`."
+  "Like [[clojure.core/alter-var-root]], but handles vars that are aliases of other vars, e.g. ones that have been
+  imported via Potemkin [[potemkin/import-vars]]."
   [multifn-var f & args]
   (let [{var-ns :ns, var-name :name} (meta multifn-var)
         varr                         (if (and var-ns var-name)
@@ -158,32 +201,32 @@
     (apply alter-var-root varr f args)))
 
 (defn add-primary-method!
-  "Destructive version of `add-primary-method`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[add-primary-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-val f]
   (alter-var-root+ multifn-var i/add-primary-method dispatch-val f))
 
 (defn remove-primary-method!
-  "Destructive version of `remove-primary-method`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-primary-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-val]
   (alter-var-root+ multifn-var i/remove-primary-method dispatch-val))
 
 (defn remove-all-primary-methods!
-  "Destructive version of `remove-all-primary-methods`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-all-primary-methods]]. Operates on a var defining a Methodical multifn."
   [multifn-var]
   (alter-var-root+ multifn-var remove-all-primary-methods))
 
 (defn add-aux-method!
-  "Destructive version of `add-aux-method`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[add-aux-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
   (alter-var-root+ multifn-var i/add-aux-method qualifier dispatch-val f))
 
 (defn remove-aux-method!
-  "Destructive version of `remove-aux-method`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-aux-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
   (alter-var-root+ multifn-var i/remove-aux-method qualifier dispatch-val f))
 
 (defn remove-all-aux-methods!
-  "Destructive version of `remove-all-aux-methods`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-all-aux-methods]]. Operates on a var defining a Methodical multifn."
   ([multifn-var]
    (alter-var-root+ multifn-var remove-all-aux-methods))
 
@@ -194,30 +237,31 @@
    (alter-var-root+ multifn-var remove-all-aux-methods qualifier dispatch-val)))
 
 (defn remove-all-aux-methods-for-dispatch-val!
-  "Destructive version of `remove-all-aux-methods-for-dispatch-val`. Operates on a var defining a Methodical multifn."
-  [multifn-var dispatch-value]
-  (alter-var-root+ multifn-var remove-all-aux-methods-for-dispatch-val dispatch-value))
+  "Destructive version of [[remove-all-aux-methods-for-dispatch-val]]. Operates on a var defining a Methodical multifn."
+  [multifn-var dispatch-val]
+  (alter-var-root+ multifn-var remove-all-aux-methods-for-dispatch-val dispatch-val))
 
 (defn add-aux-method-with-unique-key!
-  "Destructive version of `add-aux-method-with-unique-key`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[add-aux-method-with-unique-key]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f unique-key]
   (alter-var-root+ multifn-var add-aux-method-with-unique-key qualifier dispatch-val f unique-key))
 
 (defn remove-aux-method-with-unique-key!
-  "Destructive version of `remove-aux-method-with-unique-key`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-aux-method-with-unique-key]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val unique-key]
   (alter-var-root+ multifn-var remove-aux-method-with-unique-key qualifier dispatch-val unique-key))
 
 (defn remove-all-methods!
-  "Destructive version of `remove-all-methods`. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[remove-all-methods]]. Operates on a var defining a Methodical multifn."
   [multifn-var]
   (alter-var-root+ multifn-var remove-all-methods))
 
 (defn prefer-method!
-  "Destructive version of `prefer-method`. Operates on a var defining a Methodical multifn.
+  "Destructive version of [[prefer-method]]. Operates on a var defining a Methodical multifn.
 
-  Note that vanilla Clojure `prefer-method` is actually itself destructive, so this function is actually the
-  Methodical equivalent of that function. `prefer-method!` is used by Methodical to differentiate the operation from
-  our nondestructive `prefer-method`, which returns a copy of the multifn with an altered dispatch table."
+  Note that vanilla Clojure [[clojure.core/prefer-method]] is actually itself destructive, so this function is
+  actually the Methodical equivalent of that function. `prefer-method!` is used by Methodical to differentiate the
+  operation from our nondestructive [[prefer-method]], which returns a copy of the multifn with an altered dispatch
+  table."
   [multifn-var dispatch-val-x dispatch-val-y]
   (alter-var-root+ multifn-var i/prefer-method dispatch-val-x dispatch-val-y))

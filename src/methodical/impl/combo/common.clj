@@ -8,7 +8,7 @@
   (when (seq primary-methods)
     (reduce
      (fn [next-method primary-method]
-       (partial primary-method next-method))
+       (with-meta (partial primary-method next-method) (meta primary-method)))
      nil
      (reverse primary-methods))))
 
@@ -19,7 +19,7 @@
   [combined-method around-methods]
   (reduce
    (fn [combined-method around-method]
-     (partial around-method combined-method))
+     (with-meta (partial around-method combined-method) (meta around-method)))
    combined-method
    around-methods))
 
@@ -30,9 +30,18 @@
   functions, this applies `f` directly to `fn-tail`; for functions overloaded with multiple arities, this maps `f`
   across all arities."
   [f fn-tail]
-  (if (vector? (first fn-tail))
+  {:pre [(sequential? fn-tail)]}
+  (cond
+    (vector? (first fn-tail))
     (apply f fn-tail)
-    (map f fn-tail)))
+
+    (vector? (ffirst fn-tail))
+    (map (partial transform-fn-tail f) fn-tail)
+
+    :else
+    (throw (ex-info (format "Invalid fn tail: %s. Expected ([arg*] & body) or (([arg*] & body)+)"
+                            (pr-str fn-tail))
+                    {:f f, :fn-tail fn-tail}))))
 
 (defn add-implicit-arg
   "Add an implicit `arg` to the beginning of the arglists for every arity of `fn-tail`."

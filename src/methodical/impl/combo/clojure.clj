@@ -3,11 +3,13 @@
   not at all. Like vanilla Clojure multimethods, this method combination only supports primary methods."
   (:require methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
 
+(comment methodical.interface/keep-me)
+
 (p.types/deftype+ ClojureMethodCombination []
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     '(clojure-method-combination))
 
@@ -17,7 +19,7 @@
 
   MethodCombination
   (allowed-qualifiers [_]
-    #{nil}) ; only primary methods
+    #{nil})                             ; only primary methods
 
   (combine-methods [_ [primary-method] aux-methods]
     (when (seq aux-methods)

@@ -55,10 +55,43 @@
                     (conj [:around-2-before a b c])
                     (next-method a b c)
                     (conj [:around-2-after a b c])))])]
-      (t/is (= [[:around-2-before :a :b :c]
-                [:around-1-before :a :b :c]
-                [:primary :a :b :c]
-                [:around-1-after :a :b :c]
-                [:around-2-after :a :b :c]]
-               (f [] :a :b :c))
-            "Around methods should thread their values thru to to the combined before-primary-after method."))))
+      (t/testing "Around methods should thread their values thru to to the combined before-primary-after method."
+        (t/is (= [[:around-2-before :a :b :c]
+                  [:around-1-before :a :b :c]
+                  [:primary :a :b :c]
+                  [:around-1-after :a :b :c]
+                  [:around-2-after :a :b :c]]
+                 (f [] :a :b :c)))))))
+
+(t/deftest add-implicit-next-method-args-test
+  (t/testing "single-arity fn tails"
+    (let [tail '([x] (inc x))]
+      (doseq [qualifier [nil :around]]
+        (t/testing qualifier
+          (t/is (= '([next-method x] (inc x))
+                   (combo.common/add-implicit-next-method-args qualifier tail)))))
+      (doseq [qualifier [:before :after]]
+        (t/testing qualifier
+          (t/is (= tail
+                   (combo.common/add-implicit-next-method-args :before tail)))))))
+  (t/testing "multi-arity fn tails (#57)"
+    (let [tail '(([x] (inc x))
+                 ([x y] (+ x y)))]
+      (doseq [qualifier [nil :around]]
+        (t/testing qualifier
+          (t/is (= '(([next-method x] (inc x))
+                     ([next-method x y] (+ x y)))
+                   (combo.common/add-implicit-next-method-args qualifier tail)))))
+      (doseq [qualifier [:before :after]]
+        (t/testing qualifier
+          (t/is (= tail
+                   (combo.common/add-implicit-next-method-args :before tail)))))))
+  (t/testing "Throw Exception on invalid fn tails"
+    (t/is (thrown-with-msg?
+           AssertionError
+           #"Assert failed:.*\(sequential\? fn-tail\)"
+           (combo.common/add-implicit-next-method-args nil nil)))
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           #"Invalid fn tail: \(\"ABC\" \(x y\)\)"
+           (combo.common/add-implicit-next-method-args nil '("ABC" (x y)))))))

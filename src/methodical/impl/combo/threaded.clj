@@ -3,8 +3,10 @@
   (:require [methodical.impl.combo.common :as combo.common]
             methodical.interface
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
+
+(comment methodical.interface/keep-me)
 
 (defn reducer-fn
   "Reduces a series of before/combined-primary/after methods, threading the resulting values to the next method by
@@ -30,13 +32,14 @@
            threaded-fn          (combine-with-threader threader methods)
            optimized-one-arg-fn (apply comp (reverse methods))]
        (combo.common/apply-around-methods
-        (fn
-          ([]               (optimized-one-arg-fn))
-          ([a]              (optimized-one-arg-fn a))
-          ([a b]            (threaded-fn a b))
-          ([a b c]          (threaded-fn a b c))
-          ([a b c d]        (threaded-fn a b c d))
-          ([a b c d & more] (apply threaded-fn a b c d more)))
+        (-> (fn
+              ([]               (optimized-one-arg-fn))
+              ([a]              (optimized-one-arg-fn a))
+              ([a b]            (threaded-fn a b))
+              ([a b c]          (threaded-fn a b c))
+              ([a b c d]        (threaded-fn a b c d))
+              ([a b c d & more] (apply threaded-fn a b c d more)))
+            (vary-meta assoc :methodical/combined-method? true))
         around)))))
 
 (defmulti threading-invoker
@@ -72,7 +75,7 @@
 
 
 (p.types/deftype+ ThreadingMethodCombination [threading-type]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (list 'threading-method-combination threading-type))
 

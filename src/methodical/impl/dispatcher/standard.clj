@@ -1,11 +1,11 @@
 (ns methodical.impl.dispatcher.standard
   "A single-hierarchy dispatcher that behaves similarly to the way multimethod dispatch is done by vanilla Clojure
   multimethods, but with added support for auxiliary methods."
-  (:refer-clojure :exclude [prefers prefer-method])
+  (:refer-clojure :exclude [prefers prefer-method methods])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
 (defn matching-primary-pairs-excluding-default
@@ -57,10 +57,11 @@
         default-method (when (not= dispatch-value default-value)
                          (get (i/primary-methods method-table) default-value))]
     (concat
-     (map second pairs)
+     (for [[dispatch-value method] pairs]
+       (vary-meta method assoc :dispatch-value dispatch-value))
      (when (and default-method
                 (not (contains? (set (map first pairs)) default-value)))
-       [default-method]))))
+       [(vary-meta default-method assoc :dispatch-value default-value)]))))
 
 (defn- matching-aux-pairs-excluding-default
   "Return pairs of `[dispatch-value method]` of applicable aux methods, *excluding* default aux methods. Pairs are
@@ -91,10 +92,11 @@
   (into {} (for [[qualifier] (i/aux-methods method-table)
                  :let        [pairs (matching-aux-pairs qualifier opts)]
                  :when       (seq pairs)]
-             [qualifier (map second pairs)])))
+             [qualifier (for [[dispatch-value method] pairs]
+                          (vary-meta method assoc :dispatch-value dispatch-value))])))
 
 (p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (concat ['standard-dispatcher dispatch-fn]
             (when (not= hierarchy-var #'clojure.core/global-hierarchy)
@@ -149,4 +151,7 @@
     (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
-        (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs)))))
+        (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
+
+  (dominates? [_ x y]
+    (dispatcher.common/dominates? (var-get hierarchy-var) prefs default-value x y)))

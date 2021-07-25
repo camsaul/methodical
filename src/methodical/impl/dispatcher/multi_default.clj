@@ -2,12 +2,11 @@
   "A single-hierarchy dispatcher similar to the standard dispatcher, with one big improvement: when dispatching on
   multiple values, it supports default methods that specialize on some args and use the default for others. (e.g.
   `[String :default]`"
-  (:require [methodical.impl.dispatcher
-             [common :as dispatcher.common]
-             [standard :as dispatcher.standard]]
+  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
+            [methodical.impl.dispatcher.standard :as dispatcher.standard]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
-            [pretty.core :refer [PrettyPrintable]])
+            [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
 (defn- partially-specialized-default-dispatch-values* [dispatch-value default-value]
@@ -98,9 +97,7 @@
                                 (unambiguous-pairs-seq-fn opts standard-pairs)
                                 partial-default-pairs
                                 (when default-pair [default-pair]))]
-    (->> pairs
-         (dispatcher.common/distinct-by first)
-         (map second))))
+    (map second (dispatcher.common/distinct-by first pairs))))
 
 (defn- aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
   (let [comparitor (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value)]
@@ -129,7 +126,7 @@
              [qualifier (matching-aux-methods* qualifier opts)])))
 
 (p.types/deftype+ MultiDefaultDispatcher [dispatch-fn hierarchy-var default-value prefs]
-  PrettyPrintable
+  pretty/PrettyPrintable
   (pretty [_]
     (concat ['multi-default-dispatcher dispatch-fn]
             (when (not= hierarchy-var #'clojure.core/global-hierarchy)
@@ -184,4 +181,7 @@
     (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
-        (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs)))))
+        (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
+
+  (dominates? [_ x y]
+    (dispatcher.common/dominates? (var-get hierarchy-var) prefs default-value x y)))

@@ -1,8 +1,7 @@
 (ns methodical.impl.dispatcher.standard-test
   (:require [clojure.test :as t]
-            [methodical
-             [impl :as impl]
-             [interface :as i]])
+            [methodical.impl :as impl]
+            [methodical.interface :as i])
   (:import methodical.interface.MethodTable))
 
 (t/deftest equality-test
@@ -38,36 +37,57 @@
                                         :parent      'parent
                                         :grandparent 'grandparent
                                         :default     'default} nil)]
-        (t/is (= '[parent grandparent default]
-                 (i/matching-primary-methods dispatcher method-table :parent))
-              "default methods should be included if they exist")
+        (t/testing "default methods should be included if they exist"
+          (t/is (= '[parent grandparent default]
+                   (i/matching-primary-methods dispatcher method-table :parent)))
+          (t/testing "should return ^:dispatch-value metadata"
+            (t/is (= [{:dispatch-value :parent} {:dispatch-value :grandparent} {:dispatch-value :default}]
+                     (map meta (i/matching-primary-methods dispatcher method-table :parent))))))
 
-        (t/is (= '[default]
-                 (i/matching-primary-methods dispatcher method-table :cousin))
-              "If there are otherwise no matches, default should be returned (but nothing else)")
+        (t/testing "If there are otherwise no matches, default should be returned (but nothing else)"
+          (t/is (= '[default]
+                   (i/matching-primary-methods dispatcher method-table :cousin)))
+          (t/testing "should return ^:dispatch-value metadata"
+            (t/is (= [{:dispatch-value :default}]
+                     (map meta (i/matching-primary-methods dispatcher method-table :cousin))))))
 
         (t/testing "default methods should not be included twice if dispatch-value derives from it"
           (let [dispatcher-with-custom-default (impl/standard-dispatcher keyword
-                                                                         :hierarchy #'basic-hierarchy
-                                                                         :default-value :grandparent)]
+                                                 :hierarchy #'basic-hierarchy
+                                                 :default-value :grandparent)]
             (t/is (= '[parent grandparent]
-                     (i/matching-primary-methods dispatcher-with-custom-default method-table :parent)))))))))
+                     (i/matching-primary-methods dispatcher-with-custom-default method-table :parent)))
+            (t/testing "should return ^:dispatch-value metadata"
+              (t/is (= [{:dispatch-value :parent} {:dispatch-value :grandparent}]
+                       (map meta (i/matching-primary-methods
+                                  dispatcher-with-custom-default
+                                  method-table
+                                  :parent)))))))))))
 
 (t/deftest matching-aux-methods-test
   (t/testing "default aux methods"
     (let [method-table (method-table nil {:before {:child       ['child]
                                                    :parent      ['parent]
                                                    :grandparent ['grandparent]
-                                                   :default     ['default]}})]
+                                                   :default     ['default]}})
+          aux-methods-metadata (fn [aux-methods]
+                                 (into {} (for [[qualifier fns] aux-methods]
+                                            [qualifier (map meta fns)])))]
       (t/testing "If there are otherwise no matches, default should be returned (but nothing else)"
         (let [dispatcher (impl/standard-dispatcher keyword
                                                    :hierarchy #'basic-hierarchy)]
           (t/is (= {:before '[default]}
-                   (i/matching-aux-methods dispatcher method-table :cousin)))))
+                   (i/matching-aux-methods dispatcher method-table :cousin)))
+          (t/testing "should return ^:dispatch-value metadata"
+            (t/is (= {:before [{:dispatch-value :default}]}
+                     (aux-methods-metadata (i/matching-aux-methods dispatcher method-table :cousin)))))))
 
       (t/testing "default methods should not be included twice if dispatch-value derives from it"
         (let [dispatcher (impl/standard-dispatcher keyword
                                                    :hierarchy #'basic-hierarchy
                                                    :default-value :grandparent)]
           (t/is (= {:before '[parent grandparent]}
-                   (i/matching-aux-methods dispatcher method-table :parent))))))))
+                   (i/matching-aux-methods dispatcher method-table :parent)))
+          (t/testing "should return ^:dispatch-value metadata"
+            (t/is (= {:before [{:dispatch-value :parent} {:dispatch-value :grandparent}]}
+                     (aux-methods-metadata (i/matching-aux-methods dispatcher method-table :parent))))))))))
