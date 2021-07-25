@@ -35,12 +35,12 @@
 
   (matching-primary-methods [_ method-table _]
     (let [primary-methods (i/primary-methods method-table)
-          comparitor      (dispatcher.common/domination-comparitor (var-get hierarchy-var) prefs ::no-dispatch-value)]
+          comparitor      (dispatcher.common/domination-comparitor (deref hierarchy-var) prefs ::no-dispatch-value)]
       (map second (sort-by first comparitor primary-methods))))
 
   (matching-aux-methods [_ method-table _]
     (let [aux-methods (i/aux-methods method-table)
-          comparitor  (dispatcher.common/domination-comparitor (var-get hierarchy-var) prefs ::no-dispatch-value)]
+          comparitor  (dispatcher.common/domination-comparitor (deref hierarchy-var) prefs ::no-dispatch-value)]
       (into {} (for [[qualifier dispatch-value->methods] aux-methods]
                  [qualifier (mapcat second (sort-by first comparitor dispatch-value->methods))]))))
 
@@ -51,7 +51,7 @@
     prefs)
 
   (prefer-method [this x y]
-    (let [new-prefs (dispatcher.common/add-preference (partial isa? (var-get hierarchy-var)) prefs x y)]
+    (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
         (EverythingDispatcher. hierarchy-var new-prefs)))))
