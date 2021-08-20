@@ -17,8 +17,7 @@
 
 (defn- default-color-printer [x]
   ;; don't print in black. I can't see it
-  (binding [puget/*options* (assoc-in puget/*options* [:color-scheme :nil] nil)]
-    (puget/cprint x)))
+  (puget/cprint x {:color-scheme {:nil nil}}))
 
 (def ^:private default-boring-printer puget/pprint)
 
