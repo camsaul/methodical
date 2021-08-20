@@ -2,7 +2,7 @@
 [![Dependencies Status](https://versions.deps.co/camsaul/methodical/status.svg)](https://versions.deps.co/camsaul/methodical)
 [![Circle CI](https://circleci.com/gh/camsaul/methodical.svg?style=svg)](https://circleci.com/gh/camsaul/methodical)
 [![codecov](https://codecov.io/gh/camsaul/methodical/branch/master/graph/badge.svg)](https://codecov.io/gh/camsaul/methodical)
-[![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE.txt)
+[![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE)
 [![cljdoc badge](https://cljdoc.org/badge/methodical)](https://cljdoc.org/d/methodical/methodical/CURRENT)
 
 [![Clojars Project](https://clojars.org/methodical/latest-version.svg)](http://clojars.org/methodical)
@@ -517,4 +517,4 @@ There is still room for even more performance improvement!
 Code, documentation, and artwork copyright © 2019-2021 Cam Saul.
 
 Distributed under the [Eclipse Public
-License](https://raw.githubusercontent.com/metabase/camsaul/methodical/LICENSE.txt), same as Clojure.
+License](https://raw.githubusercontent.com/metabase/camsaul/methodical/LICENSE), same as Clojure.
