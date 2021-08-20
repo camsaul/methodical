@@ -157,7 +157,7 @@
 
   (matching-primary-methods [_ method-table dispatch-value]
     (matching-primary-methods
-     {:hierarchy      (var-get hierarchy-var)
+     {:hierarchy      (deref hierarchy-var)
       :prefs          prefs
       :default-value  default-value
       :method-table   method-table
@@ -165,7 +165,7 @@
 
   (matching-aux-methods [_ method-table dispatch-value]
     (matching-aux-methods
-     {:hierarchy      (var-get hierarchy-var)
+     {:hierarchy      (deref hierarchy-var)
       :prefs          prefs
       :default-value  default-value
       :method-table   method-table
@@ -178,10 +178,10 @@
     prefs)
 
   (prefer-method [this x y]
-    (let [new-prefs (dispatcher.common/add-preference (partial isa? (var-get hierarchy-var)) prefs x y)]
+    (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
       (if (= prefs new-prefs)
         this
         (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
 
   (dominates? [_ x y]
-    (dispatcher.common/dominates? (var-get hierarchy-var) prefs default-value x y)))
+    (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y)))

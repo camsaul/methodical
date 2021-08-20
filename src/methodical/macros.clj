@@ -95,7 +95,7 @@
    :style/indent :defn}
   [name-symb & args]
   (let [varr         (ns-resolve *ns* name-symb)
-        old-val      (some->> varr var-get (instance? StandardMultiFn))
+        old-val      (some->> varr deref (instance? StandardMultiFn))
         old-hash     (when old-val
                        (-> varr meta ::defmulti-hash))
         current-hash (hash &form)]
@@ -104,7 +104,7 @@
                          (let [~'old-hash     ~old-hash
                                ~'current-hash ~current-hash]
                            (= ~'old-hash ~'current-hash))
-                         (some-> (ns-resolve *ns* '~name-symb) var-get u/multifn?))]
+                         (some-> (ns-resolve *ns* '~name-symb) deref u/multifn?))]
        (when-not skip-redef?#
          (defmulti* ~(vary-meta name-symb assoc ::defmulti-hash current-hash) ~@args)))))
 
@@ -145,7 +145,7 @@
   this directly."
   {:style/indent [2 :defn]}
   [multifn-symb dispatch-val & fn-tail]
-  (let [multifn (var-get (resolve multifn-symb))
+  (let [multifn (deref (resolve multifn-symb))
         _       (assert (contains? (i/allowed-qualifiers multifn) nil)
                   (format "Method combination %s does not allow primary methods."
                           (pretty/pretty (i/method-combination multifn))))
@@ -162,7 +162,7 @@
 (defmacro ^:no-doc define-aux-method*
   "Impl for `define-aux-method*`."
   [multifn-symb qualifier dispatch-val unique-key fn-name & fn-tail]
-  (let [multifn (var-get (resolve multifn-symb))
+  (let [multifn (deref (resolve multifn-symb))
         _       (assert-allows-qualifiers multifn qualifier)
         fn-tail (i/transform-fn-tail multifn qualifier fn-tail)]
     `(do
@@ -177,7 +177,7 @@
   [multifn-symb qualifier dispatch-val & args]
   (let [[unique-key & fn-tail] (if (sequential? (first args)) (cons nil args)
                                    args)
-        multifn                (var-get (resolve multifn-symb))
+        multifn                (deref (resolve multifn-symb))
         _                      (assert multifn)
         fn-name                (if unique-key
                                  (method-fn-name multifn qualifier dispatch-val unique-key)
@@ -203,7 +203,7 @@
    :style/indent :defn}
   [multifn-symb & args]
   (let [multifn
-        (var-get (or (resolve multifn-symb)
+        (deref (or (resolve multifn-symb)
                      (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
 
         [qualifier dispatch-val & fn-tail]
