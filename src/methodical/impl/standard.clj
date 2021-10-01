@@ -2,30 +2,66 @@
   (:require [methodical.interface :as i]
             [potemkin.types :as p.types]
             [pretty.core :as pretty])
-  (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+  (:import clojure.lang.Named
+           [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+
+(defn- maybe-name [^MultiFnImpl impl]
+  ;; TODO: get this working
+  ;; impl is `CachedMultiFnImpl`, and even though we implement Named there, the `impl` it wraps is a
+  ;; `StandardMultiFnImpl`, which doesn't implement Named (only `StandardMultiFn`, defined in this namespace, does)
+  (if-let [nm (and (instance? Named impl) (name impl))]
+    (str " " nm)
+    ""))
+
+(defn- handle-effective-method-exception [^Exception e mta]
+  (if-let [dispatch-val (::unmatched-dispatch-value (ex-data e))]
+    (throw (UnsupportedOperationException.
+             (format "No matching%s method for dispatch value %s" (if-let [nm (:name mta)]
+                                                                    (str " " nm)
+                                                                    "")
+                                                                  (pr-str dispatch-val))))
+    ;; this wasn't an :unmatched-dispatch-value situation; just rethrow it
+    (throw e)))
 
 (defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
   (or (.effective-method impl dispatch-value)
-      (throw (UnsupportedOperationException. (format "No matching method for dispatch value %s" dispatch-value)))))
+      (-> (format "No matching method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
+          (ex-info {::unmatched-dispatch-value dispatch-value})
+          throw)))
+
+(defmacro ^:private invoke-multi
+  "Utility macro for finding the effective method of `impl`, given the `args`, then catching an Exception on invoking
+  the `effective-method`, where we look for the special case of `::unmatched-dispatch-value`. If we find that, we
+  rethrow a regular `UnsupportedOperationException` including the method name and `pr-str` of the  unmatched dispatch
+  value. If not, we simply rethrow the exception since it's not ours to handle."
+  [impl mta & args]
+  `(try
+     (let [em# (effective-method ~impl (.dispatch-value ^Dispatcher (.dispatcher ~impl) ~@args))]
+       (em# ~@args))
+     (catch Exception e#
+       (handle-effective-method-exception e# ~mta))))
 
 (defn- ^:static invoke-multifn
-  ([^MultiFnImpl impl]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl)))))
+  ([^MultiFnImpl impl mta]
+   (invoke-multi impl mta))
 
-  ([^MultiFnImpl impl a]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a)) a))
+  ([^MultiFnImpl impl mta a]
+   (invoke-multi impl mta a))
 
-  ([^MultiFnImpl impl a b]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b)) a b))
+  ([^MultiFnImpl impl mta a b]
+   (invoke-multi impl mta a b))
 
-  ([^MultiFnImpl impl a b c]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c)) a b c))
+  ([^MultiFnImpl impl mta a b c]
+   (invoke-multi impl mta a b c))
 
-  ([^MultiFnImpl impl a b c d]
-   ((effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d)) a b c d))
+  ([^MultiFnImpl impl mta a b c d]
+   (invoke-multi impl mta a b c d))
 
-  ([^MultiFnImpl impl a b c d & more]
-   (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)))
+  ([^MultiFnImpl impl mta a b c d & more]
+   ;; TODO: possible to use the macro somehow in this case?
+   (try (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)
+        (catch Exception e
+          (handle-effective-method-exception e mta)))))
 
 (p.types/deftype+ StandardMultiFn [^MultiFnImpl impl mta]
   pretty/PrettyPrintable
@@ -37,7 +73,7 @@
     (and (instance? StandardMultiFn another)
          (= impl (.impl ^StandardMultiFn another))))
 
-  clojure.lang.Named
+  Named
   (getName [_] (some-> (:name mta) name))
   (getNamespace [_] (some-> (:ns mta) ns-name name))
 
@@ -133,63 +169,65 @@
       (StandardMultiFn. (i/with-method-table impl new-method-table) mta)))
 
   (effective-method [_ dispatch-value]
-    (.effective-method impl dispatch-value))
+    (try (.effective-method impl dispatch-value)
+         (catch Exception e
+           (handle-effective-method-exception e mta))))
 
   java.util.concurrent.Callable
   (call [_]
-    (invoke-multifn impl))
+    (invoke-multifn impl mta))
 
   java.lang.Runnable
   (run [_]
-    (invoke-multifn impl))
+    (invoke-multifn impl mta))
 
   clojure.lang.IFn
   (invoke [_]
-    (invoke-multifn impl))
+    (invoke-multifn impl mta))
   (invoke [_ a]
-    (invoke-multifn impl a))
+    (invoke-multifn impl mta  a))
   (invoke [_ a b]
-    (invoke-multifn impl a b))
+    (invoke-multifn impl mta  a b))
   (invoke [_ a b c]
-    (invoke-multifn impl a b c))
+    (invoke-multifn impl mta  a b c))
   (invoke [_ a b c d]
-    (invoke-multifn impl a b c d))
+    (invoke-multifn impl mta  a b c d))
   (invoke [_ a b c d e]
-    (invoke-multifn impl a b c d e))
+    (invoke-multifn impl mta  a b c d e))
   (invoke [_ a b c d e f]
-    (invoke-multifn impl a b c d e f))
+    (invoke-multifn impl mta  a b c d e f))
   (invoke [_ a b c d e f g]
-    (invoke-multifn impl a b c d e f g))
+    (invoke-multifn impl mta  a b c d e f g))
   (invoke [_ a b c d e f g h]
-    (invoke-multifn impl a b c d e f g h))
+    (invoke-multifn impl mta  a b c d e f g h))
   (invoke [_ a b c d e f g h i]
-    (invoke-multifn impl a b c d e f g h i))
+    (invoke-multifn impl mta  a b c d e f g h i))
   (invoke [_ a b c d e f g h i j]
-    (invoke-multifn impl a b c d e f g h i j))
+    (invoke-multifn impl mta  a b c d e f g h i j))
   (invoke [_ a b c d e f g h i j k]
-    (invoke-multifn impl a b c d e f g h i j k))
+    (invoke-multifn impl mta  a b c d e f g h i j k))
   (invoke [_ a b c d e f g h i j k l]
-    (invoke-multifn impl a b c d e f g h i j k l))
+    (invoke-multifn impl mta  a b c d e f g h i j k l))
   (invoke [_ a b c d e f g h i j k l m]
-    (invoke-multifn impl a b c d e f g h i j k l m))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m))
   (invoke [_ a b c d e f g h i j k l m n]
-    (invoke-multifn impl a b c d e f g h i j k l m n))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n))
   (invoke [_ a b c d e f g h i j k l m n o]
-    (invoke-multifn impl a b c d e f g h i j k l m n o))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o))
   (invoke [_ a b c d e f g h i j k l m n o p]
-    (invoke-multifn impl a b c d e f g h i j k l m n o p))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o p))
   (invoke [_ a b c d e f g h i j k l m n o p q]
-    (invoke-multifn impl a b c d e f g h i j k l m n o p q))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o p q))
   (invoke [_ a b c d e f g h i j k l m n o p q r]
-    (invoke-multifn impl a b c d e f g h i j k l m n o p q r))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o p q r))
   (invoke [_ a b c d e f g h i j k l m n o p q r s]
-    (invoke-multifn impl a b c d e f g h i j k l m n o p q r s))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o p q r s))
   (invoke [_ a b c d e f g h i j k l m n o p q r s t]
-    (invoke-multifn impl a b c d e f g h i j k l m n o p q r s t))
+    (invoke-multifn impl mta  a b c d e f g h i j k l m n o p q r s t))
   (invoke [_ a b c d e f g h i j k l m n o p q r s t args]
-    (apply invoke-multifn impl a b c d e f g h i j k l m n o p q r s t args))
+    (apply invoke-multifn impl mta a b c d e f g h i j k l m n o p q r s t args))
   (applyTo [_ args]
-    (apply invoke-multifn impl args)))
+    (apply invoke-multifn impl mta args)))
 
 (defn multifn?
   "True if `x` is an instance of `StandardMultiFn`."

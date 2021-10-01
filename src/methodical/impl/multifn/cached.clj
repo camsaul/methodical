@@ -2,7 +2,8 @@
   (:require [methodical.interface :as i]
             [potemkin.types :as p.types]
             [pretty.core :as pretty])
-  (:import [methodical.interface Cache MultiFnImpl]))
+  (:import clojure.lang.Named
+           [methodical.interface Cache MultiFnImpl]))
 
 (p.types/deftype+ CachedMultiFnImpl [^MultiFnImpl impl, ^Cache cache]
   pretty/PrettyPrintable
@@ -15,6 +16,12 @@
          (= impl  (.impl ^CachedMultiFnImpl another))
          ;; TODO - does this make sense?
          (= (class cache) (class (.cache ^CachedMultiFnImpl another)))))
+
+  Named
+  (getName [_]
+    (if (instance? Named impl) (name impl)))
+  (getNamespace [_]
+    (if (instance? Named impl) (namespace impl)))
 
   MultiFnImpl
   (method-combination [_]
