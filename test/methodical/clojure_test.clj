@@ -27,9 +27,14 @@
       "x" {"x" true})))
 
 (t/deftest no-matching-method-test
-  (let [multifn (clojure-multifn keyword)]
-    (t/is (thrown-with-msg? UnsupportedOperationException #"No matching method for dispatch value :x" (multifn :x))
-          "Multifns with no default implementation should throw an Exception")))
+  (let [multifn (clojure-multifn identity)]
+    (t/is (thrown-with-msg? UnsupportedOperationException #"No matching method for dispatch value \"x\"" (multifn "x"))
+          "Multifns with no default implementation should throw an Exception"))
+  (let [named-multifn (impl/multifn (impl/default-multifn-impl identity) {:name 'named-multifn, :ns *ns*})]
+    (t/is (thrown-with-msg? UnsupportedOperationException
+                            #"No matching named-multifn method for dispatch value \"z\""
+                            (named-multifn "z"))
+      "Multifns with no default implementation should throw an Exception")))
 
 (t/deftest custom-default-value-test
   (let [multifn (-> (clojure-multifn keyword :default-value ::default)
