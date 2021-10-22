@@ -204,12 +204,22 @@
   [multifn-symb & args]
   (let [multifn
         (deref (or (resolve multifn-symb)
-                     (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
+                   (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
 
         [qualifier dispatch-val & fn-tail]
         (if (contains? (disj (i/allowed-qualifiers multifn) nil) (first args))
           args
-          (cons nil args))]
+          (cons nil args))
+        arglists (:arglists (meta (ns-resolve *ns* multifn-symb)))
+        arg-count-valid? (if arglists
+                           (set (map count arglists))
+                           (constantly true))
+        fn-arg-vecs (if (vector? (first fn-tail))
+                      [(count (first fn-tail))]
+                      (map (comp count first) fn-tail))]
+    (doseq [n-args fn-arg-vecs]
+      (when (not (arg-count-valid? n-args))
+        (throw (IllegalArgumentException. (format "Wrong number of args for %s: %d" (name multifn-symb) n-args)))))
     (if qualifier
       `(define-aux-method ~multifn-symb ~qualifier ~dispatch-val ~@fn-tail)
       `(define-primary-method ~multifn-symb ~dispatch-val ~@fn-tail))))

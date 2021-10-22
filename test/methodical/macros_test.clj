@@ -133,3 +133,25 @@
              (multi-arity ::wow)))
     (t/is (= {:x ::wow, :y 100, :after? ::wow}
              (multi-arity ::wow 100)))))
+
+(comment
+  ;; check that defmethod throws if argcount doesn't match the defmulti :arglist
+  ;; can't be in a test (I think?) as we're throwing exceptions from a macro!
+  (m/defmulti bad-arg-count
+    {:arglists '([x y])}
+    (fn [x & _]
+      (keyword x)))
+
+  (m/defmethod bad-arg-count :after ::bad-after
+    [x]
+    nil)
+
+  (m/defmethod bad-arg-count :after ::bad-after2
+    ([x]
+     nil))
+
+  (m/defmethod bad-arg-count :after ::bad-after3
+    ([x y]
+     nil)
+    ([x y z]
+     nil)))
