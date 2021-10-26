@@ -6,9 +6,6 @@
            [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
 (defn- maybe-name [^MultiFnImpl impl]
-  ;; TODO: get this working
-  ;; impl is `CachedMultiFnImpl`, and even though we implement Named there, the `impl` it wraps is a
-  ;; `StandardMultiFnImpl`, which doesn't implement Named (only `StandardMultiFn`, defined in this namespace, does)
   (if-let [nm (and (instance? Named impl) (name impl))]
     (str " " nm)
     ""))
@@ -25,7 +22,7 @@
 
 (defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
   (or (.effective-method impl dispatch-value)
-      (-> (format "No matching method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
+      (-> (format "No matching%s method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
           (ex-info {::unmatched-dispatch-value dispatch-value})
           throw)))
 
