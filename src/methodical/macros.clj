@@ -43,7 +43,7 @@
                                         args
                                         (cons nil args))
         [dispatch-fn & {:as options}] (if (even? (count args))
-                                        (cons nil args)
+                                        (cons identity args)
                                         args)
         metadata                      (merge {:tag methodical.impl.standard.StandardMultiFn}
                                              (when docstring {:doc docstring})
@@ -54,8 +54,9 @@
 
 (defmacro defmulti
   "Creates a new Methodical multimethod named by a Var. Usage of this macro mimics usage of vanilla Clojure `defmulti`,
-  and it can be used as a drop-in replacement; it does, however, support a larger set of options. In addition to the
-  usual `:default` and `:hierarchy` options, you many specifiy:
+  and it can be used as a drop-in replacement; it does, however, support a larger set of options. Note the dispatch-fn
+  is optional (if omitted, then identity will be used). In addition to the usual `:default` and `:hierarchy` options,
+  you many specify:
 
   * `:combo` - The method combination to use for this multimethods. Method combinations define how multiple applicable
      methods are combined; which auxiliary methods, e.g. `:before` or `:after` methods, are supported; and whether other
@@ -89,7 +90,7 @@
   * Evaluating the form a second time (e.g., when reloading a namespace) will *not* redefine the multimethod, unless
     you have modified its form -- unlike vanilla Clojure multimethods, which need to be unmapped from the namespace to
     make such minor tweaks as changing the dispatch function."
-  {:arglists     '([name-symb docstring? attr-map? dispatch-fn
+  {:arglists     '([name-symb docstring? attr-map? dispatch-fn?
                     & {:keys [hierarchy default-value prefers combo method-table cache]}]
                    [name-symb docstring? attr-map? & {:keys [dispatcher combo method-table cache]}])
    :style/indent :defn}
@@ -204,7 +205,7 @@
   [multifn-symb & args]
   (let [multifn
         (deref (or (resolve multifn-symb)
-                     (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
+                   (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
 
         [qualifier dispatch-val & fn-tail]
         (if (contains? (disj (i/allowed-qualifiers multifn) nil) (first args))

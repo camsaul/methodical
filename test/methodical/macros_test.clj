@@ -127,9 +127,22 @@
   ([x m]
    (assoc m :after? x)))
 
+(m/defmulti no-dispatch-fn)
+
+(m/defmethod no-dispatch-fn :first [& _]
+  1)
+
+(m/defmethod no-dispatch-fn :second [& _]
+  2)
+
 (t/deftest multi-arity-test
   (t/testing "defmulti and defmethod with multi-arity methods (#57)"
     (t/is (= {:x ::wow, :after? true}
              (multi-arity ::wow)))
     (t/is (= {:x ::wow, :y 100, :after? ::wow}
              (multi-arity ::wow 100)))))
+
+(t/deftest no-dispatch-fn-test
+  (t/testing "not specifying a dispatch fn works (should use identity)"
+    (t/is (= 1 (no-dispatch-fn :first)))
+    (t/is (= 2 (no-dispatch-fn :second)))))
