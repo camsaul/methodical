@@ -111,7 +111,6 @@
          (seq* more)))))
    methods))
 
-
 (defoperator and [methods invoke]
   (loop [[method & more] methods]
     (let [result (invoke method)]

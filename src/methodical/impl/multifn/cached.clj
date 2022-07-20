@@ -19,9 +19,11 @@
 
   Named
   (getName [_]
-    (if (instance? Named impl) (name impl)))
+    (when (instance? Named impl)
+      (name impl)))
   (getNamespace [_]
-    (if (instance? Named impl) (namespace impl)))
+    (when (instance? Named impl)
+      (namespace impl)))
 
   MultiFnImpl
   (method-combination [_]
