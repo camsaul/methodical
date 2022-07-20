@@ -128,12 +128,11 @@
   "Create a stanadrd Methodical multifn dispatcher. The standard dispatcher replicates the way vanilla Clojure
   multimethods handle multimethod dispatch, with support for a custom `hierarchy`, `default-value` and map of
   `prefers`."
-  {:style/indent 1}
   ^Dispatcher [dispatch-fn & {:keys [hierarchy default-value prefers]
                               :or   {hierarchy     #'clojure.core/global-hierarchy
                                      default-value :default
                                      prefers       {}}}]
-  {:pre [(ifn? dispatch-fn) (var? hierarchy) (map? prefers)]}
+  {:pre [(ifn? dispatch-fn) (instance? clojure.lang.IDeref hierarchy) (map? prefers)]}
   (dispatcher.standard/->StandardDispatcher dispatch-fn hierarchy default-value prefers))
 
 (defn everything-dispatcher
@@ -143,17 +142,17 @@
   ^Dispatcher [& {:keys [hierarchy prefers]
                   :or   {hierarchy #'clojure.core/global-hierarchy
                          prefers   {}}}]
+  {:pre [(instance? clojure.lang.IDeref hierarchy) (map? prefers)]}
   (dispatcher.everything/->EverythingDispatcher hierarchy prefers))
 
 (defn multi-default-dispatcher
   "Like the standard dispatcher, with one big improvement: when dispatching on multiple values, it supports default
   methods that specialize on some args and use the default for others. (e.g. `[String :default]`)"
-  {:style/indent 1}
   ^Dispatcher [dispatch-fn & {:keys [hierarchy default-value prefers]
                               :or   {hierarchy     #'clojure.core/global-hierarchy
                                      default-value :default
                                      prefers       {}}}]
-  {:pre [(ifn? dispatch-fn) (var? hierarchy) (map? prefers)]}
+  {:pre [(ifn? dispatch-fn) (instance? clojure.lang.IDeref hierarchy) (map? prefers)]}
   (dispatcher.multi-default/->MultiDefaultDispatcher dispatch-fn hierarchy default-value prefers))
 
 
@@ -200,7 +199,8 @@
 ;;; ### MultiFn Impls
 
 (defn standard-multifn-impl
-  "Create a basic multifn impl using method combination `combo`, dispatcher `dispatcher`, and `method-table`."
+  "Create a basic multifn impl using method combination `combo`, dispatcher `dispatcher`, and `method-table`.
+  See [[default-multifn-impl]] for the defaults that are normally used if you don't specify otherwise."
   ^MultiFnImpl [combo dispatcher method-table]
   {:pre [(instance? MethodCombination combo)
          (instance? Dispatcher dispatcher)
