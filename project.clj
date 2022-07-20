@@ -25,14 +25,14 @@
                                 ["docstring-checker"]]}
 
   :dependencies
-  [[mvxcvi/puget "1.3.1"]
+  [[mvxcvi/puget "1.3.2"]
    [pretty "1.0.5"]
    [potemkin "0.4.5"]]
 
   :profiles
   {:dev
    {:dependencies
-    [[org.clojure/clojure "1.10.3"]
+    [[org.clojure/clojure "1.11.1"]
      [org.clojure/math.combinatorics "0.1.6"]
      [criterium "0.4.6"]
      [pjstadig/humane-test-output "0.11.0"]]
