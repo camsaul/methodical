@@ -66,13 +66,13 @@
             "  1: (#primary-method<[:default :bird]>"
             "      #primary-method<:default>"
             "      1"
-            "      {:type :parrot, :parrot? true})"
-            "    2: (#primary-method<:default> nil 1 {:type :parrot, :parrot? true, :bird? true})"
+            "      {:parrot? true, :type :parrot})"
+            "    2: (#primary-method<:default> nil 1 {:bird? true, :parrot? true, :type :parrot})"
             "    2> {:bird? true, :parrot? true, :type :parrot, :x 1}"
             "  1> {:bird? true, :parrot? true, :type :parrot, :x 1}"
             "  1: (#aux-method<:after [java.lang.Object :default]>"
             "      1"
-            "      {:type :parrot, :parrot? true, :bird? true, :x 1})"
+            "      {:bird? true, :parrot? true, :type :parrot, :x 1})"
             "  1> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"
             "0> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"]
            (trace-output my-multimethod 1 {:type :parrot}))))

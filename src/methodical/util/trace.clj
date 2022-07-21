@@ -68,7 +68,8 @@
     (::description (meta x))                (::description (meta x))
     (:dispatch-value (meta x))              (describe-method x)
     (:methodical/combined-method? (meta x)) (->Literal "#combined-method")
-    :else                                   (->Literal (pr-str x))))
+    (fn? x)                                 (->Literal (pr-str x))
+    :else                                   x))
 
 (defn- trace-method [m]
   (fn [& args]
