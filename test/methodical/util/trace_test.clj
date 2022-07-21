@@ -117,10 +117,11 @@
 
 (t/deftest function-arg-test
   (t/testing "Function arguments should not be printed as nil (#86)"
-    (t/is (= ["0: (my= #function[clojure.core/int?] 100)"
+    ;; it might be #function[clojure.core/int?] or might not. Depends on the Clojure version I guess
+    (t/is (= [(format "0: (my= %s 100)" (pr-str int?))
               "  1: (#primary-method<[clojure.lang.AFunction java.lang.Object]>"
               "      #primary-method<:default>"
-              "      #function[clojure.core/int?]"
+              (format "      %s" (pr-str int?))
               "      100)"
               "  1> true"
               "0> true"]
