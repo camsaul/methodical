@@ -15,14 +15,18 @@
    "cloverage"                 ["with-profile" "+cloverage" "cloverage"]
    "profile"                   ["with-profile" "+profile" "run"]
    "eastwood"                  ["with-profile" "+eastwood" "eastwood"]
-   "bikeshed"                  ["with-profile" "+bikeshed" "bikeshed" "--max-line-length" "120"]
    "kibit"                     ["with-profile" "+kibit" "kibit"]
    "check-namespace-decls"     ["with-profile" "+check-namespace-decls" "check-namespace-decls"]
    "docstring-checker"         ["with-profile" "+docstring-checker" "docstring-checker"]
    "check-reflection-warnings" ["with-profile" "+reflection-warnings" "check"]
+   "whitespace-linter"         ["with-profile" "+whitespace-linter"
+                                "run" "-m" "clojure.main" "-e" (do
+                                                                 (require 'whitespace-linter)
+                                                                 (whitespace-linter/lint {:paths ["src" "test"]
+                                                                                          :include-patterns [#".clj[cs]?$"]}))]
    ;; `lein lint` will run all linters. Except for reflecion warnings, use the script for that
-   "lint"                      ["do" ["eastwood"] ["bikeshed"] ["kibit"] ["check-namespace-decls"] ["cloverage"]
-                                ["docstring-checker"]]}
+   "lint"                      ["do" ["eastwood"] ["kibit"] ["check-namespace-decls"] ["cloverage"]
+                                ["whitespace-linter"]["docstring-checker"]]}
 
   :dependencies
   [[mvxcvi/puget "1.3.2"]
@@ -44,6 +48,9 @@
     :jvm-opts ["-Xverify:none"]
 
     :source-paths ["dev"]}
+
+   :whitespace-linter
+   {:dependencies [[com.camsaul/whitespace-linter "2022.01.27.04.43" :exclusions [org.clojure/clojure]]]}
 
    :repl
    {:global-vars {*warn-on-reflection* true}}
@@ -84,7 +91,7 @@
 
      ;; disabled for now until I figure out how to disable it in the one place it's popping up
      #_:remove-linters
-     #_[:unused-ret-vals]
+     #_ [:unused-ret-vals]
 
      :add-linters
      [:unused-private-vars
@@ -124,7 +131,8 @@
    {:global-vars {*warn-on-reflection* true}}
 
    :all-profiles
-   [:test :cloverage :profile :eastwood :bikeshed :kibit :check-namespace-decls :docstring-checker :reflection-warnings
+   [:test :cloverage :profile :eastwood :whitespace-linter :kibit :check-namespace-decls :docstring-checker
+    :reflection-warnings
     {}]
 
    :deploy

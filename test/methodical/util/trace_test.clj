@@ -101,3 +101,42 @@
               "  1> {:f :f, :x :methodical.util.trace-test/x}"
               "0> {:f :f, :x :methodical.util.trace-test/x}"]
              (trace-output lots-of-args-multifn ::x :b :c :d :e :f)))))
+
+(m/defmulti my=
+  {:arglists '([x y])}
+  (fn [x y]
+    [(class x) (class y)]))
+
+(m/defmethod my= :default
+  [x y]
+  (= x y))
+
+(m/defmethod my= [clojure.lang.AFunction Object]
+  [pred x]
+  (pred x))
+
+(t/deftest function-arg-test
+  (t/testing "Function arguments should not be printed as nil (#86)"
+    ;; depending on the Clojure version [[int?`]] might get printed like
+    ;;
+    ;;    #function[clojure.core/int?]
+    ;;
+    ;; or it might get printed like
+    ;;
+    ;;    #object[clojure.core$int_QMARK_ 0x3e07ccbf \"clojure.core$int_QMARK_@3e07ccbf\"]
+    ;;
+    ;; so to make this test pass in either situation highjack `pr-str` which we use to print functions.
+    (let [orig-pr-str pr-str]
+      (with-redefs [pr-str (fn [x]
+                             (if (identical? x int?)
+                               "#function[clojure.core/int?]"
+                               (orig-pr-str x)))]
+        ;; it might be #function[clojure.core/int?] or might not. Depends on the Clojure version I guess
+        (t/is (= ["0: (my= #function[clojure.core/int?] 100)"
+                  "  1: (#primary-method<[clojure.lang.AFunction java.lang.Object]>"
+                  "      #primary-method<:default>"
+                  "      #function[clojure.core/int?]"
+                  "      100)"
+                  "  1> true"
+                  "0> true"]
+                 (trace-output my= int? 100)))))))
