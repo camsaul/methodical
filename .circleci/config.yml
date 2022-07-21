@@ -136,17 +136,10 @@ workflows:
           lein-command: check-namespace-decls
 
       - lein:
-          name: bikeshed
+          name: whitespace-linter
           requires:
             - deps
-          lein-command: bikeshed
-
-          # Kibit disabled for now because namespace docstrings break it
-      # - lein:
-      #     name: kibit
-      #     requires:
-      #       - deps
-      #     lein-command: kibit
+          lein-command: whitespace-linter
 
       - lein:
           name: cloverage
@@ -164,7 +157,7 @@ workflows:
       - lein:
           name: deploy
           requires:
-            - bikeshed
+            - whitespace-linter
             - docstring-checker
             - eastwood
             - namespace-decls
