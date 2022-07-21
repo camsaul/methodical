@@ -451,7 +451,12 @@ following summarizes all component implementations that currently ship with Meth
 
 ### Dispatchers
 
-*  `standard-dispatcher` -- The default. Dispatcher that mimics behavior of vanilla Clojure multimethods. Uses a single hierarchy,
+*  `multi-default-dispatcher` -- The default. Similar to the behavior of vanilla Clojure multimethods, but also
+   supports "partial default" methods like `[String :default]` or `[:default :some-key]`. See [this blog
+   post](https://camsaul.com/methodical/2020/04/22/methodical-now-supports-partial-default-methods.html) for a more
+   detailed explanation.
+
+*  `standard-dispatcher` -- Dispatcher that mimics behavior of vanilla Clojure multimethods. Uses a single hierarchy,
    dispatch function, default dispatch value, and map of preferences defined by `prefer-method`.
 
 *  `everything-dispatcher` -- Dispatcher that always considers *all* primary and auxiliary methods to be
