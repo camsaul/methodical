@@ -117,12 +117,26 @@
 
 (t/deftest function-arg-test
   (t/testing "Function arguments should not be printed as nil (#86)"
-    ;; it might be #function[clojure.core/int?] or might not. Depends on the Clojure version I guess
-    (t/is (= [(format "0: (my= %s 100)" (pr-str int?))
-              "  1: (#primary-method<[clojure.lang.AFunction java.lang.Object]>"
-              "      #primary-method<:default>"
-              (format "      %s" (pr-str int?))
-              "      100)"
-              "  1> true"
-              "0> true"]
-             (trace-output my= int? 100)))))
+    ;; depending on the Clojure version [[int?`]] might get printed like
+    ;;
+    ;;    #function[clojure.core/int?]
+    ;;
+    ;; or it might get printed like
+    ;;
+    ;;    #object[clojure.core$int_QMARK_ 0x3e07ccbf \"clojure.core$int_QMARK_@3e07ccbf\"]
+    ;;
+    ;; so to make this test pass in either situation highjack `pr-str` which we use to print functions.
+    (let [orig-pr-str pr-str]
+      (with-redefs [pr-str (fn [x]
+                             (if (identical? x int?)
+                               "#function[clojure.core/int?]"
+                               (orig-pr-str x)))]
+        ;; it might be #function[clojure.core/int?] or might not. Depends on the Clojure version I guess
+        (t/is (= ["0: (my= #function[clojure.core/int?] 100)"
+                  "  1: (#primary-method<[clojure.lang.AFunction java.lang.Object]>"
+                  "      #primary-method<:default>"
+                  "      #function[clojure.core/int?]"
+                  "      100)"
+                  "  1> true"
+                  "0> true"]
+                 (trace-output my= int? 100)))))))
