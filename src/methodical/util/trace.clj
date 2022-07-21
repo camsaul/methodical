@@ -15,11 +15,20 @@
   pretty-printing functions (see below)."
   nil)
 
+;; Wrap a String with `(->Literal s)` to print it literally instead of wrapping in double quotes.
+(defrecord Literal [s])
+
+(def ^:private default-print-handlers
+  {Literal (fn [_printer literal]
+             [:text (:s literal)])})
+
 (defn- default-color-printer [x]
   ;; don't print in black. I can't see it
-  (puget/cprint x {:color-scheme {:nil nil}}))
+  (puget/cprint x {:color-scheme   {:nil nil}
+                   :print-handlers default-print-handlers}))
 
-(def ^:private default-boring-printer puget/pprint)
+(defn- default-boring-printer [x]
+  (puget/pprint x {:print-handlers default-print-handlers}))
 
 (defn- pprint
   "Pretty print a form `x`."
@@ -50,16 +59,16 @@
 
 (defn- describe-method [a-method]
   (let [{:keys [qualifier dispatch-value]} (meta a-method)]
-    (symbol (if qualifier
-              (format "#aux-method<%s %s>" (pr-str qualifier) (pr-str dispatch-value))
-              (format "#primary-method<%s>" (pr-str dispatch-value))))))
+    (->Literal (if qualifier
+                 (format "#aux-method<%s %s>" (pr-str qualifier) (pr-str dispatch-value))
+                 (format "#primary-method<%s>" (pr-str dispatch-value))))))
 
 (defn- describe [x]
   (cond
     (::description (meta x))                (::description (meta x))
-    (not (fn? x))                           x
     (:dispatch-value (meta x))              (describe-method x)
-    (:methodical/combined-method? (meta x)) (symbol "#combined-method")))
+    (:methodical/combined-method? (meta x)) (->Literal "#combined-method")
+    :else                                   (->Literal (pr-str x))))
 
 (defn- trace-method [m]
   (fn [& args]

@@ -66,13 +66,13 @@
             "  1: (#primary-method<[:default :bird]>"
             "      #primary-method<:default>"
             "      1"
-            "      {:parrot? true, :type :parrot})"
-            "    2: (#primary-method<:default> nil 1 {:bird? true, :parrot? true, :type :parrot})"
+            "      {:type :parrot, :parrot? true})"
+            "    2: (#primary-method<:default> nil 1 {:type :parrot, :parrot? true, :bird? true})"
             "    2> {:bird? true, :parrot? true, :type :parrot, :x 1}"
             "  1> {:bird? true, :parrot? true, :type :parrot, :x 1}"
             "  1: (#aux-method<:after [java.lang.Object :default]>"
             "      1"
-            "      {:bird? true, :parrot? true, :type :parrot, :x 1})"
+            "      {:type :parrot, :parrot? true, :bird? true, :x 1})"
             "  1> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"
             "0> {:bird? true, :object? true, :parrot? true, :type :parrot, :x 1}"]
            (trace-output my-multimethod 1 {:type :parrot}))))
@@ -101,3 +101,27 @@
               "  1> {:f :f, :x :methodical.util.trace-test/x}"
               "0> {:f :f, :x :methodical.util.trace-test/x}"]
              (trace-output lots-of-args-multifn ::x :b :c :d :e :f)))))
+
+(m/defmulti my=
+  {:arglists '([x y])}
+  (fn [x y]
+    [(class x) (class y)]))
+
+(m/defmethod my= :default
+  [x y]
+  (= x y))
+
+(m/defmethod my= [clojure.lang.AFunction Object]
+  [pred x]
+  (pred x))
+
+(t/deftest function-arg-test
+  (t/testing "Function arguments should not be printed as nil (#86)"
+    (t/is (= ["0: (my= #function[clojure.core/int?] 100)"
+              "  1: (#primary-method<[clojure.lang.AFunction java.lang.Object]>"
+              "      #primary-method<:default>"
+              "      #function[clojure.core/int?]"
+              "      100)"
+              "  1> true"
+              "0> true"]
+             (trace-output my= int? 100)))))
