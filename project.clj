@@ -50,7 +50,7 @@
     :source-paths ["dev"]}
 
    :whitespace-linter
-   {:dependencies [[com.camsaul/whitespace-linter "2022.01.27.04.43" :exclusions [org.clojure/clojure]]]}
+   {:dependencies [[com.camsaul/whitespace-linter "2022.07.21.02.09" :exclusions [org.clojure/clojure]]]}
 
    :repl
    {:global-vars {*warn-on-reflection* true}}
@@ -62,7 +62,7 @@
    {:dependencies
     ;; Cloverage dependency is normally injected when the plugin is ran. By explicitly specifying it here we can
     ;; cache it in CI
-    [[cloverage "1.2.2"]
+    [[cloverage "1.2.4"]
      ;; Required by both Potemkin and Cloverage, but Potemkin uses an older version that breaks Cloverage's ablity to
      ;; understand certain forms. Explicitly specify newer version here.
      [riddley "0.2.0"]]
@@ -100,7 +100,7 @@
    :bikeshed
    {:dependencies
     ;; use latest tools.namespace instead of older version so we only need to fetch it once for all plugins.
-    [[org.clojure/tools.namespace "1.1.0"]]
+    [[org.clojure/tools.namespace "1.3.0"]]
 
     :plugins
     [[lein-bikeshed "0.5.2"
@@ -136,7 +136,7 @@
     {}]
 
    :deploy
-   {:dependencies [[org.clojure/clojure "1.10.3"]]}}
+   {:dependencies [[org.clojure/clojure "1.11.1"]]}}
 
   :deploy-repositories
   [["clojars"
