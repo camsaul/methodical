@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.test :as t]
             [methodical.core :as m]
-            [methodical.util.trace :as trace]))
+            [methodical.util.trace :as trace]
+            [pretty.core :as pretty]))
 
 (def ^:private h
   (-> (make-hierarchy)
@@ -140,3 +141,25 @@
                   "  1> true"
                   "0> true"]
                  (trace-output my= int? 100)))))))
+
+(defrecord PrettyRecord [x]
+  pretty/PrettyPrintable
+  (pretty [_this]
+    (list '->PrettyRecord x)))
+
+(m/defmulti pretty-record
+  class)
+
+(m/defmethod pretty-record :default
+  [x]
+  x)
+
+(t/deftest pretty-print-PrettyPrintable-test
+  (t/testing "Use [[pretty.core/pretty]] to print things when possible"
+    (t/is (= "(->PrettyRecord {:a 1})"
+             (pr-str (pretty-record (->PrettyRecord {:a 1})))))
+    (t/is (= ["0: (pretty-record (->PrettyRecord {:a 1}))"
+              "  1: (#primary-method<:default> nil (->PrettyRecord {:a 1}))"
+              "  1> (->PrettyRecord {:a 1})"
+              "0> (->PrettyRecord {:a 1})"]
+             (trace-output pretty-record (->PrettyRecord {:a 1}))))))
