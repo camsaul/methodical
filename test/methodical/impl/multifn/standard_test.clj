@@ -35,16 +35,45 @@
            [::default ::default]
            ::default}
           dispatch-values (distinct (combo/permutations dispatch-values))]
-    (t/testing dispatch-values
+    (t/testing (pr-str dispatch-values)
       (t/is (= expected
                (standard/composite-effective-dispatch-value
                 (m/multi-default-dispatcher (fn [x y] [x y]) :default-value ::default)
+                [String ::parakeet]
                 dispatch-values)))))
   (t/testing "If there's ambiguity between values, always prefer values from the first dispatch value"
     (t/is (= [String ::parakeet]
              (standard/composite-effective-dispatch-value
               (m/multi-default-dispatcher (fn [x y] [x y]) :default-value ::default)
+              [String ::budgie]
               [[String ::parrot] [Number ::parrot] [Object ::parakeet]])))))
+
+(derive ::d.can    ::d.thing)
+(derive ::d.bird   ::d.thing)
+(derive ::d.toucan ::d.can)
+(derive ::d.toucan ::d.bird)
+
+(t/deftest diamond-inheritance-effective-dispatch-value-test
+  (t/testing "effective-dispatch-value with diamond inheritance should be calculated correctly (#91)"
+    (let [mf (-> (m/default-multifn
+                  (fn [x _m]
+                    (keyword x)))
+                 (m/add-primary-method ::d.thing (constantly nil))
+                 (m/add-primary-method ::d.can (constantly nil))
+                 (m/add-aux-method :before ::d.bird (constantly nil))
+                 (m/add-aux-method :after ::d.can (constantly nil)))]
+      (t/is (= ::d.toucan
+               (m/effective-dispatch-value mf ::d.toucan))))
+    (t/testing "Composite dispatch values"
+      (let [mf (-> (m/default-multifn
+                    (fn [x _m]
+                      (keyword x)))
+                   (m/add-primary-method [::d.thing ::d.thing] (constantly nil))
+                   (m/add-primary-method [::d.can ::d.can] (constantly nil))
+                   (m/add-aux-method :before [::d.bird ::d.bird] (constantly nil))
+                   (m/add-aux-method :after [::d.can ::d.can] (constantly nil)))]
+        (t/is (= [::d.toucan ::d.toucan]
+                 (m/effective-dispatch-value mf [::d.toucan ::d.toucan])))))))
 
 (t/deftest standard-effective-method-dispatch-value-test
   (t/testing "standard-effective-method should return a method with the correct ^:dispatch-value metadata"

@@ -1,5 +1,5 @@
 (ns methodical.impl.multifn.standard
-  "Standard Methodical MultiFn impl, which "
+  "Standard Methodical MultiFn impl."
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
@@ -17,6 +17,27 @@
    (dispatcher.common/domination-comparitor (partial i/dominates? dispatcher))
    dispatch-values))
 
+(defn non-composite-effective-dispatch-value
+  "Operates only on non-composite dispatch values. Determine the effective (most-specific) dispatch value that will be
+  used when dispatching on `actual-dispatch-value`. If there is a dispatch value in `method-dispatch-values` that
+  dominates all other method dispatch values, that is the effective dispatch value. Otherwise the actual dispatch
+  value will be used.
+
+  Example. Suppose a `::toucan` is a `::can`, and a `::toucan` is a `::bird`. If we dispatch off of `::toucan` and
+  only have a method for `::bird`, then `::bird` is the effective dispatch value, because there are no other dispatch
+  values that are more specific that would cause other methods to be used; the result is the same as if we had
+  dispatched off of `::bird` in the first place. However, if we add a `::can` method, the effective dispatch value for
+  `::toucan` can no longer be `::bird`, because a `::bird` is not necessarily a `::can`. Thus our effective dispatch
+  value would become `::toucan`, since out of the three possibilities only a `::toucan` is both a `::bird` and a
+  `::can`."
+  [dispatcher actual-dispatch-value method-dispatch-values]
+  (let [[most-specific-dispatch-value & more-dispatch-values] (distinct (sort-dispatch-values dispatcher method-dispatch-values))]
+    (if (every? (fn [another-dispatch-value]
+                  (i/dominates? dispatcher most-specific-dispatch-value another-dispatch-value))
+                more-dispatch-values)
+      most-specific-dispatch-value
+      actual-dispatch-value)))
+
 (defn composite-effective-dispatch-value
   "Combine multiple composite dispatch values into a single composite dispatch value that has the overall most-specific
   arg for each position, e.g.
@@ -25,37 +46,33 @@
     (composite-effective-dispatch-value [[Object ::parrot] [String ::bird]]) ; -> [String ::parrot]
 
   If the most-specific dispatch value is not composite, it returns it directly."
-  [dispatcher dispatch-values]
+  [dispatcher actual-dispatch-value method-dispatch-values]
   ;; sort the values so in cases where there's ambiguity we take the keep the value in the overall-most-specific
   ;; dispatch value.
-  (let [[most-specific-dispatch-value & more-dispatch-values] (sort-dispatch-values dispatcher dispatch-values)]
+  (let [[most-specific-method-dispatch-value :as method-dispatch-values] (sort-dispatch-values dispatcher method-dispatch-values)]
     ;; if the most-specific dispatch value is not composite, we can return it as-is -- there's no need to build a
     ;; composite dispatch value.
-    (if-not (sequential? most-specific-dispatch-value)
-      most-specific-dispatch-value
+    (if-not (sequential? most-specific-method-dispatch-value)
+      (non-composite-effective-dispatch-value dispatcher actual-dispatch-value method-dispatch-values)
       ;; otherwise we need to combine stuff
-      (reduce
-       (fn [dv1 dv2]
-         (map
-          (fn [x y]
-            (if (i/dominates? dispatcher y x)
-              y
-              x))
-          dv1
-          dv2))
-       most-specific-dispatch-value
-       (filter sequential? more-dispatch-values)))))
+      (mapv (fn [i]
+              (non-composite-effective-dispatch-value dispatcher
+                                          (nth actual-dispatch-value i)
+                                          (map #(nth % i)
+                                               (filter sequential? method-dispatch-values))))
+            (range (count actual-dispatch-value))))))
 
 (defn effective-dispatch-value
-  "Given matching `primary-methods` and `aux-methods` for `dispatch-value`, determine the effective dispatch value."
-  {:arglists '([dispatcher primary-methods aux-methods])}
-  [dispatcher [most-specific-primary-method] aux-methods]
+  "Given matching `primary-methods` and `aux-methods` for the actual `dispatch-value`, determine the effective dispatch
+  value."
+  {:arglists '([dispatcher dispatch-value primary-methods aux-methods])}
+  [dispatcher dispatch-value [most-specific-primary-method] aux-methods]
   (let [dispatch-values (transduce
                          (comp cat (map meta) (map :dispatch-value) (filter some?))
                          conj
                          []
                          (cons [most-specific-primary-method] (vals aux-methods)))]
-    (composite-effective-dispatch-value dispatcher dispatch-values)))
+    (composite-effective-dispatch-value dispatcher dispatch-value dispatch-values)))
 
 (defn standard-effective-method
   "Build an effective method using the 'standard' technique, taking the dispatch-value-method pairs in the
@@ -64,13 +81,13 @@
   (let [primary-methods (i/matching-primary-methods dispatcher method-table dispatch-value)
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
     (some-> (i/combine-methods method-combination primary-methods aux-methods)
-            (with-meta {:dispatch-value (effective-dispatch-value dispatcher primary-methods aux-methods)}))))
+            (with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
 
 (p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
                                        ^Dispatcher dispatcher
                                        ^MethodTable method-table]
   pretty/PrettyPrintable
-  (pretty [_]
+  (pretty [_this]
     (list 'standard-multifn-impl combo dispatcher method-table))
 
   Object
@@ -82,10 +99,10 @@
                 (= method-table (.method-table another))))))
 
   MultiFnImpl
-  (method-combination [_]
+  (method-combination [_this]
     combo)
 
-  (dispatcher [_]
+  (dispatcher [_this]
     dispatcher)
 
   (with-dispatcher [this new-dispatcher]
@@ -93,7 +110,7 @@
       this
       (StandardMultiFnImpl. combo new-dispatcher method-table)))
 
-  (method-table [_]
+  (method-table [_this]
     method-table)
 
   (with-method-table [this new-method-table]
@@ -101,5 +118,5 @@
       this
       (StandardMultiFnImpl. combo dispatcher new-method-table)))
 
-  (effective-method [_ dispatch-value]
+  (effective-method [_this dispatch-value]
     (standard-effective-method combo dispatcher method-table dispatch-value)))

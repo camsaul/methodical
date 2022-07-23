@@ -20,7 +20,7 @@
     ;; this wasn't an :unmatched-dispatch-value situation; just rethrow it
     (throw e)))
 
-(defn- ^:static effective-method [^MultiFnImpl impl, dispatch-value]
+(defn- ^:static effective-method [^MultiFnImpl impl dispatch-value]
   (or (.effective-method impl dispatch-value)
       (-> (format "No matching%s method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
           (ex-info {::unmatched-dispatch-value dispatch-value})
@@ -165,7 +165,7 @@
       this
       (StandardMultiFn. (i/with-method-table impl new-method-table) mta)))
 
-  (effective-method [_ dispatch-value]
+  (effective-method [_this dispatch-value]
     (try (.effective-method impl dispatch-value)
          (catch Exception e
            (handle-effective-method-exception e mta))))
