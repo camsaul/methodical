@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [methodical.interface :as i]
             [methodical.util :as u]
+            [pretty.core :as pretty]
             [puget.printer :as puget]))
 
 (def ^:dynamic *color*
@@ -65,11 +66,12 @@
 
 (defn- describe [x]
   (cond
-    (::description (meta x))                (::description (meta x))
-    (:dispatch-value (meta x))              (describe-method x)
-    (:methodical/combined-method? (meta x)) (->Literal "#combined-method")
-    (fn? x)                                 (->Literal (pr-str x))
-    :else                                   x))
+    (::description (meta x))                  (::description (meta x))
+    (:dispatch-value (meta x))                (describe-method x)
+    (:methodical/combined-method? (meta x))   (->Literal "#combined-method")
+    (fn? x)                                   (->Literal (pr-str x))
+    (instance? pretty.core.PrettyPrintable x) (pretty/pretty x)
+    :else                                     x))
 
 (defn- trace-method [m]
   (fn [& args]
@@ -83,7 +85,7 @@
       (trace-print-indent)
       (printf "%d> " *trace-level*)
       (binding [*trace-indent* (+ *trace-indent* 3)]
-        (trace-println (with-out-str (pprint result))))
+        (trace-println (with-out-str (pprint (describe result)))))
       result)))
 
 (defn- trace-primary-method [primary-method]
