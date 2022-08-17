@@ -1,5 +1,5 @@
 {:config-paths
- ["macros"]
+ ["../resources/clj-kondo.exports/methodical/methodical"]
 
  :linters
  {:missing-docstring            {:level :warning}
@@ -10,14 +10,6 @@
   :unresolved-symbol            {}}
 
  :lint-as
- {potemkin.types/deftype+     clojure.core/deftype
-  methodical.macros/defmulti  clojure.core/defmulti
-  methodical.core/defmulti    clojure.core/defmulti
-  methodical.macros/defmethod clj-kondo.lint-as/def-catch-all
-  methodical.core/defmethod   clj-kondo.lint-as/def-catch-all}
-
- :hooks
- {:macroexpand
-  {methodical.impl.combo.operator/defoperator macros.methodical.impl.combo.operator/defoperator}}
+ {potemkin.types/deftype+ clojure.core/deftype}
 
  :skip-comments true}

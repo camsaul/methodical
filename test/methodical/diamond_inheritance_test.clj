@@ -10,7 +10,7 @@
 
 (t/deftest diamond-inheritance-test
   (t/testing "Effective dispatch values calculated incorrectly for diamond inheritance with aux methods (#91)"
-    (letfn [(mf []
+    (letfn [(create-mf []
               (-> (m/default-multifn
                    (fn [x _m]
                      (keyword x)))
@@ -41,10 +41,10 @@
                 (t/is (= {:before/bird? true, :can? true, :thing? true, :after/can? true}
                          (mf ::toucan {})))))]
       (t/testing "\n::can before ::toucan"
-        (let [mf (mf)]
+        (let [mf (create-mf)]
           (can mf)
           (toucan mf)))
       (t/testing "\n::toucan before ::can"
-        (let [mf (mf)]
+        (let [mf (create-mf)]
           (toucan mf)
           (can mf))))))
