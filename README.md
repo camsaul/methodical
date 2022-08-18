@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/camsaul/methodical/branch/master/graph/badge.svg)](https://codecov.io/gh/camsaul/methodical)
 [![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE)
 [![cljdoc badge](https://cljdoc.org/badge/methodical)](https://cljdoc.org/d/methodical/methodical/CURRENT)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/camsaul)](https://github.com/sponsors/camsaul)
 
 [![Clojars Project](https://clojars.org/methodical/latest-version.svg)](http://clojars.org/methodical)
 
