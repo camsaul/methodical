@@ -54,11 +54,8 @@
   (prefers [_]
     prefs)
 
-  (prefer-method [this x y]
-    (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
-      (if (= prefs new-prefs)
-        this
-        (EverythingDispatcher. hierarchy-var new-prefs))))
+  (with-prefers [_this new-prefs]
+    (EverythingDispatcher. hierarchy-var new-prefs))
 
   (dominates? [_ x y]
     (dispatcher.common/dominates? (deref hierarchy-var) prefs x y)))

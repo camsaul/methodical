@@ -187,6 +187,42 @@
   [multifn]
   (-> multifn remove-all-primary-methods remove-all-aux-methods))
 
+(defn add-preference
+  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`. `isa?*` is
+  used to determine whether a relationship between `x` and `y` that precludes this preference already exists; it can
+  be [[clojure.core/isa?]], perhaps partially bound with a hierarchy, or some other 2-arg predicate function."
+  [isa?* prefs x y]
+  (when (= x y)
+    (throw (IllegalStateException. (format "Cannot prefer dispatch value %s over itself." x))))
+  (when (contains? (get prefs y) x)
+    (throw (IllegalStateException. (format "Preference conflict in multimethod: %s is already preferred to %s" y x))))
+  ;; this is not actually a restriction that is enforced by vanilla Clojure multimethods, but after thinking about
+  ;; it really doesn't seem to make sense to allow you to define a preference that will never be used
+  (when (isa?* y x)
+    (throw (IllegalStateException.
+            (format "Preference conflict in multimethod: cannot prefer %s over its descendant %s."
+                    x y))))
+  (update prefs x #(conj (set %) y)))
+
+(defn prefer-method
+  "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations."
+  [multifn dispatch-val-x dispatch-val-y]
+  {:pre [(some? multifn)]}
+  (when (= dispatch-val-x dispatch-val-y)
+    (throw (IllegalStateException. (format "Cannot prefer dispatch value %s over itself." dispatch-val-x))))
+  (let [prefs (i/prefers multifn)]
+    (when (contains? (get prefs dispatch-val-y) dispatch-val-x)
+      (throw (IllegalStateException. (format "Preference conflict in multimethod: %s is already preferred to %s"
+                                             dispatch-val-y
+                                             dispatch-val-x))))
+    (when (i/dominates? (i/with-prefers multifn nil) dispatch-val-y dispatch-val-x)
+      (throw (IllegalStateException.
+              (format "Preference conflict in multimethod: cannot prefer %s over its descendant %s."
+                      dispatch-val-x
+                      dispatch-val-y))))
+    (let [new-prefs (update prefs dispatch-val-x #(conj (set %) dispatch-val-y))]
+      (i/with-prefers multifn new-prefs))))
+
 
 ;;;; #### Low-level destructive operations
 
@@ -256,6 +292,11 @@
   [multifn-var]
   (alter-var-root+ multifn-var remove-all-methods))
 
+(defn with-prefers!
+  "Destructive version of [[methodical.interface/with-prefers]]. Operates on a var defining a Methodical multifn."
+  [multifn-var new-prefs]
+  (alter-var-root+ multifn-var i/with-prefers new-prefs))
+
 (defn prefer-method!
   "Destructive version of [[prefer-method]]. Operates on a var defining a Methodical multifn.
 
@@ -264,4 +305,4 @@
   operation from our nondestructive [[prefer-method]], which returns a copy of the multifn with an altered dispatch
   table."
   [multifn-var dispatch-val-x dispatch-val-y]
-  (alter-var-root+ multifn-var i/prefer-method dispatch-val-x dispatch-val-y))
+  (alter-var-root+ multifn-var prefer-method dispatch-val-x dispatch-val-y))

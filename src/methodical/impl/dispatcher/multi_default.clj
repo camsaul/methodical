@@ -177,11 +177,8 @@
   (prefers [_]
     prefs)
 
-  (prefer-method [this x y]
-    (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
-      (if (= prefs new-prefs)
-        this
-        (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
+  (with-prefers [_this new-prefs]
+    (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))
 
   (dominates? [_ x y]
     (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y)))

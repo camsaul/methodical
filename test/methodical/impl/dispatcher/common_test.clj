@@ -2,30 +2,6 @@
   (:require [clojure.test :as t]
             [methodical.impl.dispatcher.common :as dispatcher.common]))
 
-(t/deftest add-preference-test
-  (t/is (= {:x #{:y}}
-           (dispatcher.common/add-preference isa? {} :x :y)))
-  (t/testing "should thrown an Exception if you try to add an illegal preference"
-    (t/is (thrown-with-msg?
-           IllegalStateException
-           (re-pattern "Cannot prefer dispatch value :x over itself.")
-           (dispatcher.common/add-preference isa? {} :x :x)))
-    (t/is (thrown-with-msg?
-           IllegalStateException
-           (re-pattern "Preference conflict in multimethod: :x is already preferred to :y")
-           (dispatcher.common/add-preference isa? {:x #{:y}} :y :x)))
-    (let [h     (-> (make-hierarchy)
-                    (derive :bird :animal)
-                    (derive :toucan :bird))
-          isa?* (partial isa? h)]
-      (doseq [k [:bird :animal]]
-        (t/testing (format "Prefer %s over :toucan" k)
-          (t/is (thrown-with-msg?
-                 IllegalStateException
-                 (re-pattern (format "Preference conflict in multimethod: cannot prefer %s over its descendant :toucan."
-                                     k))
-                 (dispatcher.common/add-preference isa?* {} k :toucan))))))))
-
 (t/deftest prefers-test
   (t/testing "prefers?"
     (let [h (-> (make-hierarchy)

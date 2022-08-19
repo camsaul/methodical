@@ -1,5 +1,5 @@
 (ns methodical.interface
-  (:refer-clojure :exclude [isa? prefers prefer-method])
+  (:refer-clojure :exclude [isa? prefers])
   (:require clojure.core))
 
 ;; this is a dummy dependency until Cloverage 1.3.0 is released -- see
@@ -89,8 +89,8 @@
   (prefers [dispatcher]
     "Return a map of preferred dispatch value -> set of other dispatch values.")
 
-  (prefer-method [dispatcher dispatch-val-x dispatch-val-y]
-    "Prefer `dispatch-val-x` over `dispatch-val-y` for dispatch and method combinations.")
+  (with-prefers [dispatcher new-prefs]
+    "Return a copy of `dispatcher` with its preferences map replaced with `new-prefs`.")
 
   (dominates? [dispatcher dispatch-val-x dispatch-val-y]
     "Is `dispatch-val-x` considered more specific than `dispatch-val-y`?"))
