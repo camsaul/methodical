@@ -36,7 +36,7 @@
   ;; Dispatcher
   default-dispatch-value
   prefers
-  prefer-method
+  with-prefers
   dominates?
   ;; MultiFnImpl
   method-combination
@@ -100,6 +100,7 @@
   add-aux-method-with-unique-key
   remove-aux-method-with-unique-key
   remove-all-methods
+  prefer-method
   ;; destructive ops
   add-primary-method!
   remove-primary-method!
@@ -111,7 +112,8 @@
   add-aux-method-with-unique-key!
   remove-aux-method-with-unique-key!
   remove-all-methods!
-  prefer-method!]
+  prefer-method!
+  with-prefers!]
 
  [methodical.util.trace
   trace])

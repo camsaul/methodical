@@ -397,3 +397,29 @@
 
       (t/is (= nil
                (seq (i/aux-methods remove-all-methods-multifn)))))))
+
+(t/deftest prefer-method-test
+  (let [mf (m/default-multifn :k)]
+    (t/is (= {:x #{:y}}
+             (i/prefers (u/prefer-method mf :x :y))))
+    (t/testing "should thrown an Exception if you try to add an illegal preference"
+      (t/is (thrown-with-msg?
+             IllegalStateException
+             (re-pattern "Cannot prefer dispatch value :x over itself.")
+             (u/prefer-method mf :x :x)))
+      (let [mf (i/with-prefers mf {:x #{:y}})]
+        (t/is (thrown-with-msg?
+               IllegalStateException
+               (re-pattern "Preference conflict in multimethod: :x is already preferred to :y")
+               (u/prefer-method mf :y :x))))
+      (let [h   (-> (make-hierarchy)
+                    (derive :bird :animal)
+                    (derive :toucan :bird))
+            mf2 (m/default-multifn :k :hierarchy (atom h))]
+        (doseq [k [:bird :animal]]
+          (t/testing (format "Prefer %s over :toucan" k)
+            (t/is (thrown-with-msg?
+                   IllegalStateException
+                   (re-pattern (format "Preference conflict in multimethod: cannot prefer %s over its descendant :toucan."
+                                       k))
+                   (u/prefer-method mf2 k :toucan)))))))))

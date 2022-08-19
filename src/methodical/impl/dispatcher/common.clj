@@ -1,23 +1,6 @@
 (ns methodical.impl.dispatcher.common
   "Utility functions for implementing Dispatchers.")
 
-(defn add-preference
-  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`. `isa?*` is
-  used to determine whether a relationship between `x` and `y` that precludes this preference already exists; it can
-  be `clojure.core/isa?`, perhaps partially bound with a hierarchy, or some other 2-arg predicate function."
-  [isa?* prefs x y]
-  (when (= x y)
-    (throw (IllegalStateException. (format "Cannot prefer dispatch value %s over itself." x))))
-  (when (contains? (get prefs y) x)
-    (throw (IllegalStateException. (format "Preference conflict in multimethod: %s is already preferred to %s" y x))))
-  ;; this is not actually a restriction that is enforced by vanilla Clojure multimethods, but after thinking about
-  ;; it really doesn't seem to make sense to allow you to define a preference that will never be used
-  (when (isa?* y x)
-    (throw (IllegalStateException.
-            (format "Preference conflict in multimethod: cannot prefer %s over its descendant %s."
-                    x y))))
-  (update prefs x #(conj (set %) y)))
-
 (defn prefers?
   "True if `x` or one of its ancestors is prefered over `y` or one of its ancestors."
   [hierarchy prefs x y]

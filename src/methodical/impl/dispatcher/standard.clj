@@ -1,7 +1,7 @@
 (ns methodical.impl.dispatcher.standard
   "A single-hierarchy dispatcher that behaves similarly to the way multimethod dispatch is done by vanilla Clojure
   multimethods, but with added support for auxiliary methods."
-  (:refer-clojure :exclude [prefers prefer-method methods])
+  (:refer-clojure :exclude [prefers methods])
   (:require [methodical.impl.dispatcher.common :as dispatcher.common]
             [methodical.interface :as i]
             [potemkin.types :as p.types]
@@ -147,11 +147,8 @@
   (prefers [_]
     prefs)
 
-  (prefer-method [this x y]
-    (let [new-prefs (dispatcher.common/add-preference (partial isa? (deref hierarchy-var)) prefs x y)]
-      (if (= prefs new-prefs)
-        this
-        (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs))))
+  (with-prefers [_this new-prefs]
+    (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs))
 
   (dominates? [_ x y]
     (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y)))

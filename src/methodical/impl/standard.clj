@@ -118,8 +118,8 @@
   (prefers [_]
     (i/prefers (.dispatcher impl)))
 
-  (prefer-method [this dispatch-val-x dispatch-val-y]
-    (i/with-dispatcher this (i/prefer-method (.dispatcher impl) dispatch-val-x dispatch-val-y)))
+  (with-prefers [this new-prefers]
+    (i/with-dispatcher this (i/with-prefers (.dispatcher impl) new-prefers)))
 
   (dominates? [_ dispatch-val-x dispatch-val-y]
     (i/dominates? (.dispatcher impl) dispatch-val-x dispatch-val-y))

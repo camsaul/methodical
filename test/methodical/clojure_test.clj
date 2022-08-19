@@ -1,8 +1,8 @@
 (ns methodical.clojure-test
   "Tests to ensure we can replicate the basic behavior of vanilla Clojure multimethods."
   (:require [clojure.test :as t]
-            [methodical.impl :as impl]
-            [methodical.interface :as i]))
+            [methodical.core :as m]
+            [methodical.impl :as impl]))
 
 (defn- clojure-multifn [dispatch-fn & options]
   (impl/multifn (apply impl/clojure-multifn-impl dispatch-fn options)))
@@ -10,7 +10,7 @@
 (defn- add-methods [multifn fns]
   (reduce
    (fn [multifn [dispatch-val f]]
-     (i/add-primary-method multifn dispatch-val f))
+     (m/add-primary-method multifn dispatch-val f))
    multifn
    fns))
 
@@ -157,8 +157,8 @@
 (t/deftest prefer-method-test
   (with-local-vars [hierarchy (make-ambiguous-hierarchy)]
     (let [multifn (-> (ambiguous-hierarchy-multifn hierarchy)
-                      (i/prefer-method :parent-1 :parent-2))]
-      (t/is (= (i/prefers multifn) {:parent-1 #{:parent-2}})
+                      (m/prefer-method :parent-1 :parent-2))]
+      (t/is (= (m/prefers multifn) {:parent-1 #{:parent-2}})
           "Map of prefers should be visible by calling `prefers`")
       (t/is (= (multifn :child) :parent-1)
             "It should be possible to prefer one ambiguous method over another"))))
@@ -168,17 +168,17 @@
     (let [multifn (ambiguous-hierarchy-multifn hierarchy)]
       (t/is (thrown-with-msg? IllegalStateException
                             #"Cannot prefer dispatch value :parent-1 over itself"
-                            (i/prefer-method multifn :parent-1 :parent-1))
+                            (m/prefer-method multifn :parent-1 :parent-1))
             "Trying to prefer a dispatch value over itself should throw an Exception")
       (t/is (thrown-with-msg? IllegalStateException
                             #"Preference conflict in multimethod: :parent-1 is already preferred to :parent-2"
                             (-> multifn
-                                (i/prefer-method :parent-1 :parent-2)
-                                (i/prefer-method :parent-2 :parent-1)))
+                                (m/prefer-method :parent-1 :parent-2)
+                                (m/prefer-method :parent-2 :parent-1)))
             "You should not be able to prefer something if it would conflict with an existing prefer")
       (t/is (thrown-with-msg? IllegalStateException
                             #"Preference conflict in multimethod: cannot prefer :parent-1 over its descendant :child"
-                            (i/prefer-method multifn :parent-1 :child))
+                            (m/prefer-method multifn :parent-1 :child))
             "You should not be able to prefer an ancestor over its descendant."))))
 
 (t/deftest remove-primary-method-test
@@ -187,11 +187,11 @@
         multifn (-> (clojure-multifn keyword)
                     (add-methods {:a a, :default default}))]
     (t/testing "sanity check"
-      (t/is (= (i/primary-methods multifn) {:a a, :default default})
+      (t/is (= (m/primary-methods multifn) {:a a, :default default})
             "You should be able to see a map of dispatch-value -> primary method with `primary-methods`"))
     (t/testing "remove-primary-method"
-      (let [multifn (i/remove-primary-method multifn :a)]
-        (t/is (= (i/primary-methods multifn) {:default default}))
+      (let [multifn (m/remove-primary-method multifn :a)]
+        (t/is (= (m/primary-methods multifn) {:default default}))
         (t/is (= (multifn :a) :default))))))
 
 (t/deftest effective-method-test
@@ -202,13 +202,13 @@
                                          :default default-method}))]
     (t/testing "For Clojure-style multifns, `effective-method` should work just like vanilla `get-method`."
       (t/is (= (a-method :x)
-               ((i/effective-method multifn :a) :x))))
+               ((m/effective-method multifn :a) :x))))
     (t/testing "The default method should be returned if no matching method is found."
       (t/is (= (default-method :x)
-               ((i/effective-method multifn :b) :x))))
-    (let [multifn (i/remove-primary-method multifn :default)]
+               ((m/effective-method multifn :b) :x))))
+    (let [multifn (m/remove-primary-method multifn :default)]
       (t/testing "If no default method exists, `effective-method` should return nil if no methods match."
         (t/is (= nil
-                 (i/effective-method multifn :b)))))))
+                 (m/effective-method multifn :b)))))))
 
 ;; TODO - test other methods not available in vanilla Clojure, e.g. `dominates?` and `aux-methods`
