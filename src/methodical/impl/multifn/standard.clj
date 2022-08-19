@@ -57,9 +57,9 @@
 
   If the most-specific dispatch value is not composite, it returns it directly."
   [dispatcher actual-dispatch-value method-dispatch-values]
-  (let [;; sort the values so in cases where there's ambiguity we take the keep the value in the overall-most-specific
-        ;; dispatch value.
-        [most-specific-method-dispatch-value :as method-dispatch-values] (sort-dispatch-values dispatcher method-dispatch-values)]
+  ;; sort the values so in cases where there's ambiguity we take the keep the value in the overall-most-specific
+  ;; dispatch value.
+  (let [[most-specific-method-dispatch-value :as method-dispatch-values] (sort-dispatch-values dispatcher method-dispatch-values)]
     ;; if the most-specific dispatch value is not composite, we can return it as-is -- there's no need to build a
     ;; composite dispatch value.
     (if-not (sequential? most-specific-method-dispatch-value)
