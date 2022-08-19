@@ -31,7 +31,17 @@
   value would become `::toucan`, since out of the three possibilities only a `::toucan` is both a `::bird` and a
   `::can`."
   [dispatcher actual-dispatch-value method-dispatch-values]
-  (let [[most-specific-dispatch-value & more-dispatch-values] (distinct (sort-dispatch-values dispatcher method-dispatch-values))]
+  (let [[most-specific-dispatch-value & more-dispatch-values] (distinct (sort-dispatch-values dispatcher method-dispatch-values))
+        ;; do not take preferences into account when calculating the effective dispatch value. Aux methods are applied
+        ;; to *all* matching dispatch values, which means that one aux method should not be considered unambiguously
+        ;; dominant over another based on preferences alone; we should only consider a method to be dominant over
+        ;; another for effective dispatch value purposes if its dispatch value ISA all of the other matching dispatch
+        ;; values.
+        ;;
+        ;; Example: if a `:toucan` ISA `:can` and a `:toucan` ISA `:bird`, and we have `:before` methods for both
+        ;; `:can` and `:bird`, and a preference for `:bird` over `:can`, we cannot consider `:bird` to be the
+        ;; effective dispatch value for `:toucan`, because a `:toucan` ISA `:can`, but a `:bird` is not a `:can`.
+        dispatcher                                            (i/with-prefers dispatcher nil)]
     (if (every? (fn [another-dispatch-value]
                   (i/dominates? dispatcher most-specific-dispatch-value another-dispatch-value))
                 more-dispatch-values)
@@ -57,9 +67,9 @@
       ;; otherwise we need to combine stuff
       (mapv (fn [i]
               (non-composite-effective-dispatch-value dispatcher
-                                          (nth actual-dispatch-value i)
-                                          (map #(nth % i)
-                                               (filter sequential? method-dispatch-values))))
+                                                      (nth actual-dispatch-value i)
+                                                      (map #(nth % i)
+                                                           (filter sequential? method-dispatch-values))))
             (range (count actual-dispatch-value))))))
 
 (defn effective-dispatch-value

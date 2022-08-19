@@ -89,7 +89,7 @@
   (prefers [dispatcher]
     "Return a map of preferred dispatch value -> set of other dispatch values.")
 
-  (with-prefers [dispatcher new-prefs]
+  (^methodical.interface.Dispatcher ^{:style/indent :defn} with-prefers [dispatcher new-prefs]
     "Return a copy of `dispatcher` with its preferences map replaced with `new-prefs`.")
 
   (dominates? [dispatcher dispatch-val-x dispatch-val-y]
@@ -109,13 +109,13 @@
   (^methodical.interface.Dispatcher dispatcher [multifn]
    "Get the dispatcher associated with this multifn.")
 
-  (^methodical.interface.MultiFnImpl with-dispatcher [multifn new-dispatcher]
+  (^methodical.interface.MultiFnImpl ^{:style/indent :defn} with-dispatcher [multifn new-dispatcher]
    "Return a copy of this multifn using `new-dispatcher` as its dispatcher.")
 
   (^methodical.interface.MethodTable method-table [multifn]
    "Get the method table associated with this multifn.")
 
-  (^methodical.interface.MultiFnImpl with-method-table [multifn new-method-table]
+  (^methodical.interface.MultiFnImpl ^{:style/indent :defn} with-method-table [multifn new-method-table]
    "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]

@@ -75,6 +75,51 @@
         (t/is (= [::d.toucan ::d.toucan]
                  (m/effective-dispatch-value mf [::d.toucan ::d.toucan])))))))
 
+(t/deftest effective-dispatch-value-with-preferred-aux-methods-test
+  (t/testing "effective-dispatch-value should ignore preferences (#104)"
+    (let [h (-> (make-hierarchy)
+                (derive :toucan :bird)
+                (derive :toucan :can)
+                (derive :parrot :bird))]
+      (doseq [invoke-order [[:parrot :toucan]
+                            [:toucan :parrot]]
+              prefs        [nil
+                            [:bird :can]
+                            [:can :bird]]]
+        (t/testing (str (format "\nInvoke %s before %s" (first invoke-order) (second invoke-order))
+                        (when prefs
+                          (format "\nprefer %s over %s" (first prefs) (second prefs))))
+          (let [mf (-> (m/default-multifn :k, :hierarchy (atom h))
+                       ;; apply `:bird` methods before `:can` methods
+                       (m/add-aux-method :before :bird (fn [m] (update m :calls conj :before/bird)))
+                       (m/add-aux-method :before :can (fn [m] (update m :calls conj :before/can)))
+                       (m/add-primary-method :default (fn [_next-method m] (update m :calls conj :primary/default)))
+                       (m/add-aux-method :around :default (fn [next-method m] (update (next-method m) :calls conj :around/default))))
+                mf (if prefs
+                     (m/prefer-method mf (first prefs) (second prefs))
+                     mf)]
+            (doseq [bird invoke-order]
+              (t/testing (format "\nInvoke %s" bird)
+                (t/testing "\neffective dispatch value"
+                  (let [expected (case bird
+                                   :parrot :bird
+                                   :toucan :toucan)]
+                    (t/testing (format "\ncalling mf for %s should use the method for %s" bird expected)
+                      (t/is (= expected
+                               (m/effective-dispatch-value mf bird))))))
+                (t/is (= (case bird
+                           :toucan {:k bird, :calls (case prefs
+                                                      ;; if there is no preference between aux methods the order is
+                                                      ;; indeterminant -- see #103 -- but for whatever reason this
+                                                      ;; seems to be what happens for now
+                                                      (nil [:bird :can])
+                                                      [:before/bird :before/can :primary/default :around/default]
+
+                                                      [:can :bird]
+                                                      [:before/can :before/bird :primary/default :around/default])}
+                           :parrot {:k bird, :calls [:before/bird :primary/default :around/default]})
+                         (mf {:k bird, :calls []})))))))))))
+
 (t/deftest standard-effective-method-dispatch-value-test
   (t/testing "standard-effective-method should return a method with the correct ^:dispatch-value metadata"
     (let [combo        (m/thread-last-method-combination)
