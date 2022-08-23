@@ -120,6 +120,48 @@
                            :parrot {:k bird, :calls [:before/bird :primary/default :around/default]})
                          (mf {:k bird, :calls []})))))))))))
 
+(t/deftest consider-all-primary-methods-when-calculating-effective-dispatch-value-test
+  (t/testing "effective-dispatch-value needs to consider *all* primary methods."
+    (doseq [ks   [[:bird :toucan]
+                  [:toucan :bird]]
+            :let [h (-> (make-hierarchy)
+                        (derive :bird :thing)
+                        (derive :can :thing)
+                        (derive :toucan :bird)
+                        (derive :toucan :can))
+                  m (-> (m/default-multifn :k, :hierarchy (atom h))
+                        (m/add-primary-method :bird (fn [next-method m]
+                                                      (cond-> (update m :calls conj :bird)
+                                                        next-method
+                                                        next-method)))
+                        (m/add-primary-method :can (fn [next-method m]
+                                                     (cond-> (update m :calls conj :can)
+                                                       next-method
+                                                       next-method)))
+                        (m/prefer-method :bird :can))]
+            k    ks]
+      (t/testing (format "order = %s, testing %s" (pr-str ks) k)
+        (t/testing `standard/composite-effective-dispatch-value
+          (t/is (= k
+                   (standard/composite-effective-dispatch-value m k [:bird :can]))))
+        (t/testing `standard/effective-dispatch-value
+          (t/is (= k
+                   (standard/effective-dispatch-value
+                    m
+                    k
+                    (m/matching-primary-methods m k)
+                    (m/matching-aux-methods m k)))))
+        (t/testing `standard/standard-effective-method
+          (t/is (= k
+                   (:dispatch-value (meta (standard/standard-effective-method m m m k))))))
+        (t/testing `m/effective-dispatch-value
+          (t/is (= k
+                   (m/effective-dispatch-value m k))))
+        (t/is (= (case k
+                   :bird   {:k :bird, :calls [:bird]}
+                   :toucan {:k :toucan, :calls [:bird :can]})
+                 (m {:k k, :calls []})))))))
+
 (t/deftest standard-effective-method-dispatch-value-test
   (t/testing "standard-effective-method should return a method with the correct ^:dispatch-value metadata"
     (let [combo        (m/thread-last-method-combination)
