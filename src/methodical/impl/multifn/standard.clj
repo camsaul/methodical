@@ -73,16 +73,18 @@
             (range (count actual-dispatch-value))))))
 
 (defn effective-dispatch-value
-  "Given matching `primary-methods` and `aux-methods` for the actual `dispatch-value`, determine the effective dispatch
+  "Given matching `primary-methods` and `aux-methods` for the `actual-dispatch-value`, determine the effective dispatch
   value."
-  {:arglists '([dispatcher dispatch-value primary-methods aux-methods])}
-  [dispatcher dispatch-value [most-specific-primary-method] aux-methods]
+  [dispatcher actual-dispatch-value primary-methods aux-methods]
   (let [dispatch-values (transduce
-                         (comp cat (map meta) (map :dispatch-value) (filter some?))
+                         (comp cat
+                               (map meta)
+                               (map :dispatch-value)
+                               (filter some?))
                          conj
                          []
-                         (cons [most-specific-primary-method] (vals aux-methods)))]
-    (composite-effective-dispatch-value dispatcher dispatch-value dispatch-values)))
+                         (cons primary-methods (vals aux-methods)))]
+    (composite-effective-dispatch-value dispatcher actual-dispatch-value dispatch-values)))
 
 (defn standard-effective-method
   "Build an effective method using the 'standard' technique, taking the dispatch-value-method pairs in the
