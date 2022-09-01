@@ -61,10 +61,11 @@
            ;; cache for dispatch value. This way we don't end up with a bunch of duplicate methods impls for various
            ;; dispatch values that have the same effective dispatch value
            cached-effective-dv-method (.cached-method cache effective-dispatch-value)
-           method                     (or cached-effective-dv-method method)]
+           method                     (-> (or cached-effective-dv-method method)
+                                          (vary-meta assoc :methodical/cached-by dispatch-value))]
        ;; Make sure the method was cached for the effective dispatch value as well, that way if some less-specific
        ;; dispatch value comes along with the same effective dispatch value we can use the existing method
        (when-not cached-effective-dv-method
-         (i/cache-method! cache effective-dispatch-value method))
-       (i/cache-method! cache dispatch-value method)
+         (i/cache-method! cache effective-dispatch-value (vary-meta method assoc :methodical/cached-for effective-dispatch-value)))
+       (i/cache-method! cache dispatch-value (vary-meta method assoc :methodical/cached-for dispatch-value))
        method))))

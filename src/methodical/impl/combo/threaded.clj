@@ -26,7 +26,7 @@
   ([threader before-primary-afters]
    (comp (reducer-fn before-primary-afters) threader))
 
-  ([threader primary-methods {:keys [before after around]}]
+  ([threader primary-methods {:keys [before after around], :as aux-methods}]
    (when-let [primary (combo.common/combine-primary-methods primary-methods)]
      (let [methods              (concat before [primary] (reverse after))
            threaded-fn          (combine-with-threader threader methods)
@@ -39,7 +39,9 @@
               ([a b c]          (threaded-fn a b c))
               ([a b c d]        (threaded-fn a b c d))
               ([a b c d & more] (apply threaded-fn a b c d more)))
-            (vary-meta assoc :methodical/combined-method? true))
+            (vary-meta assoc
+                       :methodical/combined-method? true
+                       :methodical/built-from      {:primary primary-methods, :aux aux-methods}))
         around)))))
 
 (defmulti threading-invoker
