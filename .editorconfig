@@ -1,0 +1,17 @@
+# http://editorconfig.org/
+
+[*]
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+end_of_line = lf
+
+[*.clj]
+max_line_length = 120
+
+[*.{html,css,mustache,js,jsx,ts,tsx,json}]
+indent_size = 2
+
+[*.{yaml,yml}]
+indent_size = 2
