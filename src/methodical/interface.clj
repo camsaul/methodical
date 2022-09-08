@@ -12,9 +12,9 @@
   allowed, and how `defmethod` macro forms using those qualifiers are expanded (e.g., whether they get an implicit
   `next-method` arg)."
   (allowed-qualifiers [method-combination]
-    "The set containg all qualifiers supported by this method combination. `nil` in the set means the method
+    "The set containing all qualifiers supported by this method combination. `nil` in the set means the method
     combination supports primary methods (because primary methods have no qualifier); all other values refer to
-    auxiliary methods with that qualifer, e.g. `:before`, `:after`, or `:around`.
+    auxiliary methods with that qualifier, e.g. `:before`, `:after`, or `:around`.
 
     (allowed-qualifiers (clojure-method-combination)) ;-> #{nil}
     (allowed-qualifiers (clos-method-combination))    ;-> #{nil :before :after :around}
@@ -34,7 +34,7 @@
   "A *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
    `standard-method-table`, uses simple Clojure immutable maps."
   (primary-methods [method-table]
-    "Get a `dispatch-value -> fn` map of all primary methods assoicated with this method table.")
+    "Get a `dispatch-value -> fn` map of all primary methods associated with this method table.")
 
   (aux-methods [method-table]
     "Get a `qualifier -> dispatch-value -> [fn]` map of all auxiliary methods associated with this method table.")
@@ -46,7 +46,7 @@
     "Remove the primary method for `dispatch-value`.")
 
   (add-aux-method ^methodical.interface.MethodTable [method-table qualifier dispatch-value f]
-    "Add an auxiliary method implementation for `qualifer` (e.g. `:before`) and `dispatch-value`. Unlike primary
+    "Add an auxiliary method implementation for `qualifier` (e.g. `:before`) and `dispatch-value`. Unlike primary
     methods, auxiliary methods are not limited to one method per dispatch value; thus this method does not remove
     existing methods for this dispatch value. existing ")
 

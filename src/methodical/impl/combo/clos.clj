@@ -1,5 +1,5 @@
 (ns methodical.impl.combo.clos
-  "Method combination stategy that mimics the standard method combination in the Common Lisp Object System (CLOS).
+  "Method combination strategy that mimics the standard method combination in the Common Lisp Object System (CLOS).
   Supports `:before`, `:after`, and `:around` auxiliary methods. The values returned by `:before` and `:after` methods
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
@@ -11,7 +11,7 @@
 
 (comment methodical.interface/keep-me)
 
-;; TODO - I'm 90% sure we can leverage the `reducing-operator` stuff in `combo.operator` to implemet this
+;; TODO - I'm 90% sure we can leverage the `reducing-operator` stuff in `combo.operator` to implement this
 (defn- apply-befores [combined-method befores]
   (if (empty? befores)
     combined-method

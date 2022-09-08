@@ -74,8 +74,8 @@
 
 (defn matching-primary-methods
   "Return a lazy sequence of applicable priamry methods for `dispatch-value`, sorted from most-specific to
-  least-specific. Similar to the implementation in `methodical.impl.dispatcher.standard`, but supports
-  partially-specialized default methods; see explaination in ns docstring."
+  least-specific. Similar to the implementation in [[methodical.impl.dispatcher.standard]], but supports
+  partially-specialized default methods; see explanation in ns docstring."
   [{:keys [default-value method-table unambiguous-pairs-seq-fn]
     :or   {unambiguous-pairs-seq-fn dispatcher.standard/unambiguous-pairs-seq}
     :as   opts}]
@@ -100,11 +100,11 @@
     (map second (dispatcher.common/distinct-by first pairs))))
 
 (defn- aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
-  (let [comparitor (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value)]
+  (let [comparator (dispatcher.common/domination-comparator hierarchy prefs dispatch-value)]
     (distinct
      (sort-by
       identity
-      comparitor
+      comparator
       (for [dispatch-value (concat [dispatch-value]
                                    (partially-specialized-default-dispatch-values dispatch-value default-value)
                                    [default-value])

@@ -1,10 +1,11 @@
-[![Downloads](https://versions.deps.co/camsaul/methodical/downloads.svg)](https://versions.deps.co/camsaul/methodical)
-[![Dependencies Status](https://versions.deps.co/camsaul/methodical/status.svg)](https://versions.deps.co/camsaul/methodical)
-[![Circle CI](https://circleci.com/gh/camsaul/methodical.svg?style=svg)](https://circleci.com/gh/camsaul/methodical)
-[![codecov](https://codecov.io/gh/camsaul/methodical/branch/master/graph/badge.svg)](https://codecov.io/gh/camsaul/methodical)
-[![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE)
-[![cljdoc badge](https://cljdoc.org/badge/methodical)](https://cljdoc.org/d/methodical/methodical/CURRENT)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/camsaul)](https://github.com/sponsors/camsaul)
+[![ClojarsDownloads](https://img.shields.io/clojars/dt/methodical?style=for-the-badge)](http://clojars.org/methodical)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/camsaul/methodical/Tests/master?style=for-the-badge)](https://github.com/camsaul/methodical/actions/workflows/tests.yml)
+[![License](https://img.shields.io/badge/license-Eclipse%20Public%20License-blue.svg?style=for-the-badge)](https://raw.githubusercontent.com/camsaul/methodical/master/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/camsaul/methodical?style=for-the-badge)](https://github.com/camsaul/methodical/commits/)
+[![Codecov](https://img.shields.io/codecov/c/github/camsaul/methodical?style=for-the-badge)](https://codecov.io/gh/camsaul/methodical)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/camsaul?style=for-the-badge)](https://github.com/sponsors/camsaul)
+[![cljdoc badge](https://img.shields.io/badge/dynamic/json?color=informational&label=cljdoc&query=results%5B%3F%28%40%5B%22artifact-id%22%5D%20%3D%3D%20%22methodical%22%29%5D.version&url=https%3A%2F%2Fcljdoc.org%2Fapi%2Fsearch%3Fq%3Dmethodical%2Fmethodical&style=for-the-badge)](https://cljdoc.org/d/methodical/methodical/CURRENT)
+[![Get help on Slack](http://img.shields.io/badge/slack-clojurians%20%23toucan-4A154B?logo=slack&style=for-the-badge)](https://clojurians.slack.com/channels/toucan)
 
 [![Clojars Project](https://clojars.org/methodical/latest-version.svg)](http://clojars.org/methodical)
 
@@ -106,7 +107,7 @@ supports Clojure's functional programming style.
 
 `:before` methods unlock a whole new range of solutions that would be tedious with vanilla Clojure multimethods:
 suppose you wanted add logging to all invocations of a multimethod. With vanilla multimethods, you'd have to add an
-individual log statment to every method! With Methodical, just add a new `:default` `:before` method:
+individual log statement to every method! With Methodical, just add a new `:default` `:before` method:
 
 ```clj
 (m/defmethod my-multimethod :before :default

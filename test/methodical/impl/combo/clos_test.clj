@@ -16,7 +16,7 @@
   * `make-method`; which makes a method impl that adds its invocation (`(method-key & args)`) to calls, and returns
     its first arg (if any) with `method-key` appended.
 
-  * `record-call!`, which records the invocation (just like `make-method` does, bu for cases where you don't want to
+  * `record-call!`, which records the invocation (just like `make-method` does, but for cases where you don't want to
      use this.)"
   []
   (let [calls* (atom [])]

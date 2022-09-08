@@ -225,7 +225,7 @@
 (t/deftest no-methods-test
   (t/is (= nil
            (i/combine-methods (combo.operator/operator-method-combination :do) nil nil))
-        "Combine-methods should return nil if there are no matcing primary methods."))
+        "Combine-methods should return nil if there are no matching primary methods."))
 
 (def ^:private hierarchy
   (-> (make-hierarchy)

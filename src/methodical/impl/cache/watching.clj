@@ -66,7 +66,7 @@
      function this function returns `cache` as-is.
 
   * If `cache` is a WatchingCache with a *different* set of refs, this returns a flattened WatchingCache that both the
-    orignal refs and the new ones. The original `cache` is unmodified."
+    original refs and the new ones. The original `cache` is unmodified."
   ^Cache [^Cache cache refs]
   {:pre [(every? (partial instance? clojure.lang.IRef) refs)]}
   (cond

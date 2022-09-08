@@ -25,7 +25,7 @@
     below. We actually do one better than CLOS and return a lazy sequence, but `lazy-cat` seemed like a cumbersome name
     for the combo.
 
-  One last difference: unlike CLOS operator method combinations, primary method implementations *are not* qualfied by
+  One last difference: unlike CLOS operator method combinations, primary method implementations *are not* qualified by
   their operator.
 
     ;; CLOS

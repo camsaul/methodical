@@ -64,7 +64,7 @@
                                               [nil :y]          '[dy dd d]
                                               [default default] '[dd d]
                                               default           '[d]}
-                                             ;; these are merged seperately in in case default *is* nil
+                                             ;; these are merged separately in in case default *is* nil
                                              {[nil nil] '[dd d]
                                               nil       '[d]}
                                              {[default nil] '[dd d]}

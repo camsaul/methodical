@@ -77,4 +77,4 @@
               5 (t/is (dominates? [String ::bird] ::default)))
             (t/is (not (dominates? ::default [Object ::parrot])))))))))
 
-;; TODO - add tests for `domination-comparitor`, and `ambiguous?`?
+;; TODO - add tests for `domination-comparator`, and `ambiguous?`?

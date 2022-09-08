@@ -14,7 +14,7 @@
   [dispatcher dispatch-values]
   (sort-by
    identity
-   (dispatcher.common/domination-comparitor (partial i/dominates? dispatcher))
+   (dispatcher.common/domination-comparator (partial i/dominates? dispatcher))
    dispatch-values))
 
 (defn non-composite-effective-dispatch-value

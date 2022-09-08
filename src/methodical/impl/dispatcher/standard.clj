@@ -17,7 +17,7 @@
                              :when                   (isa? hierarchy dispatch-value a-dispatch-val)]
                          [a-dispatch-val method])]
     (when (seq matches)
-      (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) matches))))
+      (sort-by first (dispatcher.common/domination-comparator hierarchy prefs dispatch-value) matches))))
 
 (defn- ambiguous-error-fn [dispatch-val this-dispatch-val next-dispatch-val]
   (fn [& _]
@@ -72,7 +72,7 @@
                               :when        (isa? hierarchy dispatch-value dv)
                               method       methods]
                           [dv method])]
-    (sort-by first (dispatcher.common/domination-comparitor hierarchy prefs dispatch-value) pairs)))
+    (sort-by first (dispatcher.common/domination-comparator hierarchy prefs dispatch-value) pairs)))
 
 (defn matching-aux-pairs
   "Return pairs of `[dispatch-value method]` of applicable aux methods, *including* default aux methods. Pairs are
