@@ -53,59 +53,55 @@
 
 (t/deftest before-test
   (t/testing "before methods for CLOS method combinations"
-    (t/are [args]
-        (t/testing (format "%d args" (count args))
-          (let [[calls make-method] (make-method-fn)
-                f                   (combine-methods
-                                     [(make-primary-method make-method)]
-                                     {:before [(make-method :before-1)
-                                               (make-method :before-2)]})]
-            (t/testing "result"
-              (t/is (= [:primary]
-                       (apply f args))
-                    "Return values of before methods should be ignored"))
+    (doseq [args [[]
+                  [[]]
+                  [[] :v2]
+                  [[] :v2 :v3]
+                  [[] :v2 :v3 :v4]
+                  [[] :v2 :v3 :v4 :v5]]]
+      (t/testing (format "%d args" (count args))
+        (let [[calls make-method] (make-method-fn)
+              f                   (combine-methods
+                                   [(make-primary-method make-method)]
+                                   {:before [(make-method :before-1)
+                                             (make-method :before-2)]})]
+          (t/testing "result"
+            (t/is (= [:primary]
+                     (apply f args))
+                  "Return values of before methods should be ignored"))
 
-            (t/testing "calls"
-              (t/is (= [(cons 'before-1 args)
-                        (cons 'before-2 args)
-                        (cons 'primary args)]
-                       (calls))
-                    "Before methods should be called in order from most-specific to least-specific"))))
-
-      []
-      [[]]
-      [[] :v2]
-      [[] :v2 :v3]
-      [[] :v2 :v3 :v4]
-      [[] :v2 :v3 :v4 :v5])))
+          (t/testing "calls"
+            (t/is (= [(cons 'before-1 args)
+                      (cons 'before-2 args)
+                      (cons 'primary args)]
+                     (calls))
+                  "Before methods should be called in order from most-specific to least-specific")))))))
 
 (t/deftest after-test
   (t/testing "after methods for CLOS method combinations"
-    (t/are [args]
-        (t/testing (format "%d args" (count args))
-          (let [[calls make-method] (make-method-fn)
-                f                   (combine-methods
-                                     [(make-primary-method make-method)]
-                                     {:after [(make-method :after-1)
-                                              (make-method :after-2)]})]
-            (t/testing "result"
-              (t/is (= [:primary]
-                       (apply f args))
-                    "Return values of after methods should be ignored"))
+    (doseq [args [[]
+                  [[]]
+                  [[] :v2]
+                  [[] :v2 :v3]
+                  [[] :v2 :v3 :v4]
+                  [[] :v2 :v3 :v4 :v5]]]
+      (t/testing (format "%d args" (count args))
+        (let [[calls make-method] (make-method-fn)
+              f                   (combine-methods
+                                   [(make-primary-method make-method)]
+                                   {:after [(make-method :after-1)
+                                            (make-method :after-2)]})]
+          (t/testing "result"
+            (t/is (= [:primary]
+                     (apply f args))
+                  "Return values of after methods should be ignored"))
 
-            (t/testing "calls"
-              (t/is (= [(cons 'primary args)
-                        '(after-2 [:primary])
-                        '(after-1 [:primary])]
-                       (calls))
-                    "after methods should be called in order from least- to most-specific with result of primary fn"))))
-
-      []
-      [[]]
-      [[] :v2]
-      [[] :v2 :v3]
-      [[] :v2 :v3 :v4]
-      [[] :v2 :v3 :v4 :v5])))
+          (t/testing "calls"
+            (t/is (= [(cons 'primary args)
+                      '(after-2 [:primary])
+                      '(after-1 [:primary])]
+                     (calls))
+                  "after methods should be called in order from least- to most-specific with result of primary fn")))))))
 
 (defn- make-around-method
   "Makes an around method that appends `<method-key>-before` to the first arg (if any), wraps all other args
@@ -125,47 +121,45 @@
 
 (t/deftest around-test
   (t/testing "around methods"
-    (t/are [args]
-        (t/testing (format "%d args" (count args))
-          (let [[calls make-method record-call!] (make-method-fn)
-                f                                (combine-methods
-                                                  [(make-primary-method make-method)]
-                                                  {:around [(make-around-method record-call! :around-1)
-                                                            (make-around-method record-call! :around-2)]})]
-            (t/testing "result"
-              (let [expected-args (if (empty? args)
-                                    [:primary :around-1-after :around-2-after]
-                                    [:around-2-before :around-1-before :primary :around-1-after :around-2-after])]
-                (t/is (= expected-args
-                         (apply f args))
-                      "Around methods should be able to modify args, and modify the results")))
+    (doseq [args [[]
+                  [[]]
+                  [[] :v2]
+                  [[] :v2 :v3]
+                  [[] :v2 :v3 :v4]
+                  [[] :v2 :v3 :v4 :v5]]]
+      (t/testing (format "%d args" (count args))
+        (let [[calls make-method record-call!] (make-method-fn)
+              f                                (combine-methods
+                                                [(make-primary-method make-method)]
+                                                {:around [(make-around-method record-call! :around-1)
+                                                          (make-around-method record-call! :around-2)]})]
+          (t/testing "result"
+            (let [expected-args (if (empty? args)
+                                  [:primary :around-1-after :around-2-after]
+                                  [:around-2-before :around-1-before :primary :around-1-after :around-2-after])]
+              (t/is (= expected-args
+                       (apply f args))
+                    "Around methods should be able to modify args, and modify the results")))
 
-            (t/testing "calls"
-              (let [expected-calls (if (empty? args)
-                                     '[(around-2-before)
-                                       (around-1-before)
-                                       (primary)
-                                       (around-1-after [:primary])
-                                       (around-2-after [:primary :around-1-after])]
-                                     [(cons 'around-2-before args)
-                                      (concat '(around-1-before [:around-2-before])
-                                              (for [arg (rest args)]
-                                                (list 'around-2-before arg)))
-                                      (concat '(primary [:around-2-before :around-1-before])
-                                              (for [arg (rest args)]
-                                                (list 'around-1-before (list 'around-2-before arg))))
-                                      '(around-1-after [:around-2-before :around-1-before :primary])
-                                      '(around-2-after [:around-2-before :around-1-before :primary :around-1-after])])]
-                (t/is (= expected-calls
-                         (calls))
-                      "Around methods should be applied, in or in order from least- to most- specific")))))
-
-      []
-      [[]]
-      [[] :v2]
-      [[] :v2 :v3]
-      [[] :v2 :v3 :v4]
-      [[] :v2 :v3 :v4 :v5])))
+          (t/testing "calls"
+            (let [expected-calls (if (empty? args)
+                                   '[(around-2-before)
+                                     (around-1-before)
+                                     (primary)
+                                     (around-1-after [:primary])
+                                     (around-2-after [:primary :around-1-after])]
+                                   [(cons 'around-2-before args)
+                                    (concat '(around-1-before [:around-2-before])
+                                            (for [arg (rest args)]
+                                              (list 'around-2-before arg)))
+                                    (concat '(primary [:around-2-before :around-1-before])
+                                            (for [arg (rest args)]
+                                              (list 'around-1-before (list 'around-2-before arg))))
+                                    '(around-1-after [:around-2-before :around-1-before :primary])
+                                    '(around-2-after [:around-2-before :around-1-before :primary :around-1-after])])]
+              (t/is (= expected-calls
+                       (calls))
+                    "Around methods should be applied, in or in order from least- to most- specific"))))))))
 
 (t/deftest primary-method-test
   (t/testing "Empty primary-methods"
@@ -174,29 +168,27 @@
           "combine-methods should return nil if there are no matching primary methods."))
 
   (t/testing "next-method"
-    (t/are [args]
-        (t/testing (format "%d args" (count args))
-          (let [[calls make-method] (make-method-fn)
+    (doseq [args [[]
+                  [[]]
+                  [[] :v2]
+                  [[] :v2 :v3]
+                  [[] :v2 :v3 :v4]
+                  [[] :v2 :v3 :v4 :v5]]]
+      (t/testing (format "%d args" (count args))
+        (let [[calls make-method] (make-method-fn)
 
-                f
-                (combine-methods [(make-primary-method make-method :primary-1)
-                                  (make-primary-method make-method :primary-2)]
-                                 nil)]
-            (t/is (= [:primary-1 :primary-2 :primary-1-after]
-                     (f []))
-                  "Calling `next-method` should invoke the next method")
+              f
+              (combine-methods [(make-primary-method make-method :primary-1)
+                                (make-primary-method make-method :primary-2)]
+                               nil)]
+          (t/is (= [:primary-1 :primary-2 :primary-1-after]
+                   (f []))
+                "Calling `next-method` should invoke the next method")
 
-            (t/testing "calls"
-              (t/is (= '[(primary-1 [])
-                         (primary-2 [:primary-1])]
-                       (calls))))))
-
-      []
-      [[]]
-      [[] :v2]
-      [[] :v2 :v3]
-      [[] :v2 :v3 :v4]
-      [[] :v2 :v3 :v4 :v5])))
+          (t/testing "calls"
+            (t/is (= '[(primary-1 [])
+                       (primary-2 [:primary-1])]
+                     (calls)))))))))
 
 (t/deftest everything-test
   (let [[calls make-method record-call!] (make-method-fn)

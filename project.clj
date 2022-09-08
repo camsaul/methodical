@@ -36,16 +36,17 @@
   :profiles
   {:dev
    {:dependencies
-    [[org.clojure/clojure "1.11.1"]
+    [[criterium "0.4.6"]
+     [io.github.camsaul/humane-are "1.0.2"]
+     [org.clojure/clojure "1.11.1"]
      [org.clojure/math.combinatorics "0.1.6"]
-     [criterium "0.4.6"]
      [pjstadig/humane-test-output "0.11.0"]]
 
     :injections
     [(require 'pjstadig.humane-test-output)
-     (pjstadig.humane-test-output/activate!)]
-
-    :jvm-opts ["-Xverify:none"]
+     (pjstadig.humane-test-output/activate!)
+     (require 'humane-are.core)
+     (humane-are.core/install!)]
 
     :source-paths ["dev"]}
 

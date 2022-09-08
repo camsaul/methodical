@@ -74,15 +74,12 @@
         (after-xform acc)))))
 
 (t/deftest primary-test
-  (t/are [threading]
-      (t/testing threading
-        (t/testing "Empty primary methods"
-          (t/is (= nil
-                   (combine-methods threading [] {:before [(constantly :before)]}))
-                "Combine-methods should return nil if `primary-methods` is empty.")))
-
-    :thread-first
-    :thread-last))
+  (t/testing "Empty primary methods"
+    (t/testing "Combine-methods should return nil if `primary-methods` is empty."
+      (t/are [threading] (= nil
+                            (combine-methods threading [] {:before [(constantly :before)]}))
+        :thread-first
+        :thread-last))))
 
 (t/deftest before-test
   (t/are [threading expected-1 expected-4]
