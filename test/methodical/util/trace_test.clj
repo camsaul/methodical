@@ -80,7 +80,7 @@
 
 (def ^:private lots-of-args-multifn
   (-> (m/default-multifn
-       (fn [a b c d e f] [a (class b) c d e]))
+       (fn [a b c d e _f] [a (class b) c d e]))
       (m/add-primary-method :default
                             (fn [_ a _ _ _ _ f] {:a a, :f f}))
       (m/add-primary-method [::x :default :default :default :default]
@@ -126,7 +126,7 @@
     ;;
     ;;    #object[clojure.core$int_QMARK_ 0x3e07ccbf \"clojure.core$int_QMARK_@3e07ccbf\"]
     ;;
-    ;; so to make this test pass in either situation highjack `pr-str` which we use to print functions.
+    ;; so to make this test pass in either situation hijack `pr-str` which we use to print functions.
     (let [orig-pr-str pr-str]
       (with-redefs [pr-str (fn [x]
                              (if (identical? x int?)

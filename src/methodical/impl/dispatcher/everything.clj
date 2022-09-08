@@ -36,15 +36,15 @@
 
   (matching-primary-methods [_ method-table _]
     (let [primary-methods (i/primary-methods method-table)
-          comparitor      (dispatcher.common/domination-comparitor (deref hierarchy-var) prefs)]
-      (for [[dispatch-value method] (sort-by first comparitor primary-methods)]
+          comparatorr     (dispatcher.common/domination-comparator (deref hierarchy-var) prefs)]
+      (for [[dispatch-value method] (sort-by first comparatorr primary-methods)]
         (vary-meta method assoc :dispatch-value dispatch-value))))
 
   (matching-aux-methods [_ method-table _]
     (let [aux-methods (i/aux-methods method-table)
-          comparitor  (dispatcher.common/domination-comparitor (deref hierarchy-var) prefs)]
+          comparatorr (dispatcher.common/domination-comparator (deref hierarchy-var) prefs)]
       (into {} (for [[qualifier dispatch-value->methods] aux-methods]
-                 [qualifier (for [[dispatch-value methods] (sort-by first comparitor dispatch-value->methods)
+                 [qualifier (for [[dispatch-value methods] (sort-by first comparatorr dispatch-value->methods)
                                   method methods]
                               (vary-meta method assoc :dispatch-value dispatch-value))]))))
 

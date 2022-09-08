@@ -30,7 +30,7 @@
   (combo.clojure/->ClojureMethodCombination))
 
 (defn clos-method-combination
-  "Method combination stategy that mimics the standard method combination in the Common Lisp Object System (CLOS).
+  "Method combination strategy that mimics the standard method combination in the Common Lisp Object System (CLOS).
   Supports `:before`, `:after`, and `:around` auxiliary methods. The values returned by `:before` and `:after` methods
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
@@ -81,14 +81,14 @@
   (combo.operator/operator-method-combination :min))
 
 (defn max-method-combination
-  "Executes *all* applicable primary methods, and returns the maximum value returned by any one implemenation. Same
-  constraints as othe CLOS operator-style method combinations."
+  "Executes *all* applicable primary methods, and returns the maximum value returned by any one implementation. Same
+  constraints as other CLOS operator-style method combinations."
   ^MethodCombination []
   (combo.operator/operator-method-combination :max))
 
 (defn +-method-combination
   "Executes *all* applicable primary methods, returnings the sum of the values returned by each method. Same constraints
-  as othe CLOS operator-style method combinations."
+  as other CLOS operator-style method combinations."
   ^MethodCombination []
   (combo.operator/operator-method-combination :+))
 

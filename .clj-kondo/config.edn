@@ -12,4 +12,15 @@
  :lint-as
  {potemkin.types/deftype+ clojure.core/deftype}
 
- :skip-comments true}
+ :skip-comments true
+
+ :ns-groups
+ [{:pattern ".*-test$"
+   :name    tests}]
+
+ :config-in-ns
+ {tests
+  {:linters
+   {:inline-def        {:level :off}
+    :missing-docstring {:level :off}
+    :shadowed-var      {:level :off}}}}}

@@ -67,7 +67,7 @@
   [m]
   (assoc m :method :x))
 
-(m/define-aux-method mf2 :before :default
+(m/define-aux-method  mf2 :before :default
   [m]
   (assoc m :before? true))
 
@@ -88,7 +88,7 @@
 
 ;; make a var that is basically an alias for another var. This mimics the way Potemkin import-vars works
 (intern *ns* 'mf4 mf3)
-(alter-meta! #'mf4 (constantly (meta #'mf3)))
+(alter-meta! #_{:clj-kondo/ignore [:unresolved-symbol]} #'mf4 (constantly (meta #'mf3)))
 
 (p.namespaces/link-vars #'mf3 #'mf4)
 

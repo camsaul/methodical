@@ -1,12 +1,15 @@
-((nil . ((indent-tabs-mode . nil)       ; always use spaces for tabs
+((nil . ((indent-tabs-mode      . nil)       ; always use spaces for tabs
          (require-final-newline . t)))  ; add final newline on save
- (clojure-mode . (;; prefer keeping source width about ~118, GitHub seems to cut off stuff at either 119 or 120 and
-                  ;; it's nicer to look at code in GH when you don't have to scroll back and forth
-                  (fill-column . 118)
-                  (clojure-docstring-fill-column . 118)
-                  (eval . (define-clojure-indent
-                            (p.types/defprotocol+ '(1 (:defn)))
-                            (p.types/definterface+ '(1 (:defn)))
-                            (p.types/def-abstract-type '(1 (:defn)))
-                            (p.types/deftype+ '(2 nil nil (:defn)))
-                            (p.types/defrecord+ '(2 nil nil (:defn))))))))
+ (clojure-mode . ((cider-preferred-build-tool    . clojure-cli)
+                  (cider-clojure-cli-aliases     . "dev")
+                  (fill-column                   . 120)
+                  (clojure-docstring-fill-column . 120)
+                  (eval . (put 'p/defprotocol+       'clojure-doc-string-elt 2))
+                  (eval . (put 'p.types/defprotocol+ 'clojure-doc-string-elt 2))
+                  (eval . (put-clojure-indent 'p.types/defprotocol+      '(1 (:defn))))
+                  (eval . (put-clojure-indent 'p.types/definterface+     '(1 (:defn))))
+                  (eval . (put-clojure-indent 'p.types/def-abstract-type '(1 (:defn))))
+                  ;; (eval . (put-clojure-indent 'p.types/deftype+          '(2 nil nil (:defn))))
+                  ;; (eval . (put-clojure-indent 'p.types/defrecord+        '(2 nil nil (:defn))))
+                  (eval . (put-clojure-indent 'with-meta                 '(:form)))
+                  (eval . (put-clojure-indent 'with-bindings*            '(:form))))))

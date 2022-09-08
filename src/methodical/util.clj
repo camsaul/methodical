@@ -86,7 +86,7 @@
   (primary-method multifn (i/default-dispatch-value multifn)))
 
 (defn default-aux-methods
-  "Get a map of aux qualifer -> methods for the default dispatch value, if any exist."
+  "Get a map of aux qualifier -> methods for the default dispatch value, if any exist."
   [multifn]
   (aux-methods multifn (i/default-dispatch-value multifn)))
 

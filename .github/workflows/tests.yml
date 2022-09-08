@@ -1,0 +1,124 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  kondo:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v3
+    - uses: DeLaGuardo/clojure-lint-action@master
+      with:
+        check-name: Run clj-kondo
+        clj-kondo-args: >-
+          --lint src test
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  tests:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v3
+    - name: Prepare JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: 1.11.1.1155
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: tests-postgres
+    - run: clojure -X:dev:test
+      name: Run tests
+      env:
+        CI: TRUE
+
+  whitespace-linter:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Prepare JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: 1.11.1.1155
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: whitespace-linter
+    - run: clojure -T:whitespace-linter
+      name: Run whitespace linter
+
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Prepare JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: 1.11.1.1155
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: check
+    - run: clojure -M:check
+      name: Check namespaces
+
+  codecov:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Prepare JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: 1.11.1.1155
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: codecov
+    - run: clojure -X:dev:test-h2:cloverage
+      name: Run tests with Cloverage
+    - name: Upload results to codecov.io
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./target/coverage/codecov.json
+
+  codespell:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: codespell-project/actions-codespell@master

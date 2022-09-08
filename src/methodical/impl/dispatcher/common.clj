@@ -2,7 +2,7 @@
   "Utility functions for implementing Dispatchers.")
 
 (defn prefers?
-  "True if `x` or one of its ancestors is prefered over `y` or one of its ancestors."
+  "True if `x` or one of its ancestors is preferred over `y` or one of its ancestors."
   [hierarchy prefs x y]
   (or
    ;; direct preference for x over y
@@ -35,7 +35,7 @@
             (not= x default-dispatch-value)
             (= y default-dispatch-value)))))
 
-(defn domination-comparitor
+(defn domination-comparator
   "Given a `hierarchy` and `prefs` return a function that can be used to sort dispatch values from most-specific to
   least-specific."
   ([dominates?-pred]
@@ -47,10 +47,10 @@
        :else                 0)))
 
   ([hierarchy prefs]
-   (domination-comparitor (partial dominates? hierarchy prefs)))
+   (domination-comparator (partial dominates? hierarchy prefs)))
 
   ([hierarchy prefs dispatch-value]
-   (let [f (domination-comparitor hierarchy prefs)]
+   (let [f (domination-comparator hierarchy prefs)]
      (fn [x y]
        (condp = dispatch-value
          x -2
@@ -61,7 +61,7 @@
   "True if neither `dispatch-val-x` nor `dispatch-val-y` dominate one another, e.g. because they are the same value or
   are both equally-specific ancestors."
   [hierarchy prefs dispatch-value dispatch-val-x dispatch-val-y]
-  (zero? ((domination-comparitor hierarchy prefs dispatch-value) dispatch-val-x dispatch-val-y)))
+  (zero? ((domination-comparator hierarchy prefs dispatch-value) dispatch-val-x dispatch-val-y)))
 
 (defn distinct-by
   "Like `distinct`, but uses value of `(f item)` to determine whether to keep each `item` in the resulting collection."
