@@ -5,7 +5,7 @@
             [org.corfield.build :as bb]))
 
 (def scm-url "git@github.com:camsaul/methodical.git")
-(def lib     'io.github.camsaul/methodical)
+(def lib     'methodical/methodical)
 (def version (str/trim (slurp "VERSION.txt")))
 
 (defn sha [& _]
