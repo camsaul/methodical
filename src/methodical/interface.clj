@@ -39,18 +39,18 @@
   (aux-methods [method-table]
     "Get a `qualifier -> dispatch-value -> [fn]` map of all auxiliary methods associated with this method table.")
 
-  (add-primary-method [method-table dispatch-value f]
+  (add-primary-method ^methodical.interface.MethodTable [method-table dispatch-value f]
     "Set the primary method implementation for `dispatch-value`, replacing it if it already exists.")
 
-  (remove-primary-method [method-table dispatch-value]
+  (remove-primary-method ^methodical.interface.MethodTable [method-table dispatch-value]
     "Remove the primary method for `dispatch-value`.")
 
-  (add-aux-method [method-table qualifier dispatch-value f]
+  (add-aux-method ^methodical.interface.MethodTable [method-table qualifier dispatch-value f]
     "Add an auxiliary method implementation for `qualifer` (e.g. `:before`) and `dispatch-value`. Unlike primary
     methods, auxiliary methods are not limited to one method per dispatch value; thus this method does not remove
     existing methods for this dispatch value. existing ")
 
-  (remove-aux-method [method-table qualifier dispatch-val method]
+  (remove-aux-method ^methodical.interface.MethodTable [method-table qualifier dispatch-val method]
     "Remove an auxiliary method from a method table. Because multiple auxiliary methods are allowed for the same
     dispatch value, existing implementations of `MethodTable` are currently only able to remove exact matches -- for
     functions, this usually means identical objects.
