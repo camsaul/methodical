@@ -59,9 +59,7 @@
               (m/add-primary-method :key (fn [_ & args]
                                            (count args))))]
     (t/testing "invoke"
-      (t/are [expected-count fn-call] (t/testing (format "invoking multifn with %d args" expected-count)
-                                        (t/is (= expected-count
-                                                 fn-call)))
+      (t/are [expected-count fn-call] (= expected-count fn-call)
 
         0 (f)
         1 (f :a)
@@ -172,9 +170,7 @@
 
 (t/deftest dispatch-value-test
   (let [f (impl.standard/->StandardMultiFn (m/default-multifn-impl (fn [& args] (count args))) nil)]
-    (t/are [num-args fn-call] (t/testing (format "dispatch-value w/ %d args" num-args)
-                                (t/is (= num-args
-                                         fn-call)))
+    (t/are [num-args fn-call] (= num-args fn-call)
       0 (i/dispatch-value f)
       1 (i/dispatch-value f :a)
       2 (i/dispatch-value f :a :b)

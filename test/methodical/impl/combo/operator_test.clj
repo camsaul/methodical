@@ -6,41 +6,39 @@
             [methodical.interface :as i]))
 
 (t/deftest primary-test
-  (t/are [operator] (t/testing operator
-                      (t/testing "Empty primary methods"
-                        (t/is (= nil
-                                 ((combo.operator/operator operator) []))
-                              "Combine-methods should return nil if `primary-methods` is empty.")))
-    :+ :and :concat :do :max :min :or :seq))
+  (t/testing "Empty primary methods"
+    (t/testing "Combine-methods should return nil if `primary-methods` is empty."
+      (t/are [operator] (= nil
+                           ((combo.operator/operator operator) []))
+        :+ :and :concat :do :max :min :or :seq))))
 
 (t/deftest around-test
-  (t/are [operator primary-result combined-result]
+  (t/testing "around methods"
+    (doseq [[operator primary-result combined-result] [[:+ 100 100]
+                                                       [:and true true]
+                                                       [:concat [:v] [:v]]
+                                                       [:do :x :x]
+                                                       [:max 100 100]
+                                                       [:min 100 100]
+                                                       [:or true true]
+                                                       [:seq :v [:v]]]]
       (t/testing operator
-        (t/testing "around methods"
-          (let [calls   (atom [])
-                primary (constantly primary-result)
-                around  (fn [next-method]
-                          (swap! calls conj '(around-before))
-                          (let [result (next-method)]
-                            (swap! calls conj (list 'around-after result))
-                            result))
-                f       ((combo.operator/operator operator)
-                         [primary]
-                         {:around [around]})]
-            (t/is (= ['(around-before)
-                      (list 'around-after combined-result)]
-                     (do
-                       (f)
-                       @calls))
-                  "Operator method combinations should support around methods"))))
-    :+ 100 100
-    :and true true
-    :concat [:v] [:v]
-    :do :x :x
-    :max 100 100
-    :min 100 100
-    :or true true
-    :seq :v [:v]))
+        (let [calls   (atom [])
+              primary (constantly primary-result)
+              around  (fn [next-method]
+                        (swap! calls conj '(around-before))
+                        (let [result (next-method)]
+                          (swap! calls conj (list 'around-after result))
+                          result))
+              f       ((combo.operator/operator operator)
+                       [primary]
+                       {:around [around]})]
+          (t/is (= ['(around-before)
+                    (list 'around-after combined-result)]
+                   (do
+                     (f)
+                     @calls))
+                "Operator method combinations should support around methods"))))))
 
 (defn- record-calls [method-vars]
   (let [calls   (atom [])
