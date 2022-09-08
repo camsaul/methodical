@@ -93,7 +93,9 @@
   (let [primary-methods (i/matching-primary-methods dispatcher method-table dispatch-value)
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
     (some-> (i/combine-methods method-combination primary-methods aux-methods)
-            (with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
+            (with-meta {:dispatch-value        (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)
+                        :methodical/built-for  dispatch-value
+                        :methodical/built-from {:primary primary-methods, :aux aux-methods}}))))
 
 (p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
                                        ^Dispatcher dispatcher
