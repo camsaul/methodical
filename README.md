@@ -5,7 +5,6 @@
 [![Codecov](https://img.shields.io/codecov/c/github/camsaul/methodical?style=for-the-badge)](https://codecov.io/gh/camsaul/methodical)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/camsaul?style=for-the-badge)](https://github.com/sponsors/camsaul)
 [![cljdoc badge](https://img.shields.io/badge/dynamic/json?color=informational&label=cljdoc&query=results%5B%3F%28%40%5B%22artifact-id%22%5D%20%3D%3D%20%22methodical%22%29%5D.version&url=https%3A%2F%2Fcljdoc.org%2Fapi%2Fsearch%3Fq%3Dmethodical%2Fmethodical&style=for-the-badge)](https://cljdoc.org/d/methodical/methodical/CURRENT)
-[![Get help on Slack](http://img.shields.io/badge/slack-clojurians%20%23toucan-4A154B?logo=slack&style=for-the-badge)](https://clojurians.slack.com/channels/toucan)
 
 [![Clojars Project](https://clojars.org/methodical/latest-version.svg)](http://clojars.org/methodical)
 
