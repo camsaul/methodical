@@ -40,8 +40,8 @@
   {:deps       {com.github.camsaul/whitespace-linter {:sha "e35bc252ccf5cc74f7d543ef95ad8a3e5131f25b"}}
    :ns-default whitespace-linter
    :exec-fn    whitespace-linter/lint
-   :exec-args  {:paths            ["deps.edn" "src" "test" "toucan1/src" "toucan1/test" ".github"]
-                :include-patterns ["\\.clj[cs]?$" "\\.edn$" "\\.yaml$" "\\.sql$"]}}
+   :exec-args  {:paths            ["deps.edn" "src" "test" ".github" #_"doc"]
+                :include-patterns ["\\.clj[cs]?$" "\\.edn$" "\\.yaml$" "\\.md$"]}}
 
   ;; clojure -X:dev:test
   :test

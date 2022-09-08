@@ -100,11 +100,11 @@
     (map second (dispatcher.common/distinct-by first pairs))))
 
 (defn- aux-dispatch-values [qualifier {:keys [default-value method-table dispatch-value hierarchy prefs]}]
-  (let [comparator (dispatcher.common/domination-comparator hierarchy prefs dispatch-value)]
+  (let [comparatorr (dispatcher.common/domination-comparator hierarchy prefs dispatch-value)]
     (distinct
      (sort-by
       identity
-      comparator
+      comparatorr
       (for [dispatch-value (concat [dispatch-value]
                                    (partially-specialized-default-dispatch-values dispatch-value default-value)
                                    [default-value])

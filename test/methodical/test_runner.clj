@@ -62,7 +62,7 @@
   [_]
   (find-tests (classpath/system-classpath)))
 
-(defn tests [{:keys [only]}]
+(defn- tests [{:keys [only]}]
   (when only
     (println "Running tests in" (pr-str only)))
   (find-tests only))

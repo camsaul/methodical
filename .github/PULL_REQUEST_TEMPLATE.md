@@ -1,11 +1,9 @@
 Thanks for contributing to Methodical. Before open a pull request, please take a moment to:
 
 - [ ] Ensure the PR follows the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide).
-- [ ] Tests and linters pass. You can run them locally as follows:
+- [ ] Tests and linters pass. You can run all of the tests and linters locally with
 
-      clj -X:dev:test
-      clj-kondo --lint src test
-      codespell
+      ./scripts/lint-and-test.sh
 
     GitHub Actions will also run these same tests against your PR.
 - [ ] Make sure you've included new tests for any new features or bugfixes.

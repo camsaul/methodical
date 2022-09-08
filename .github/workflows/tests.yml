@@ -4,15 +4,15 @@ on: [push]
 
 jobs:
   kondo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v3
     - uses: DeLaGuardo/clojure-lint-action@master
       with:
+        check-name: Run clj-kondo
         clj-kondo-args: >-
-          --parallel
-          --lint src
+          --lint src test
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
   tests:

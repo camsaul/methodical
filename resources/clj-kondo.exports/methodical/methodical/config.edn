@@ -1,14 +1,16 @@
 {:config-paths ["macros"]
 
  :lint-as
- {methodical.macros/defmulti  clojure.core/defmulti
-  methodical.core/defmulti    clojure.core/defmulti
-  methodical.macros/defmethod clj-kondo.lint-as/def-catch-all
-  methodical.core/defmethod   clj-kondo.lint-as/def-catch-all}
+ {}
 
  :hooks
  {:analyze-call
-  {methodical.core/defmethod hooks.methodical.core/defmethod}
+  {methodical.core/defmethod               hooks.methodical.core/defmethod
+   methodical.core/defmulti                hooks.methodical.core/defmulti
+   methodical.macros/define-aux-method     hooks.methodical.core/defmethod
+   methodical.macros/define-primary-method hooks.methodical.core/defmethod
+   methodical.macros/defmethod             hooks.methodical.core/defmethod
+   methodical.macros/defmulti              hooks.methodical.core/defmulti}
 
   :macroexpand
   {methodical.impl.combo.operator/defoperator macros.methodical.impl.combo.operator/defoperator}}}

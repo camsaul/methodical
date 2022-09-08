@@ -1,9 +1,11 @@
 (ns methodical.util-test
-  (:require [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl :as impl]
-            [methodical.interface :as i]
-            [methodical.util :as u]))
+  (:require
+   [clojure.test :as t]
+   [clojure.walk :as walk]
+   [methodical.core :as m]
+   [methodical.impl :as impl]
+   [methodical.interface :as i]
+   [methodical.util :as u]))
 
 (t/deftest multifn?-test
   (t/is (= false
@@ -67,34 +69,39 @@
 
 ;; aux-methods
 (t/deftest aux-methods-test
-  (let [m1 #(conj % :before-1)
-        m2 #(conj % :before-2)
-        m3 #(conj % :before-3)
-        f  (-> (m/default-multifn class)
-               (m/add-aux-method :before String m1)
-               (m/add-aux-method :before String m2)
-               (m/add-aux-method :before Object m3)
-               (m/add-aux-method :after String m2)
-               (m/add-aux-method :after Object m3))]
-    (t/testing "aux-methods"
-      (t/is (=
-             {:before [m1 m2]}
-             (u/aux-methods f :before String))
-            "3-arity")
-
-      (t/is (=
-             {:before [m1 m2]
-              :after  [m2]}
-             (u/aux-methods f String))
-            "2-ariy")
-
-      (t/is (=
-             {:before {String [m1 m2]
-                       Object [m3]}
-              :after {String [m2]
-                      Object [m3]}}
-             (u/aux-methods))
-            "1-arity"))))
+  (t/testing "aux-methods"
+    (let [m1 #(conj % :before-1)
+          m2 #(conj % :before-2)
+          m3 #(conj % :before-3)
+          f  (-> (m/default-multifn class)
+                 (m/add-aux-method :before String m1)
+                 (m/add-aux-method :before String m2)
+                 (m/add-aux-method :before Object m3)
+                 (m/add-aux-method :after String m2)
+                 (m/add-aux-method :after Object m3))]
+      (letfn [(replace-fns-with-dispatch-value-metadata [form]
+                (walk/postwalk
+                 (fn [form]
+                   (if (fn? form)
+                     (:dispatch-value (meta form))
+                     form))
+                 form))]
+        (t/testing "3-arity"
+          (t/is (= [String String]
+                   (replace-fns-with-dispatch-value-metadata
+                    (u/aux-methods f :before String)))))
+        (t/testing "2-ariy"
+          (t/is (= {:before [String String]
+                    :after  [String]}
+                   (replace-fns-with-dispatch-value-metadata
+                    (u/aux-methods f String)))))
+        (t/testing "1-arity"
+          (t/is (= {:before {String [String String]
+                             Object [Object]}
+                    :after  {String [String]
+                             Object [Object]}}
+                   (replace-fns-with-dispatch-value-metadata
+                    (u/aux-methods f)))))))))
 
 (t/deftest default-methods-test
   (let [m1 (constantly [:char-sequence])
@@ -121,7 +128,7 @@
 
 (def ^:private lots-of-args-multifn
   (-> (m/default-multifn
-       (fn [a b c d e f] [a (class b) c d e]))
+       (fn [a b c d e _f] [a (class b) c d e]))
       (m/add-primary-method :default
                             (fn [_ a _ _ _ _ f] {:a a, :f f}))
       (m/add-primary-method [::x :default :default :default :default]
@@ -270,7 +277,7 @@
       (t/is (= nil
                (seq (i/primary-methods remove-primary-method-multifn)))))))
 
-(t/deftest aux-methods-test
+(t/deftest aux-methods-test-2
   (let [f (-> (m/default-multifn class)
               (m/add-aux-method :before String 'm1)
               (m/add-aux-method :before Object 'm2)

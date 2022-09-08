@@ -284,7 +284,7 @@
   [x]
   (next-method (str/lower-case x)))
 
-(t/deftest e2e-test
+(t/deftest e2e-test-2
   (t/is (= '((string "wow")
              (object "wow"))
            (seq-multimethod "WOW"))

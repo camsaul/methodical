@@ -22,7 +22,7 @@
                 [default default default]]
                (multi-default/partially-specialized-default-dispatch-values [x y z] default))))))
 
-(t/deftest partially-specialized-default-dispatch-values-test
+(t/deftest partially-specialized-default-dispatch-values-test-2
   (doseq [default [:default ::default :a]]
     (doseq [x [:x nil]]
       (t/testing (format "dispatch value = %s" (pr-str x))

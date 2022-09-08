@@ -80,7 +80,7 @@
 
 (def ^:private lots-of-args-multifn
   (-> (m/default-multifn
-       (fn [a b c d e f] [a (class b) c d e]))
+       (fn [a b c d e _f] [a (class b) c d e]))
       (m/add-primary-method :default
                             (fn [_ a _ _ _ _ f] {:a a, :f f}))
       (m/add-primary-method [::x :default :default :default :default]
