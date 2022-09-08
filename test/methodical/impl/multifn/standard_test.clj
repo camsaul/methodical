@@ -1,8 +1,11 @@
 (ns methodical.impl.multifn.standard-test
-  (:require [clojure.math.combinatorics :as combo]
-            [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl.multifn.standard :as standard]))
+  (:require
+   [clojure.math.combinatorics :as combo]
+   [clojure.test :as t]
+   [methodical.core :as m]
+   [methodical.impl.multifn.standard :as standard]))
+
+(set! *warn-on-reflection* true)
 
 (derive ::parrot ::bird)
 (derive ::parakeet ::parrot)
@@ -205,3 +208,27 @@
                                       :default
                                       [expected-1 expected-2])}
                    (meta (standard/standard-effective-method combo dispatcher method-table dv)))))))))
+
+(t/deftest nil-dispatch-values-test
+  (t/testing "Dispatch values for `nil` should be calculated correctly (#112)"
+    (doseq [order [[nil :default]
+                   [:default nil]]]
+      (t/testing (str "\norder = " (pr-str order))
+        (let [mf* (atom nil)
+              mf  (-> (m/multifn
+                       (m/standard-multifn-impl
+                        (m/thread-last-method-combination)
+                        (m/multi-default-dispatcher identity)
+                        (m/standard-method-table)))
+                      (m/add-primary-method :default (fn [_next-method _m] :default))
+                      (m/add-primary-method nil (fn [_next-method _m]
+                                                  (@mf* :default)
+                                                  nil)))]
+          (reset! mf* mf)
+          (doseq [x order]
+            (t/testing (str \newline (pr-str x))
+              (t/testing (str \newline `m/effective-dispatch-value)
+                (t/is (= x
+                         (m/effective-dispatch-value mf x))))
+              (t/is (= x
+                       (mf x))))))))))

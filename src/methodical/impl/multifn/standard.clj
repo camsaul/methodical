@@ -79,8 +79,8 @@
   (let [dispatch-values (transduce
                          (comp cat
                                (map meta)
-                               (map :dispatch-value)
-                               (filter some?))
+                               (filter #(contains? % :dispatch-value))
+                               (map :dispatch-value))
                          conj
                          []
                          (cons primary-methods (vals aux-methods)))]
