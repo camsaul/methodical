@@ -2,16 +2,18 @@
   "A basic, dumb cache. `SimpleCache` stores cached methods in a simple map of dispatch-value -> effective method; it
   offers no facilities to deduplicate identical methods for the same dispatch value. This behaves similarly to the
   caching mechanism in vanilla Clojure."
-  (:require methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.Cache))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.interface]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface Cache)))
 
 (set! *warn-on-reflection* true)
 
 (comment methodical.interface/keep-me)
 
-(p.types/deftype+ SimpleCache [atomm]
+(deftype SimpleCache [atomm]
   pretty/PrettyPrintable
   (pretty [_]
     '(simple-cache))
@@ -28,4 +30,9 @@
     this)
 
   (empty-copy [_]
-    (SimpleCache. (atom {}))))
+    (SimpleCache. (atom {})))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class (class this)
+     :cache @atomm}))

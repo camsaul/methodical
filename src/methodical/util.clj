@@ -167,7 +167,7 @@
   {:pre [(some? multifn)]}
   (if-let [method (some
                    (fn [method]
-                     (when (= (::unique-key (meta method)) unique-key)
+                     (when (= (:methodical/unique-key (meta method)) unique-key)
                        method))
                    (aux-methods multifn qualifier dispatch-val))]
     (i/remove-aux-method multifn qualifier dispatch-val method)
@@ -181,7 +181,7 @@
   {:pre [(some? multifn)]}
   (-> multifn
       (remove-aux-method-with-unique-key qualifier dispatch-val unique-key)
-      (i/add-aux-method qualifier dispatch-val (vary-meta f assoc ::unique-key unique-key))))
+      (i/add-aux-method qualifier dispatch-val (vary-meta f assoc :methodical/unique-key unique-key))))
 
 (defn remove-all-methods
   "Remove all primary and auxiliary methods, including default implementations."
@@ -189,7 +189,7 @@
   (-> multifn remove-all-primary-methods remove-all-aux-methods))
 
 (defn add-preference
-  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement `prefer-method`. `isa?*` is
+  "Add a method preference to `prefs` for dispatch value `x` over `y`. Used to implement [[prefer-method]]. `isa?*` is
   used to determine whether a relationship between `x` and `y` that precludes this preference already exists; it can
   be [[clojure.core/isa?]], perhaps partially bound with a hierarchy, or some other 2-arg predicate function."
   [isa?* prefs x y]

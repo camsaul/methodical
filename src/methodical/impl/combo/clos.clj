@@ -3,11 +3,13 @@
   Supports `:before`, `:after`, and `:around` auxiliary methods. The values returned by `:before` and `:after` methods
   are ignored. Primary methods and around methods get an implicit `next-method` arg (see Methodical dox for more on
   what this means)."
-  (:require [methodical.impl.combo.common :as combo.common]
-            methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.MethodCombination))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.combo.common :as combo.common]
+   [methodical.interface]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface MethodCombination)))
 
 (set! *warn-on-reflection* true)
 
@@ -58,7 +60,7 @@
                             result)]
       (comp apply-after-fns combined-method))))
 
-(p.types/deftype+ CLOSStandardMethodCombination []
+(deftype CLOSStandardMethodCombination []
   pretty/PrettyPrintable
   (pretty [_]
     '(clos-method-combination))
@@ -78,4 +80,8 @@
             (combo.common/apply-around-methods around)))
 
   (transform-fn-tail [_ qualifier fn-tail]
-    (combo.common/add-implicit-next-method-args qualifier fn-tail)))
+    (combo.common/add-implicit-next-method-args qualifier fn-tail))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class (class this)}))

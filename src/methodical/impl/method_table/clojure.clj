@@ -1,14 +1,17 @@
 (ns methodical.impl.method-table.clojure
-  (:require methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.MethodTable))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.method-table.common :as method-table.common]
+   [methodical.interface]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface MethodTable)))
 
 (set! *warn-on-reflection* true)
 
 (comment methodical.interface/keep-me)
 
-(p.types/deftype+ ClojureMethodTable [m]
+(deftype ClojureMethodTable [m]
   pretty/PrettyPrintable
   (pretty [_]
     (if (seq m)
@@ -43,4 +46,9 @@
     (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods.")))
 
   (remove-aux-method [_ _ _ _]
-    (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods."))))
+    (throw (UnsupportedOperationException. "Clojure-style multimethods do not support auxiliary methods.")))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class   (class this)
+     :primary (method-table.common/datafy-primary-methods m)}))

@@ -1,14 +1,16 @@
 (ns methodical.impl.dispatcher.everything
   (:refer-clojure :exclude [methods])
-  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
-            [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.Dispatcher))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.dispatcher.common :as dispatcher.common]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface Dispatcher)))
 
 (set! *warn-on-reflection* true)
 
-(p.types/deftype+ EverythingDispatcher [hierarchy-var prefs]
+(deftype EverythingDispatcher [hierarchy-var prefs]
   pretty/PrettyPrintable
   (pretty [_]
     (cons
@@ -47,7 +49,7 @@
           comparatorr (dispatcher.common/domination-comparator (deref hierarchy-var) prefs)]
       (into {} (for [[qualifier dispatch-value->methods] aux-methods]
                  [qualifier (for [[dispatch-value methods] (sort-by first comparatorr dispatch-value->methods)
-                                  method methods]
+                                  method                   methods]
                               (vary-meta method assoc :dispatch-value dispatch-value))]))))
 
   (default-dispatch-value [_]
@@ -60,4 +62,10 @@
     (EverythingDispatcher. hierarchy-var new-prefs))
 
   (dominates? [_ x y]
-    (dispatcher.common/dominates? (deref hierarchy-var) prefs x y)))
+    (dispatcher.common/dominates? (deref hierarchy-var) prefs x y))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class     (class this)
+     :hierarchy hierarchy-var
+     :prefs     prefs}))

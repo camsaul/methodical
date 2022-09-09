@@ -1,10 +1,13 @@
 (ns methodical.impl.multifn.standard
   "Standard Methodical MultiFn impl."
-  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
-            [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [clojure.datafy :as datafy]
+   [methodical.impl.dispatcher.common :as dispatcher.common]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl)))
 
 (set! *warn-on-reflection* true)
 
@@ -97,9 +100,9 @@
     (some-> (i/combine-methods method-combination primary-methods aux-methods)
             (with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
 
-(p.types/deftype+ StandardMultiFnImpl [^MethodCombination combo
-                                       ^Dispatcher dispatcher
-                                       ^MethodTable method-table]
+(deftype StandardMultiFnImpl [^MethodCombination combo
+                              ^Dispatcher dispatcher
+                              ^MethodTable method-table]
   pretty/PrettyPrintable
   (pretty [_this]
     (list 'standard-multifn-impl combo dispatcher method-table))
@@ -133,4 +136,11 @@
       (StandardMultiFnImpl. combo dispatcher new-method-table)))
 
   (effective-method [_this dispatch-value]
-    (standard-effective-method combo dispatcher method-table dispatch-value)))
+    (standard-effective-method combo dispatcher method-table dispatch-value))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class        (class this)
+     :combo        (datafy/datafy combo)
+     :dispatcher   (datafy/datafy dispatcher)
+     :method-table (datafy/datafy method-table)}))

@@ -46,7 +46,8 @@
   ;; clojure -X:dev:test
   :test
   {:exec-fn   methodical.test-runner/run-tests
-   :exec-args {:only ["test"]}}
+   :exec-args {:only ["test"]}
+   :jvm-opts  ["-Dinhumane.test.output=true"]}
 
   ;; clj -X:dev:cloverage
   :cloverage
