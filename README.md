@@ -579,8 +579,6 @@ Methodical multimethods also implement `datafy`:
                 :refs  #{#'clojure.core/global-hierarchy}}}
 ```
 
-![Datafy](assets/datafy.png)
-
 ## Performance
 
 Methodical is built with performance in mind. Although it is written entirely in Clojure, and supports many more
