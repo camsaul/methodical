@@ -234,7 +234,8 @@
       ([a b c] x)
       ([a b c d] x)
       ([a b c d & more] x))
-    ;; => ok, because everything required by [:>= 3] is covered, and everything present is allowed by [:>= 3]"
+    ;; => ok, because everything required by [:>= 3] is covered, and everything present is allowed by [:>= 3]
+    ```"
   {:arglists     '([name-symb docstring? attr-map? dispatch-fn?
                     & {:keys [hierarchy default-value prefers combo method-table cache]}]
                    [name-symb docstring? attr-map? & {:keys [dispatcher combo method-table cache]}])
