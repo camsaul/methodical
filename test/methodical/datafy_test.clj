@@ -31,6 +31,9 @@
 (t/deftest datafy-test
   (t/is (= {:ns           'methodical.datafy-test
             :name         'methodical.datafy-test/mf
+            :file         "methodical/datafy_test.clj"
+            :line         11
+            :column       1
             :arglists     '([x y])
             :class        methodical.impl.standard.StandardMultiFn
             :combo        {:class          methodical.impl.combo.threaded.ThreadingMethodCombination

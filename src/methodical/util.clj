@@ -3,7 +3,8 @@
   interfaces. These functions are compositions of those methods."
   (:refer-clojure :exclude [prefers prefer-method remove-all-methods])
   (:require [methodical.impl.standard :as impl.standard]
-            [methodical.interface :as i]))
+            [methodical.interface :as i]
+            [methodical.util.describe :as describe]))
 
 (set! *warn-on-reflection* true)
 
@@ -25,7 +26,7 @@
 
 (defn matching-primary-methods
   "Return a sequence of applicable primary methods for `dispatch-value`, sorted from most-specific to least-specific.
-  Methods include the `^:dispatch-valueue` with which they were defined as metadata. The standard dispatcher also checks
+  Methods include the `^:dispatch-value` with which they were defined as metadata. The standard dispatcher also checks
   to make sure methods in the sequence are not ambiguously specific, replacing ambiguous methods with ones that will
   throw an Exception when invoked."
   ([multifn dispatch-val]
@@ -35,16 +36,16 @@
 
 (defn applicable-primary-method
   "Return the primary method that would be use for `dispatch-value`, including ones from ancestor dispatch values or the
-  default dipsatch value. Method includes `^:dispatch-valueue` metadata indicating the actual dispatch value for which
+  default dipsatch value. Method includes `^:dispatch-value` metadata indicating the actual dispatch value for which
   the applicable method was defined.
 
-  Like `primary-method`, the method returned will not have any implicit args (such as `next-method`) bound."
+  Like [[primary-method]], the method returned will not have any implicit args (such as `next-method`) bound."
   [multifn dispatch-val]
   (first (matching-primary-methods multifn dispatch-val)))
 
 (defn effective-primary-method
   "Build and effective method equivalent that would be used for this `dispatch-value` if it had no applicable auxiliary
-  methods. Implicit args (such as `next-method`) will be bound appropriately. Method has `^:dispatch-valueue` metadata
+  methods. Implicit args (such as `next-method`) will be bound appropriately. Method has `^:dispatch-value` metadata
   for the dispatch value with which the most-specific primary method was defined."
   [multifn dispatch-val]
   (let [[most-specific-primary-method :as primary-methods] (matching-primary-methods multifn dispatch-val)]
@@ -75,7 +76,7 @@
 
 (defn matching-aux-methods
   "Return a map of aux method qualifier -> sequence of applicable methods for `dispatch-value`, sorted from
-  most-specific to least-specific. Methods should have the `^:dispatch-valueue` with which they were defined as
+  most-specific to least-specific. Methods should have the `^:dispatch-value` with which they were defined as
   metadata."
   ([multifn dispatch-val]
    (i/matching-aux-methods multifn multifn dispatch-val))
@@ -234,8 +235,16 @@
   (let [{var-ns :ns, var-name :name} (meta multifn-var)
         varr                         (if (and var-ns var-name)
                                        (ns-resolve var-ns var-name)
-                                       multifn-var)]
-    (apply alter-var-root varr f args)))
+                                       multifn-var)
+        original-doc ((some-fn :original-doc :doc) (meta multifn-var))]
+    (apply alter-var-root varr f args)
+    (let [updated-value (var-get varr)
+          new-doc       (str
+                         (when original-doc
+                           (str original-doc \newline \newline))
+                         (describe/describe updated-value))]
+      (alter-meta! multifn-var assoc :original-doc original-doc, :doc new-doc))
+    multifn-var))
 
 (defn add-primary-method!
   "Destructive version of [[add-primary-method]]. Operates on a var defining a Methodical multifn."
@@ -243,7 +252,7 @@
   (alter-var-root+ multifn-var i/add-primary-method dispatch-val f))
 
 (defn remove-primary-method!
-  "Destructive version of [[remove-primary-method]]. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[methodical.interface/remove-primary-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var dispatch-val]
   (alter-var-root+ multifn-var i/remove-primary-method dispatch-val))
 
@@ -253,12 +262,12 @@
   (alter-var-root+ multifn-var remove-all-primary-methods))
 
 (defn add-aux-method!
-  "Destructive version of [[add-aux-method]]. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[methodical.interface/add-aux-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
   (alter-var-root+ multifn-var i/add-aux-method qualifier dispatch-val f))
 
 (defn remove-aux-method!
-  "Destructive version of [[remove-aux-method]]. Operates on a var defining a Methodical multifn."
+  "Destructive version of [[methodical.interface/remove-aux-method]]. Operates on a var defining a Methodical multifn."
   [multifn-var qualifier dispatch-val f]
   (alter-var-root+ multifn-var i/remove-aux-method qualifier dispatch-val f))
 

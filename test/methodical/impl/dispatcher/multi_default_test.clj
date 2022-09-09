@@ -1,7 +1,7 @@
 (ns methodical.impl.dispatcher.multi-default-test
   (:require [clojure.test :as t]
             [methodical.core :as m]
-            [methodical.impl.dispatcher.multi-default :as multi-default]
+            [methodical.impl.dispatcher.multi-default :as dispatcher.multi-default]
             methodical.interface)
   (:import methodical.interface.MethodTable))
 
@@ -22,14 +22,14 @@
                 [default y       default]
                 [default default z]
                 [default default default]]
-               (multi-default/partially-specialized-default-dispatch-values [x y z] default))))))
+               (dispatcher.multi-default/partially-specialized-default-dispatch-values [x y z] default))))))
 
 (t/deftest partially-specialized-default-dispatch-values-test-2
   (doseq [default [:default ::default :a]]
     (doseq [x [:x nil]]
       (t/testing (format "dispatch value = %s" (pr-str x))
         (t/is (= nil
-                 (multi-default/partially-specialized-default-dispatch-values x default))
+                 (dispatcher.multi-default/partially-specialized-default-dispatch-values x default))
               "If the dispatch value isn't sequential, we shouldn't calculate partial default dispatch values")))
     (doseq [x [:x nil]
             y [:y nil]]
@@ -37,11 +37,11 @@
         (t/is (= [[x       default]
                   [default y]
                   [default default]]
-                 (multi-default/partially-specialized-default-dispatch-values [x y] default))
+                 (dispatcher.multi-default/partially-specialized-default-dispatch-values [x y] default))
               (str "If the dispatch value is sequental, but default is not, we should return a sequence of partial"
                    " default dispatch values"))
         (t/is (= nil
-                 (multi-default/partially-specialized-default-dispatch-values [x y] [default x]))
+                 (dispatcher.multi-default/partially-specialized-default-dispatch-values [x y] [default x]))
               "If the default value is sequential, we shouldn't calculate partial default dispatch values")))))
 
 (defn- test-method-symbol->dispatch-value [default symb]
@@ -90,7 +90,7 @@
                      (derive :x :letter)
                      (derive :y :letter))]]
     (t/testing (format "default value = %s dispatch value = %s" (pr-str default) (pr-str dispatch-value))
-      (let [matching-methods (multi-default/matching-primary-methods
+      (let [matching-methods (dispatcher.multi-default/matching-primary-methods
                               {:hierarchy                h
                                :prefs                    nil
                                :default-value            default
@@ -122,7 +122,7 @@
                       (derive :large-beak :thing)
                       (derive :eats-fruit :thing))]
         (letfn [(invoke-with-prefs [prefs dispatch-val]
-                  (let [[matching-method] (multi-default/matching-primary-methods
+                  (let [[matching-method] (dispatcher.multi-default/matching-primary-methods
                                            {:hierarchy      h
                                             :prefs          prefs
                                             :default-value  default
@@ -186,7 +186,7 @@
                      (derive :y :letter))]]
     (t/testing (format "method-type = %s default value = %s dispatch value = %s"
                        method-type default (pr-str dispatch-value))
-      (let [matching-methods (multi-default/matching-aux-methods
+      (let [matching-methods (dispatcher.multi-default/matching-aux-methods
                               {:hierarchy      h
                                :prefs          nil #_prefs
                                :default-value  default

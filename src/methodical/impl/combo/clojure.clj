@@ -4,6 +4,7 @@
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [methodical.interface]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -35,4 +36,8 @@
 
   clojure.protocols/Datafiable
   (datafy [this]
-    {:class (class this)}))
+    {:class (class this)})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the method combination %s." (.getCanonicalName (class this)))))

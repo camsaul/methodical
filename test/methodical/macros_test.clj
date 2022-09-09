@@ -4,7 +4,7 @@
    [clojure.test :as t]
    [methodical.impl :as impl]
    [methodical.interface :as i]
-   [methodical.macros :as m]
+   [methodical.macros :as macros]
    [methodical.util :as u]
    [potemkin.namespaces :as p.namespaces]))
 
@@ -18,22 +18,22 @@
                           (s/conform :methodical.macros/defmulti-args (quote args)))
     (clojure-multifn
      class
-     :combo (m/clojure-method-combination))
+     :combo (macros/clojure-method-combination))
     {:name-symb   clojure-multifn
      :dispatch-fn class
-     :options     [{:k :combo, :v (m/clojure-method-combination)}]})
+     :options     [{:k :combo, :v (macros/clojure-method-combination)}]})
 
   (t/testing "Throw error on invalid args (#36)"
     (t/is (thrown?
            clojure.lang.Compiler$CompilerException
            (macroexpand
-            '(m/defmulti multifn :default
+            '(macros/defmulti multifn :default
                [x y z]
                :ok))))))
 
 (t/deftest method-fn-symbol-test
   (letfn [(method-fn-symbol [dispatch-value]
-            (#'m/method-fn-symbol 'my-multimethod "primary" dispatch-value))]
+            (#'macros/method-fn-symbol 'my-multimethod "primary" dispatch-value))]
     (t/testing "Keyword dispatch value"
       (t/is (= 'my-multimethod-primary-method-something
                (method-fn-symbol :something))))
@@ -65,11 +65,11 @@
       (t/is (= 'my-multimethod-primary-method-can_SINGLEQUOTE_t-use-this
                (method-fn-symbol "can't use this"))))))
 
-(m/defmulti ^:private mf1 :type)
+(macros/defmulti ^:private mf1 :type)
 
 (t/deftest parse-defmethod-args-test
   (t/are [args parsed] (= (quote parsed)
-                          (#'m/parse-defmethod-args mf1 (quote args)))
+                          (#'macros/parse-defmethod-args mf1 (quote args)))
     (:x [m] body1 body2)
     {:method-type    :primary
      :dispatch-value :x
@@ -194,7 +194,7 @@
      :dispatch-value "str"
      :fn-tail        [[_x]]}))
 
-(m/defmethod mf1 :x
+(macros/defmethod mf1 :x
   [m]
   (assoc m :method :x))
 
@@ -204,25 +204,25 @@
                          (macroexpand (quote invalid-form)))
 
     ;; bad aux method
-    (m/defmethod mf1 :arounds :x
+    (macros/defmethod mf1 :arounds :x
       [m]
       (assoc m :method :x))
 
     ;; missing function tail
-    (m/defmethod mf1 :around :x)
+    (macros/defmethod mf1 :around :x)
 
     ;; invalid function tail
-    (m/defmethod mf1 :around :x {} a b c)
+    (macros/defmethod mf1 :around :x {} a b c)
 
     ;; string unique key
-    (m/defmethod mf1 :around :x "unique-key" "docstr" [a] b c)))
+    (macros/defmethod mf1 :around :x "unique-key" "docstr" [a] b c)))
 
 (s/def ::arg-validation-spec
   (s/or :default (partial = :default)
         :x-y     (s/spec (s/cat :x keyword?
                                 :y keyword?))))
 
-(m/defmulti validate-args-spec-mf
+(macros/defmulti validate-args-spec-mf
   {:arglists '([x y]), :dispatch-value-spec ::arg-validation-spec}
   (fn [x y]
     [(keyword x) (keyword y)]))
@@ -235,17 +235,17 @@
       #'validate-args-spec-mf))
   (t/testing "valid"
     (t/are [form] (some? (macroexpand (quote form)))
-      (m/defmethod validate-args-spec-mf :default [x y])
-      (m/defmethod validate-args-spec-mf [:x :y] [x y])))
+      (macros/defmethod validate-args-spec-mf :default [x y])
+      (macros/defmethod validate-args-spec-mf [:x :y] [x y])))
 
   (t/testing "invalid"
     (t/are [form] (thrown?
                    clojure.lang.Compiler$CompilerException
                    (macroexpand (quote form)))
-      (m/defmethod validate-args-spec-mf :x [x y])
-      (m/defmethod validate-args-spec-mf [:x 1] [x y])
-      (m/defmethod validate-args-spec-mf [:x] [x y])
-      (m/defmethod validate-args-spec-mf [:x :y :z] [x y]))))
+      (macros/defmethod validate-args-spec-mf :x [x y])
+      (macros/defmethod validate-args-spec-mf [:x 1] [x y])
+      (macros/defmethod validate-args-spec-mf [:x] [x y])
+      (macros/defmethod validate-args-spec-mf [:x :y :z] [x y]))))
 
 (t/deftest defmethod-primary-methods-test
   (t/is (= mf1 (let [impl    (impl/standard-multifn-impl
@@ -262,13 +262,13 @@
            {:type :x, :method :x})
         "We should be able to define new primary methods using `defmethod`"))
 
-(m/defmulti ^:private mf2 :type)
+(macros/defmulti ^:private mf2 :type)
 
-(m/defmethod mf2 :x
+(macros/defmethod mf2 :x
   [m]
   (assoc m :method :x))
 
-(m/defmethod mf2 :before :default
+(macros/defmethod mf2 :before :default
   [m]
   (assoc m :before? true))
 
@@ -277,13 +277,13 @@
            {:type :x, :before? true, :method :x})
         "We should be able to define new aux methods using `defmethod`"))
 
-(m/defmulti ^:private mf3 :type)
+(macros/defmulti ^:private mf3 :type)
 
-(m/defmethod mf3 :x
+(macros/defmethod mf3 :x
   [m]
   (assoc m :method :x))
 
-(m/defmethod mf3 :after :default
+(macros/defmethod mf3 :after :default
   [m]
   (assoc m :after? true))
 
@@ -293,7 +293,7 @@
 
 (p.namespaces/link-vars #'mf3 #'mf4)
 
-(m/defmethod mf4 :y
+(macros/defmethod mf4 :y
   [m]
   (assoc m :method :y))
 
@@ -308,7 +308,7 @@
              (mf3 {:type :y})
              (mf4 {:type :y})))))
 
-(m/defmulti multi-arity
+(macros/defmulti multi-arity
   {:arglists '([x] [x y])}
   (fn
     ([x]
@@ -316,24 +316,24 @@
     ([x _]
      (keyword x))))
 
-(m/defmethod multi-arity ::wow
+(macros/defmethod multi-arity ::wow
   ([x]
    {:x x})
   ([x y]
    {:x x, :y y}))
 
-(m/defmethod multi-arity :after :default
+(macros/defmethod multi-arity :after :default
   ([m]
    (assoc m :after? true))
   ([x m]
    (assoc m :after? x)))
 
-(m/defmulti no-dispatch-fn)
+(macros/defmulti no-dispatch-fn)
 
-(m/defmethod no-dispatch-fn :first [& _]
+(macros/defmethod no-dispatch-fn :first [& _]
   1)
 
-(m/defmethod no-dispatch-fn :second [& _]
+(macros/defmethod no-dispatch-fn :second [& _]
   2)
 
 (t/deftest multi-arity-test
@@ -348,13 +348,13 @@
     (t/is (= 1 (no-dispatch-fn :first)))
     (t/is (= 2 (no-dispatch-fn :second)))))
 
-(m/defmulti docstring-multifn)
+(macros/defmulti docstring-multifn)
 
-(m/defmethod docstring-multifn :docstring
+(macros/defmethod docstring-multifn :docstring
   "Docstring"
   [_x])
 
-(m/defmethod docstring-multifn :around :docstring
+(macros/defmethod docstring-multifn :around :docstring
   "Docstring"
   [_x])
 

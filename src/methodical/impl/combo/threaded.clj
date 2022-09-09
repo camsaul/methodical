@@ -4,6 +4,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.combo.common :as combo.common]
    [methodical.interface]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -102,7 +103,13 @@
   clojure.protocols/Datafiable
   (datafy [this]
     {:class          (class this)
-     :threading-type threading-type}))
+     :threading-type threading-type})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the method combination %s\nwith the threading strategy %s."
+            (.getCanonicalName (class this))
+            (pr-str threading-type))))
 
 (defn threading-method-combination
   "Create a new `ThreadingMethodCombination` using the keyword `threading-type` strategy, e.g. `:thread-first` or

@@ -3,6 +3,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [clojure.datafy :as datafy]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (clojure.lang Named)
@@ -78,4 +79,10 @@
   (datafy [this]
     (assoc (datafy/datafy impl)
            :class (class this)
-           :cache (datafy/datafy cache))))
+           :cache (datafy/datafy cache)))
+
+  describe/Describeable
+  (describe [_this]
+    (str (describe/describe cache)
+         \newline \newline
+         (describe/describe impl))))

@@ -5,6 +5,7 @@
    [clojure.datafy :as datafy]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl)))
@@ -57,8 +58,11 @@
   "Combine multiple composite dispatch values into a single composite dispatch value that has the overall most-specific
   arg for each position, e.g.
 
-    ;; String is more specific than Object; ::parrot is more specific than ::bird
-    (composite-effective-dispatch-value [[Object ::parrot] [String ::bird]]) ; -> [String ::parrot]
+
+  ```clj
+  ;; String is more specific than Object; ::parrot is more specific than ::bird
+  (composite-effective-dispatch-value [[Object ::parrot] [String ::bird]]) ; -> [String ::parrot]
+  ```
 
   If the most-specific dispatch value is not composite, it returns it directly."
   [dispatcher actual-dispatch-value method-dispatch-values]
@@ -143,4 +147,12 @@
     {:class        (class this)
      :combo        (datafy/datafy combo)
      :dispatcher   (datafy/datafy dispatcher)
-     :method-table (datafy/datafy method-table)}))
+     :method-table (datafy/datafy method-table)})
+
+  describe/Describeable
+  (describe [_this]
+    (str (describe/describe combo)
+         \newline \newline
+         (describe/describe dispatcher)
+         \newline \newline
+         (describe/describe method-table))))

@@ -107,8 +107,8 @@
                           (trace-aux-method (vary-meta aux-method assoc :qualifier qualifier)))])))
 
 (defn trace*
-  "Function version of `trace` macro. The only difference is this doesn't capture the form of `multifn` passed to
-  `trace`, and thus can't usually generate a pretty description for the top-level form."
+  "Function version of [[trace]] macro. The only difference is this doesn't capture the form of `multifn` passed to
+  [[trace]], and thus can't usually generate a pretty description for the top-level form."
   [multifn & args]
   (let [dispatch-value  (apply u/dispatch-value multifn args)
         primary-methods (trace-primary-methods (u/matching-primary-methods multifn dispatch-value))
@@ -126,14 +126,16 @@
   Method calls are printed with `n:`, where `n` is the current depth of the trace; the result of each method call is
   printed with a corresponding `n>`:
 
-    (trace/trace my-fn 1 {})
-    ;; ->
-    0: (my-fn 1 {})
-      1: (#primary-method<:default> nil 1 {})
-      1> {:x 1}
-      1: (#aux-method<:after [java.lang.Object :default]> 1 {:x 1})
-      1> {:object? true, :x 1}
-    0> {:object? true, :x 1}"
+  ```clj
+  (trace/trace my-fn 1 {})
+  ;; ->
+  0: (my-fn 1 {})
+    1: (#primary-method<:default> nil 1 {})
+    1> {:x 1}
+    1: (#aux-method<:after [java.lang.Object :default]> 1 {:x 1})
+    1> {:object? true, :x 1}
+  0> {:object? true, :x 1}
+  ```"
   [multifn & args]
   `(trace* (vary-meta ~multifn assoc ::description '~multifn)
            ~@args))

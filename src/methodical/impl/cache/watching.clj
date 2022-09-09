@@ -1,20 +1,21 @@
 (ns methodical.impl.cache.watching
-  "A `Cache` implementation that wraps any other cache, watching one or more references (such as an
-  atom or var), calling `clear-cache!` whenever one of those references changes.
+  "A [[methodical.interface/Cache]] implementation that wraps any other cache, watching one or more references (such as an
+  atom or var), calling [[methodical.interface/clear-cache!]] whenever one of those references changes.
 
-  WatchingCaches can be created by calling `add-watches` on another cache. `add-watches` is composable, meaning you
-  can thread multiple calls to it to build a cache that watches the entire world go by. You could, for example, use
+  `WatchingCache`s can be created by calling [[add-watches]] on another cache. [[add-watches]] is composable, meaning
+  you can thread multiple calls to it to build a cache that watches the entire world go by. You could, for example, use
   this to build a multifn that supports a dynamic set of hierarchies, letting you add more as you go. The world's your
   oyster!
 
-  WatchingCaches' watch functions weakly reference their caches, meaning they do not prevent garbage collection of
+  `WatchingCache`s' watch functions weakly reference their caches, meaning they do not prevent garbage collection of
   potentially large method maps; they also automatically clear out their watches when they are garbage collected and
-  finalized (which, of course, may actually be never -- but worst-case is that some unneeded calls to `clear-cache!`
-  get made)."
+  finalized (which, of course, may actually be never -- but worst-case is that some unneeded calls
+  to [[methodical.interface/clear-cache!]] get made)."
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [clojure.datafy :as datafy]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (java.lang.ref WeakReference)
@@ -52,7 +53,11 @@
   (datafy [this]
     {:class (class this)
      :cache (datafy/datafy cache)
-     :refs  refs}))
+     :refs  refs})
+
+  describe/Describeable
+  (describe [this]
+    (format "It caches methods using a %s." (.getCanonicalName (class this)))))
 
 (defn- cache-watch-fn [cache]
   (let [cache-weak-ref (WeakReference. cache)]
@@ -97,7 +102,7 @@
 
 (defn remove-watches
   "Recursively removes all watches from `cache`, and returning the cache it wrapped (in case you want to thread it into
-  `add-watches` to watch something else). If `cache` is not an instance of `WatchingCache`, returns the cache as-is."
+  [[add-watches]] to watch something else). If `cache` is not an instance of `WatchingCache`, returns the cache as-is."
   [cache]
   (if-not (instance? WatchingCache cache)
     cache
