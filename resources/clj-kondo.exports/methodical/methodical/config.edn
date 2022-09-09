@@ -5,12 +5,10 @@
 
  :hooks
  {:analyze-call
-  {methodical.core/defmethod               hooks.methodical.core/defmethod
-   methodical.core/defmulti                hooks.methodical.core/defmulti
-   methodical.macros/define-aux-method     hooks.methodical.core/defmethod
-   methodical.macros/define-primary-method hooks.methodical.core/defmethod
-   methodical.macros/defmethod             hooks.methodical.core/defmethod
-   methodical.macros/defmulti              hooks.methodical.core/defmulti}
+  {methodical.core/defmethod   hooks.methodical.macros/defmethod
+   methodical.core/defmulti    hooks.methodical.macros/defmulti
+   methodical.macros/defmethod hooks.methodical.macros/defmethod
+   methodical.macros/defmulti  hooks.methodical.macros/defmulti}
 
   :macroexpand
   {methodical.impl.combo.operator/defoperator macros.methodical.impl.combo.operator/defoperator}}}

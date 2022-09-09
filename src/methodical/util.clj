@@ -5,6 +5,8 @@
   (:require [methodical.impl.standard :as impl.standard]
             [methodical.interface :as i]))
 
+(set! *warn-on-reflection* true)
+
 (defn multifn?
   "True if `x` is a Methodical multifn (i.e., if it is an instance of `StandardMultiFn`)."
   [x]
@@ -124,15 +126,14 @@
   table."
   [multifn]
   (reduce
-   (fn [multifn dispatch-val]
-     (i/remove-primary-method multifn dispatch-val))
+   i/remove-primary-method
    multifn
    (keys (i/primary-methods multifn))))
 
 (defn remove-all-aux-methods
   "With one arg, remove *all* auxiliary methods for a `multifn`. With two args, remove all auxiliary methods for the
   given `qualifier` (e.g. `:before`). With three args, remove all auxiliary methods for a given `qualifier` and
-  `dispatch-value`. "
+  `dispatch-value`."
   ([multifn]
    (reduce remove-all-aux-methods multifn (keys (i/aux-methods multifn))))
 

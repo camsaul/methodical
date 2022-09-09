@@ -5,6 +5,8 @@
   (:import clojure.lang.Named
            [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
+(set! *warn-on-reflection* true)
+
 (defn- maybe-name [^MultiFnImpl impl]
   (if-let [nm (and (instance? Named impl) (name impl))]
     (str " " nm)

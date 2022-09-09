@@ -6,6 +6,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
+(set! *warn-on-reflection* true)
+
 (p.types/deftype+ EverythingDispatcher [hierarchy-var prefs]
   pretty/PrettyPrintable
   (pretty [_]

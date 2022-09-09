@@ -4,6 +4,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.MethodTable))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (p.types/deftype+ ClojureMethodTable [m]

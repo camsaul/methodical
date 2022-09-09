@@ -17,6 +17,8 @@
   (:import java.lang.ref.WeakReference
            methodical.interface.Cache))
 
+(set! *warn-on-reflection* true)
+
 (declare add-watches remove-watches)
 
 (p.types/deftype+ WatchingCache [^Cache cache watch-key refs]

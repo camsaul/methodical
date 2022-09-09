@@ -9,6 +9,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
+(set! *warn-on-reflection* true)
+
 (defn- partially-specialized-default-dispatch-values* [dispatch-value default-value]
   ;; The basic idea here is to count down from (2^(count dispatch-value) - 2) to 0, then treat each bit as whether the
   ;; value at the corresponding position in `dispatch-value` should be included (if the bit is `1`) or if
