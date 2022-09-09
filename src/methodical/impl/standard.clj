@@ -1,9 +1,12 @@
 (ns methodical.impl.standard
-  (:require [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import clojure.lang.Named
-           [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [clojure.datafy :as datafy]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (clojure.lang Named)
+   (methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl)))
 
 (set! *warn-on-reflection* true)
 
@@ -24,9 +27,9 @@
 
 (defn- ^:static effective-method [^MultiFnImpl impl dispatch-value]
   (or (.effective-method impl dispatch-value)
-      (-> (format "No matching%s method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
-          (ex-info {::unmatched-dispatch-value dispatch-value})
-          throw)))
+      (throw
+       (ex-info (format "No matching%s method for dispatch value %s" (maybe-name impl) (pr-str dispatch-value))
+                {::unmatched-dispatch-value dispatch-value}))))
 
 (defmacro ^:private invoke-multi
   "Utility macro for finding the effective method of `impl`, given the `args`, then catching an Exception on invoking
@@ -62,7 +65,7 @@
         (catch Exception e
           (handle-effective-method-exception e mta)))))
 
-(p.types/deftype+ StandardMultiFn [^MultiFnImpl impl mta]
+(deftype StandardMultiFn [^MultiFnImpl impl mta]
   pretty/PrettyPrintable
   (pretty [_]
     (list 'multifn impl))
@@ -226,7 +229,18 @@
   (invoke [_ a b c d e f g h i j k l m n o p q r s t args]
     (apply invoke-multifn impl mta a b c d e f g h i j k l m n o p q r s t args))
   (applyTo [_ args]
-    (apply invoke-multifn impl mta args)))
+    (apply invoke-multifn impl mta args))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    (with-meta (merge (datafy/datafy impl)
+                      (select-keys mta [:name :arglists])
+                      (when (:ns mta)
+                        {:ns (ns-name (:ns mta))})
+                      (when (and (:ns mta) (:name mta))
+                        {:name (symbol (str (ns-name (:ns mta))) (str (:name mta)))})
+                      {:class (class this)})
+               mta)))
 
 (defn multifn?
   "True if `x` is an instance of `StandardMultiFn`."

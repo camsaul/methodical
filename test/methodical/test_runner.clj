@@ -11,12 +11,10 @@
    [eftest.report.progress]
    [eftest.runner]
    [environ.core :as env]
-   [humane-are.core :as humane-are]
-   [pjstadig.humane-test-output :as humane-test-output]))
+   [humane-are.core :as humane-are]))
 
 (set! *warn-on-reflection* true)
 
-(humane-test-output/activate!)
 (humane-are/install!)
 
 (defmulti ^:private find-tests

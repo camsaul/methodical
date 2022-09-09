@@ -1,13 +1,16 @@
 (ns methodical.impl.multifn.cached
-  (:require [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import clojure.lang.Named
-           [methodical.interface Cache MultiFnImpl]))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [clojure.datafy :as datafy]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (clojure.lang Named)
+   (methodical.interface Cache MultiFnImpl)))
 
 (set! *warn-on-reflection* true)
 
-(p.types/deftype+ CachedMultiFnImpl [^MultiFnImpl impl, ^Cache cache]
+(deftype CachedMultiFnImpl [^MultiFnImpl impl ^Cache cache]
   pretty/PrettyPrintable
   (pretty [_]
     (list 'cached-multifn-impl impl cache))
@@ -69,4 +72,10 @@
        (when-not cached-effective-dv-method
          (i/cache-method! cache effective-dispatch-value method))
        (i/cache-method! cache dispatch-value method)
-       method))))
+       method)))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    (assoc (datafy/datafy impl)
+           :class (class this)
+           :cache (datafy/datafy cache))))

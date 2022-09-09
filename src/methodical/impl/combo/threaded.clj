@@ -1,10 +1,12 @@
 (ns methodical.impl.combo.threaded
   (:refer-clojure :exclude [methods])
-  (:require [methodical.impl.combo.common :as combo.common]
-            methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.MethodCombination))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.combo.common :as combo.common]
+   [methodical.interface]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface MethodCombination)))
 
 (set! *warn-on-reflection* true)
 
@@ -76,7 +78,7 @@
           (apply method (conj butlast* last*)))]))))
 
 
-(p.types/deftype+ ThreadingMethodCombination [threading-type]
+(deftype ThreadingMethodCombination [threading-type]
   pretty/PrettyPrintable
   (pretty [_]
     (list 'threading-method-combination threading-type))
@@ -95,7 +97,12 @@
     (combine-with-threader (threading-invoker threading-type) primary-methods aux-methods))
 
   (transform-fn-tail [_ qualifier fn-tail]
-    (combo.common/add-implicit-next-method-args qualifier fn-tail)))
+    (combo.common/add-implicit-next-method-args qualifier fn-tail))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class          (class this)
+     :threading-type threading-type}))
 
 (defn threading-method-combination
   "Create a new `ThreadingMethodCombination` using the keyword `threading-type` strategy, e.g. `:thread-first` or

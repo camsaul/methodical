@@ -2,11 +2,13 @@
   "A single-hierarchy dispatcher that behaves similarly to the way multimethod dispatch is done by vanilla Clojure
   multimethods, but with added support for auxiliary methods."
   (:refer-clojure :exclude [prefers methods])
-  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
-            [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.Dispatcher))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.dispatcher.common :as dispatcher.common]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface Dispatcher)))
 
 (set! *warn-on-reflection* true)
 
@@ -97,7 +99,7 @@
              [qualifier (for [[dispatch-value method] pairs]
                           (vary-meta method assoc :dispatch-value dispatch-value))])))
 
-(p.types/deftype+ StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
+(deftype StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
   pretty/PrettyPrintable
   (pretty [_]
     (concat ['standard-dispatcher dispatch-fn]
@@ -153,4 +155,12 @@
     (StandardDispatcher. dispatch-fn hierarchy-var default-value new-prefs))
 
   (dominates? [_ x y]
-    (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y)))
+    (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class         (class this)
+     :dispatch-fn   dispatch-fn
+     :default-value default-value
+     :hierarchy     hierarchy-var
+     :prefs         prefs}))

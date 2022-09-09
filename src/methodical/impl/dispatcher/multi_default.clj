@@ -2,12 +2,14 @@
   "A single-hierarchy dispatcher similar to the standard dispatcher, with one big improvement: when dispatching on
   multiple values, it supports default methods that specialize on some args and use the default for others. (e.g.
   `[String :default]`"
-  (:require [methodical.impl.dispatcher.common :as dispatcher.common]
-            [methodical.impl.dispatcher.standard :as dispatcher.standard]
-            [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.Dispatcher))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.dispatcher.common :as dispatcher.common]
+   [methodical.impl.dispatcher.standard :as dispatcher.standard]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface Dispatcher)))
 
 (set! *warn-on-reflection* true)
 
@@ -127,7 +129,7 @@
   (into {} (for [[qualifier] (i/aux-methods method-table)]
              [qualifier (matching-aux-methods* qualifier opts)])))
 
-(p.types/deftype+ MultiDefaultDispatcher [dispatch-fn hierarchy-var default-value prefs]
+(deftype MultiDefaultDispatcher [dispatch-fn hierarchy-var default-value prefs]
   pretty/PrettyPrintable
   (pretty [_]
     (concat ['multi-default-dispatcher dispatch-fn]
@@ -183,4 +185,12 @@
     (MultiDefaultDispatcher. dispatch-fn hierarchy-var default-value new-prefs))
 
   (dominates? [_ x y]
-    (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y)))
+    (dispatcher.common/dominates? (deref hierarchy-var) prefs default-value x y))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class         (class this)
+     :dispatch-fn   dispatch-fn
+     :default-value default-value
+     :hierarchy     hierarchy-var
+     :prefs         prefs}))

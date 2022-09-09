@@ -11,17 +11,20 @@
   potentially large method maps; they also automatically clear out their watches when they are garbage collected and
   finalized (which, of course, may actually be never -- but worst-case is that some unneeded calls to `clear-cache!`
   get made)."
-  (:require [methodical.interface :as i]
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import java.lang.ref.WeakReference
-           methodical.interface.Cache))
+  (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [clojure.datafy :as datafy]
+   [methodical.interface :as i]
+   [pretty.core :as pretty])
+  (:import
+   (java.lang.ref WeakReference)
+   (methodical.interface Cache)))
 
 (set! *warn-on-reflection* true)
 
 (declare add-watches remove-watches)
 
-(p.types/deftype+ WatchingCache [^Cache cache watch-key refs]
+(deftype WatchingCache [^Cache cache watch-key refs]
   pretty/PrettyPrintable
   (pretty [_]
     (concat ['watching-cache cache 'watching] refs))
@@ -43,7 +46,13 @@
     this)
 
   (empty-copy [_]
-    (add-watches (i/empty-copy cache) refs)))
+    (add-watches (i/empty-copy cache) refs))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class (class this)
+     :cache (datafy/datafy cache)
+     :refs  refs}))
 
 (defn- cache-watch-fn [cache]
   (let [cache-weak-ref (WeakReference. cache)]

@@ -38,10 +38,10 @@
       ...)"
   (:refer-clojure :exclude [methods])
   (:require
+   [clojure.core.protocols :as clojure.protocols]
    [clojure.spec.alpha :as s]
    [methodical.impl.combo.common :as combo.common]
    [methodical.interface]
-   [potemkin.types :as p.types]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -168,7 +168,7 @@
 
 ;;;; ### `OperatorMethodCombination`
 
-(p.types/deftype+ OperatorMethodCombination [operator-name]
+(deftype OperatorMethodCombination [operator-name]
   pretty/PrettyPrintable
   (pretty [_]
     (list 'operator-method-combination operator-name))
@@ -190,7 +190,12 @@
   (transform-fn-tail [_ qualifier fn-tail]
     (if (= qualifier :around)
       (combo.common/add-implicit-next-method-args qualifier fn-tail)
-      fn-tail)))
+      fn-tail))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class    (class this)
+     :operator operator-name}))
 
 (defn operator-method-combination
   "Create a new method combination using the operator named by `operator-name`, a keyword name of one of the

@@ -1,5 +1,7 @@
 (ns methodical.impl.method-table.standard
   (:require
+   [clojure.core.protocols :as clojure.protocols]
+   [methodical.impl.method-table.common :as method-table.common]
    [methodical.interface]
    [pretty.core :as pretty])
   (:import
@@ -84,4 +86,10 @@
           new-aux (reduce (fn [aux xform] (xform aux)) aux xforms)]
       (if (= aux new-aux)
         this
-        (StandardMethodTable. primary new-aux)))))
+        (StandardMethodTable. primary new-aux))))
+
+  clojure.protocols/Datafiable
+  (datafy [this]
+    {:class   (class this)
+     :primary (method-table.common/datafy-primary-methods primary)
+     :aux     (method-table.common/datafy-aux-methods aux)}))
