@@ -68,7 +68,9 @@
   [reducer]
   (comp reducer invoke-fn))
 
-(defn- combine-methods-with-operator [f]
+(defn ^:no-doc combine-methods-with-operator
+  "Part of the impl for [[defoperator]]."
+  [f]
   (fn combine*
     ([primary-methods]
      (when (seq primary-methods)
