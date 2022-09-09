@@ -21,7 +21,8 @@
   :warn-on-reflection                    {:level :warning}
 
   :unresolved-symbol
-  {}
+  {:exclude
+   [(clojure.test/is [macroexpansion-spec-error?])]}
 
   :consistent-alias
   {:aliases
