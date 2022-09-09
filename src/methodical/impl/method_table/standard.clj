@@ -95,8 +95,9 @@
      :primary (method-table.common/datafy-primary-methods primary)
      :aux     (method-table.common/datafy-aux-methods aux)})
 
-  describe/Describeable
+  describe/Describable
   (describe [this]
-    (format "It uses the method table %s.%s%s" (.getCanonicalName (class this))
+    (format "It uses the method table [[%s]].%s%s"
+            (.getCanonicalName (class this))
             (method-table.common/describe-primary-methods primary)
             (method-table.common/describe-aux-methods aux))))

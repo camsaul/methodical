@@ -55,9 +55,9 @@
      :cache (datafy/datafy cache)
      :refs  refs})
 
-  describe/Describeable
+  describe/Describable
   (describe [this]
-    (format "It caches methods using a %s." (.getCanonicalName (class this)))))
+    (format "It caches methods using a [[%s]]." (.getCanonicalName (class this)))))
 
 (defn- cache-watch-fn [cache]
   (let [cache-weak-ref (WeakReference. cache)]

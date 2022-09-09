@@ -243,13 +243,13 @@
                       {:class (class this)})
       mta))
 
-  describe/Describeable
+  describe/Describable
   (describe [_this]
     (let [{mf-name :name, mf-ns :ns, :keys [file line]} mta]
       (str (pr-str mf-name)
            (let [message (str
                           (when mf-ns
-                            (ns-name mf-ns))
+                            (format "[[%s]]" (ns-name mf-ns)))
                           (cond
                             (and file line) (format " (%s:%d)" file line)
                             file            (str \space file)
