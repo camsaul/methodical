@@ -524,7 +524,7 @@ Methodical offers debugging facilities so you can see what's going on under the 
 ![Trace](assets/tracing.png)
 
 and the `describe` utility, which outputs Markdown-formatted documentation, for human-friendly viewing in tools like
-CIDER:
+[CIDER](https://github.com/clojure-emacs/cider):
 
 ![Describe](assets/describe.png)
 
