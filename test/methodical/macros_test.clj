@@ -365,11 +365,3 @@
     #_{:clj-kondo/ignore [:unresolved-symbol]} #'docstring-multifn-primary-method-docstring
     (first (u/aux-methods docstring-multifn :around :docstring))
     #_{:clj-kondo/ignore [:unresolved-symbol]} #'docstring-multifn-around-method-docstring))
-
-
-;; NOCOMMIT
-(defmulti xyz (fn [x y] [x y]))
-
-(defmethod xyz '({:a 2} [2 3])
-  [x y]
-  {:x x, :y y})

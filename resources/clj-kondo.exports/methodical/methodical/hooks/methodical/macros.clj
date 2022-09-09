@@ -2,19 +2,11 @@
   (:refer-clojure :exclude [defmulti defmethod])
   (:require [clj-kondo.hooks-api :as hooks]))
 
-;; (defn add-next-method [fn-tail]
-;;   (if (hooks/vector-node? (first fn-tail))
-;;     (let [[args & body] fn-tail]
-;;       (list*
-;;        (-> (hooks/vector-node
-;;             (cons (hooks/token-node 'next-method)
-;;                   (:children args)))
-;;            (with-meta (meta args)))
-;;        ;; so Kondo stops complaining about it being unused.
-;;        (hooks/token-node 'next-method)
-;;        body))
-;;     (for [list-node fn-tail]
-;;       (hooks/list-node (add-next-method (:children list-node))))))
+;;; The code below is basically simulating the spec for parsing defmethod args without using spec. It uses a basic
+;;; backtracking algorithm to achieve a similar result. Parsing defmethod args is kinda complicated.
+;;;
+;;; Unfortunately this is hardcoded to `:before`, `:after`, and `:around` as the only allowed qualifiers for now... at
+;;; some point in the future we'll have to figure out how to fix this and support other qualifiers too.
 
 (defn- bindings-vector? [x]
   (and (hooks/vector-node? x)
