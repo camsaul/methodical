@@ -3,6 +3,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [clojure.datafy :as datafy]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (clojure.lang Named)
@@ -234,13 +235,29 @@
   clojure.protocols/Datafiable
   (datafy [this]
     (with-meta (merge (datafy/datafy impl)
-                      (select-keys mta [:name :arglists])
+                      (select-keys mta [:name :arglists :file :column :line])
                       (when (:ns mta)
                         {:ns (ns-name (:ns mta))})
                       (when (and (:ns mta) (:name mta))
                         {:name (symbol (str (ns-name (:ns mta))) (str (:name mta)))})
                       {:class (class this)})
-               mta)))
+      mta))
+
+  describe/Describeable
+  (describe [_this]
+    (let [{mf-name :name, mf-ns :ns, :keys [file line]} mta]
+      (str (pr-str mf-name)
+           (let [message (str
+                          (when mf-ns
+                            (ns-name mf-ns))
+                          (cond
+                            (and file line) (format " (%s:%d)" file line)
+                            file            (str \space file)
+                            :else           ""))]
+             (when (seq message)
+               (format " is defined in %s." message)))
+           \newline \newline
+           (describe/describe impl)))))
 
 (defn multifn?
   "True if `x` is an instance of `StandardMultiFn`."

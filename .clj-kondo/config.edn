@@ -2,28 +2,78 @@
  ["../resources/clj-kondo.exports/methodical/methodical"]
 
  :linters
- {:missing-docstring            {:level :warning}
-  :refer                        {:level :warning}
-  :unsorted-required-namespaces {:level :warning}
-  :single-key-in                {:level :warning}
-  :shadowed-var                 {:level :warning}
-  :unresolved-symbol            {}
-
-  :docstring-leading-trailing-whitespace {:level :warning}
+ {:docstring-leading-trailing-whitespace {:level :warning}
   :keyword-binding                       {:level :warning}
   :misplaced-docstring                   {:level :warning}
   :missing-body-in-when                  {:level :warning}
+  :missing-docstring                     {:level :warning}
   :missing-else-branch                   {:level :warning}
   :namespace-name-mismatch               {:level :warning}
   :non-arg-vec-return-type-hint          {:level :warning}
   :reduce-without-init                   {:level :warning}
   :redundant-fn-wrapper                  {:level :warning}
+  :refer                                 {:level :warning}
+  :shadowed-var                          {:level :warning}
+  :single-key-in                         {:level :warning}
+  :unsorted-required-namespaces          {:level :warning}
   :use                                   {:level :warning}
   :used-underscored-binding              {:level :warning}
-  :warn-on-reflection                    {:level :warning}}
+  :warn-on-reflection                    {:level :warning}
+
+  :unresolved-symbol
+  {}
+
+  :consistent-alias
+  {:aliases
+   {clojure.core.protocols                   clojure.protocols
+    clojure.datafy                           datafy
+    clojure.java.classpath                   classpath
+    clojure.java.io                          io
+    clojure.math.combinatorics               combo
+    clojure.pprint                           pprint
+    clojure.spec.alpha                       s
+    clojure.string                           str
+    clojure.test                             t
+    clojure.tools.namespace.find             ns.find
+    clojure.tools.reader.edn                 edn
+    clojure.walk                             walk
+    environ.core                             env
+    humane-are.core                          humane-are
+    methodical.core                          m
+    methodical.impl                          impl
+    methodical.impl.cache.simple             cache.simple
+    methodical.impl.cache.watching           cache.watching
+    methodical.impl.combo.clojure            combo.clojure
+    methodical.impl.combo.clos               combo.clos
+    methodical.impl.combo.common             combo.common
+    methodical.impl.combo.operator           combo.operator
+    methodical.impl.combo.threaded           combo.threaded
+    methodical.impl.dispatcher.common        dispatcher.common
+    methodical.impl.dispatcher.everything    dispatcher.everything
+    methodical.impl.dispatcher.multi-default dispatcher.multi-default
+    methodical.impl.dispatcher.standard      dispatcher.standard
+    methodical.impl.method-table.clojure     method-table.clojure
+    methodical.impl.method-table.common      method-table.common
+    methodical.impl.method-table.standard    method-table.standard
+    methodical.impl.multifn.cached           multifn.cached
+    methodical.impl.multifn.standard         multifn.standard
+    methodical.impl.standard                 impl.standard
+    methodical.interface                     i
+    methodical.macros                        macros
+    methodical.util                          u
+    methodical.util.describe                 describe
+    methodical.util.trace                    trace
+    pjstadig.humane-test-output              humane-test-output
+    potemkin                                 p
+    potemkin.namespaces                      p.namespaces
+    potemkin.types                           p.types
+    pretty.core                              pretty
+    puget.printer                            puget}}}
 
  :lint-as
- {potemkin.types/deftype+ clojure.core/deftype}
+ {potemkin/defprotocol+       clojure.core/defprotocol
+  potemkin.types/deftype+     clojure.core/deftype
+  potemkin.types/defprotocol+ clojure.core/defprotocol}
 
  :skip-comments true
 

@@ -3,6 +3,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.method-table.common :as method-table.common]
    [methodical.interface]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodTable)))
@@ -51,4 +52,10 @@
   clojure.protocols/Datafiable
   (datafy [this]
     {:class   (class this)
-     :primary (method-table.common/datafy-primary-methods m)}))
+     :primary (method-table.common/datafy-primary-methods m)})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the method table %s. These primary methods are known:\n\n%s"
+            (.getCanonicalName (class this))
+            (method-table.common/describe-primary-methods m))))

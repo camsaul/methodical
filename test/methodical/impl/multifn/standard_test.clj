@@ -3,7 +3,7 @@
    [clojure.math.combinatorics :as combo]
    [clojure.test :as t]
    [methodical.core :as m]
-   [methodical.impl.multifn.standard :as standard]))
+   [methodical.impl.multifn.standard :as multifn.standard]))
 
 (set! *warn-on-reflection* true)
 
@@ -19,7 +19,7 @@
             :let        [permutation (cons [Double ::parrot] permutation)]]
       (t/testing (vec permutation)
         (t/is (= [[Double ::parrot] [Integer ::parrot] [Number ::parrot] [Object ::bird] ::default]
-                 (standard/sort-dispatch-values dispatcher permutation)))))))
+                 (multifn.standard/sort-dispatch-values dispatcher permutation)))))))
 
 (t/deftest composite-effective-dispatch-value-test
   (doseq [[dispatch-values expected]
@@ -40,13 +40,13 @@
           dispatch-values (distinct (combo/permutations dispatch-values))]
     (t/testing (pr-str dispatch-values)
       (t/is (= expected
-               (standard/composite-effective-dispatch-value
+               (multifn.standard/composite-effective-dispatch-value
                 (m/multi-default-dispatcher (fn [x y] [x y]) :default-value ::default)
                 [String ::parakeet]
                 dispatch-values)))))
   (t/testing "If there's ambiguity between values, always prefer values from the first dispatch value"
     (t/is (= [String ::parakeet]
-             (standard/composite-effective-dispatch-value
+             (multifn.standard/composite-effective-dispatch-value
               (m/multi-default-dispatcher (fn [x y] [x y]) :default-value ::default)
               [String ::budgie]
               [[String ::parrot] [Number ::parrot] [Object ::parakeet]])))))
@@ -144,19 +144,19 @@
                         (m/prefer-method :bird :can))]
             k    ks]
       (t/testing (format "order = %s, testing %s" (pr-str ks) k)
-        (t/testing `standard/composite-effective-dispatch-value
+        (t/testing `multifn.standard/composite-effective-dispatch-value
           (t/is (= k
-                   (standard/composite-effective-dispatch-value m k [:bird :can]))))
-        (t/testing `standard/effective-dispatch-value
+                   (multifn.standard/composite-effective-dispatch-value m k [:bird :can]))))
+        (t/testing `multifn.standard/effective-dispatch-value
           (t/is (= k
-                   (standard/effective-dispatch-value
+                   (multifn.standard/effective-dispatch-value
                     m
                     k
                     (m/matching-primary-methods m k)
                     (m/matching-aux-methods m k)))))
-        (t/testing `standard/standard-effective-method
+        (t/testing `multifn.standard/standard-effective-method
           (t/is (= k
-                   (:dispatch-value (meta (standard/standard-effective-method m m m k))))))
+                   (:dispatch-value (meta (multifn.standard/standard-effective-method m m m k))))))
         (t/testing `m/effective-dispatch-value
           (t/is (= k
                    (m/effective-dispatch-value m k))))
@@ -182,7 +182,7 @@
                              ::love-bird ::parrot}]
         (t/testing dv
           (t/is (= {:dispatch-value expected}
-                   (meta (standard/standard-effective-method combo dispatcher method-table dv))))))))
+                   (meta (multifn.standard/standard-effective-method combo dispatcher method-table dv))))))))
 
   (t/testing "multiple dispatch values"
     (let [combo        (m/thread-last-method-combination)
@@ -207,7 +207,7 @@
           (t/is (= {:dispatch-value (if (= [expected-1 expected-2] [:default :default])
                                       :default
                                       [expected-1 expected-2])}
-                   (meta (standard/standard-effective-method combo dispatcher method-table dv)))))))))
+                   (meta (multifn.standard/standard-effective-method combo dispatcher method-table dv)))))))))
 
 (t/deftest nil-dispatch-values-test
   (t/testing "Dispatch values for `nil` should be calculated correctly (#112)"

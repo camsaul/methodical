@@ -5,6 +5,7 @@
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [methodical.interface]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Cache)))
@@ -35,4 +36,8 @@
   clojure.protocols/Datafiable
   (datafy [this]
     {:class (class this)
-     :cache @atomm}))
+     :cache @atomm})
+
+  describe/Describeable
+  (describe [this]
+    (format "It caches methods using a %s." (.getCanonicalName (class this)))))

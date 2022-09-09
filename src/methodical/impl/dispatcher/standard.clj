@@ -6,6 +6,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Dispatcher)))
@@ -163,4 +164,12 @@
      :dispatch-fn   dispatch-fn
      :default-value default-value
      :hierarchy     hierarchy-var
-     :prefs         prefs}))
+     :prefs         prefs})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the dispatcher %s\nwith hierarchy %s\nand prefs %s.\n\nThe default value is %s."
+            (.getCanonicalName (class this))
+            (pr-str hierarchy-var)
+            (pr-str prefs)
+            (pr-str default-value))))

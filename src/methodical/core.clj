@@ -6,6 +6,7 @@
             methodical.interface
             methodical.macros
             methodical.util
+            methodical.util.describe
             methodical.util.trace
             [potemkin :as p]))
 
@@ -14,6 +15,7 @@
   methodical.impl/keep-me
   methodical.interface/keep-me
   methodical.macros/keep-me
+  methodical.util.describe/keep-me
   methodical.util.trace/keep-me
   methodical.util/keep-me)
 
@@ -114,6 +116,9 @@
   remove-all-methods!
   prefer-method!
   with-prefers!]
+
+ [methodical.util.describe
+  describe]
 
  [methodical.util.trace
   trace])

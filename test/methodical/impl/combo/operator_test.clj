@@ -1,9 +1,10 @@
 (ns methodical.impl.combo.operator-test
-  (:require [clojure.string :as str]
-            [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl.combo.operator :as combo.operator]
-            [methodical.interface :as i]))
+  (:require
+   [clojure.string :as str]
+   [clojure.test :as t]
+   [methodical.core :as m]
+   [methodical.impl.combo.operator :as combo.operator]
+   [methodical.interface :as i]))
 
 (t/deftest primary-test
   (t/testing "Empty primary methods"
@@ -186,12 +187,15 @@
     (t/is (= false
              (((combo.operator/operator :and) [(constantly true) (constantly false) (constantly true)])))))
 
-  #_(t/testing "with many args"
-      (t/are [expected args] (= expected (apply combined args))
-        [:a :b :b :a] [:a :b]
-        [:a :b :c :c :b :a] [:a :b :c]
-        [:a :b :c :d :d :c :b :a] [:a :b :c :d]
-        [:a :b :c :d :e :e :d :c :b :a] [:a :b :c :d :e] )))
+  (t/testing "with many args"
+    (let [combined ((combo.operator/operator :and) [(fn [& args]
+                                                      (concat args (reverse args)))])]
+      (t/are [args expected] (= expected
+                                (apply combined args))
+        [:a :b]          [:a :b :b :a]
+        [:a :b :c]       [:a :b :c :c :b :a]
+        [:a :b :c :d]    [:a :b :c :d :d :c :b :a]
+        [:a :b :c :d :e] [:a :b :c :d :e :e :d :c :b :a]  ))))
 
 (t/deftest or-operator-test
   (t/is (= [:b :c]
@@ -289,3 +293,28 @@
              (object "wow"))
            (seq-multimethod "WOW"))
         "Test that we can use operator method combinations using the `defmulti` and `defmethod` macros."))
+
+;; failing test for #98
+(comment
+  (t/deftest operator-method-combination-caching-tets
+    (doseq [ks (combo/permutations [:bird :can :toucan])]
+      (t/testing (vec ks)
+        (let [mf (-> (m/multifn
+                      (m/standard-multifn-impl
+                       (m/seq-method-combination)
+                       (m/standard-dispatcher
+                        keyword
+                        :hierarchy (atom (-> (make-hierarchy)
+                                             (derive :toucan :can)
+                                             (derive :toucan :bird))))
+                       (m/standard-method-table)))
+                     (m/add-primary-method :bird (constantly {:bird? true}))
+                     (m/add-primary-method :can (constantly {:can? true}))
+                     (m/prefer-method :bird :can))]
+          (doseq [k ks]
+            (t/testing k
+              (t/is (= (case k
+                         :bird   {:bird? true}
+                         :can    {:can? true}
+                         :toucan {:bird? true, :toucan? true})
+                       (reduce merge {} (mf k)))))))))))

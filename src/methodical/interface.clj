@@ -15,26 +15,28 @@
   `next-method` arg)."
   (allowed-qualifiers [method-combination]
     "The set containing all qualifiers supported by this method combination. `nil` in the set means the method
-    combination supports primary methods (because primary methods have no qualifier); all other values refer to
-    auxiliary methods with that qualifier, e.g. `:before`, `:after`, or `:around`.
+  combination supports primary methods (because primary methods have no qualifier); all other values refer to auxiliary
+  methods with that qualifier, e.g. `:before`, `:after`, or `:around`.
 
-    (allowed-qualifiers (clojure-method-combination)) ;-> #{nil}
-    (allowed-qualifiers (clos-method-combination))    ;-> #{nil :before :after :around}
-    (allowed-qualifiers (doseq-method-combination))   ;-> #{:doseq}")
+  ```clj
+  (allowed-qualifiers (clojure-method-combination)) ;-> #{nil}
+  (allowed-qualifiers (clos-method-combination))    ;-> #{nil :before :after :around}
+  (allowed-qualifiers (doseq-method-combination))   ;-> #{:doseq}
+  ```")
 
   (combine-methods [method-combination primary-methods aux-methods]
     "Combine a sequence of matching `primary-methods` with `aux-methods` (a map of qualifier -> sequence of methods)
-    into a single effective method. Method includes effective `^:dispatch-value` metadata.")
+  into a single effective method. Method includes effective `^:dispatch-value` metadata.")
 
   (transform-fn-tail [method-combination qualifier fn-tail]
-    "Make appropriate transformations to the `fn-tail` of a `defmethod` macro expansion for a primary
-    method (qualifier will be `nil`) or an auxiliary method. You can use this method to add implicit args like
-    `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
-    return a Clojure form.)"))
+    "Make appropriate transformations to the `fn-tail` of a [[methodical.macros/defmethod]] macro expansion for a
+  primary method (qualifier will be `nil`) or an auxiliary method. You can use this method to add implicit args like
+  `next-method` to the body of a `defmethod` macro. (Because this method is invoked during macroexpansion, it should
+  return a Clojure form.)"))
 
 (defprotocol MethodTable
   "A *method table* stores primary and auxiliary methods, and returns them when asked. The default implementation,
-   `standard-method-table`, uses simple Clojure immutable maps."
+   [[methodical.impl/standard-method-table]], uses simple Clojure immutable maps."
   (primary-methods [method-table]
     "Get a `dispatch-value -> fn` map of all primary methods associated with this method table.")
 
@@ -121,10 +123,11 @@
    "Return a copy of this multifn using `new-method-table` as its method table.")
 
   (effective-method [multifn dispatch-value]
-    "Return the effective method for `dispatch-value`. The effective method is a combined primary method and
-    applicable auxiliary methods that can be called like a normal function. `effective-method` is similar in purpose
-    to `get-method` in vanilla Clojure multimethods; a different name is used here because I felt `get-method` would
-    be ambiguous with regards to whether it returns only a primary method or a combined effective method."))
+    "Return the effective method for `dispatch-value`. The effective method is a combined primary method and applicable
+    auxiliary methods that can be called like a normal function. [[effective-method]] is similar in purpose
+    to [[clojure.core/get-method]] in vanilla Clojure multimethods; a different name is used here because I felt
+    `get-method` would be ambiguous with regards to whether it returns only a primary method or a combined effective
+    method."))
 
 (defprotocol Cache
   "A *cache*, if present, implements a caching strategy for effective methods, so that they need not be recomputed on

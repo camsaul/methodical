@@ -2,32 +2,32 @@
   (:require
    [clojure.test :as t]
    [clojure.tools.reader.edn :as edn]
-   [methodical.impl.method-table.standard :as standard]
+   [methodical.impl.method-table.standard :as method-table.standard]
    [methodical.interface :as i]))
 
 (t/deftest print-test
   (t/is (= "(standard-method-table)"
-           (pr-str (standard/->StandardMethodTable {} {})))
+           (pr-str (method-table.standard/->StandardMethodTable {} {})))
         "Empty method tables should print simply.")
   (letfn [(pr-str-read [x]
             (edn/read-string (pr-str x)))]
     (t/is (= '(standard-method-table {:primary [:a :b]})
              (pr-str-read
-              (standard/->StandardMethodTable {:a +, :b +} {})))
+              (method-table.standard/->StandardMethodTable {:a +, :b +} {})))
           "Method tables should print the count of primary methods if it has any.")
     (t/is (= '(standard-method-table {:aux {:after [:a], :before [:a :b :b]}})
-             (pr-str-read (standard/->StandardMethodTable {} {:before {:a [+] :b [+ +]}, :after {:a [+]}})))
+             (pr-str-read (method-table.standard/->StandardMethodTable {} {:before {:a [+] :b [+ +]}, :after {:a [+]}})))
           "Method tables should print the count of aux methods if it hash any.")
     (t/is (= '(standard-method-table {:primary [:a], :aux {:before [:a :b :b], :after [:a]}})
-             (pr-str-read (standard/->StandardMethodTable {:a +} {:before {:a [+] :b [+ +]}, :after {:a [+]}})))
+             (pr-str-read (method-table.standard/->StandardMethodTable {:a +} {:before {:a [+] :b [+ +]}, :after {:a [+]}})))
           "Method tables should be able to print both primary + aux counts.")
     (t/is (= '(standard-method-table {:aux {:before [:b :b]}})
-             (pr-str-read (standard/->StandardMethodTable {} {:before {:b [+ +]}, :after {:a []}, :around {}})))
+             (pr-str-read (method-table.standard/->StandardMethodTable {} {:before {:b [+ +]}, :after {:a []}, :around {}})))
           "Method tables shouldn't print counts aux qualifiers that are empty.")))
 
 (t/deftest add-dispatch-value-metadata-test
   (t/testing "should add ^:dispatch-value metadata to methods when you add them"
-    (let [table (-> (standard/->StandardMethodTable {} {})
+    (let [table (-> (method-table.standard/->StandardMethodTable {} {})
                     (i/add-primary-method [:x :y] 'f)
                     (i/add-aux-method :before :x 'f))]
       (t/testing "primary method"

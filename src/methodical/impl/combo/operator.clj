@@ -2,9 +2,11 @@
   "Method combinations strategies based on the non-default method combination types in CLOS. All non-default method
   combinations follow the same basic pattern:
 
-    (operator (primary-method-1 args)
-              (primary-method-2 args)
-              (primary-method-3 args)))
+  ```clj
+  (operator (primary-method-1 args)
+            (primary-method-2 args)
+            (primary-method-3 args)))
+  ```
 
   (Example from \"Object-Oriented Programming in Common Lisp\", Keene 1988.)
 
@@ -28,20 +30,23 @@
   One last difference: unlike CLOS operator method combinations, primary method implementations *are not* qualified by
   their operator.
 
-    ;; CLOS
-    (defmethod total-electric-supply + ((city city))
-      ...)
+  ```clj
+  ;; CLOS
+  (defmethod total-electric-supply + ((city city))
+    ...)
 
-    ;; Methodical
-    (defmethod total-electric-supply :city
-      [city]
-      ...)"
+  ;; Methodical
+  (defmethod total-electric-supply :city
+    [city]
+    ...)
+  ```"
   (:refer-clojure :exclude [methods])
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [clojure.spec.alpha :as s]
    [methodical.impl.combo.common :as combo.common]
    [methodical.interface]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -195,7 +200,13 @@
   clojure.protocols/Datafiable
   (datafy [this]
     {:class    (class this)
-     :operator operator-name}))
+     :operator operator-name})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the method combination %s\nwith the operator %s."
+            (.getCanonicalName (class this))
+            (pr-str operator-name))))
 
 (defn operator-method-combination
   "Create a new method combination using the operator named by `operator-name`, a keyword name of one of the

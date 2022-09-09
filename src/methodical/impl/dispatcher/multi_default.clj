@@ -7,6 +7,7 @@
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.impl.dispatcher.standard :as dispatcher.standard]
    [methodical.interface :as i]
+   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Dispatcher)))
@@ -44,11 +45,13 @@
   "Return a sequence of all partially-specialized default dispatch values for a given `dispatch-value` and
   `default-value`, in order from most-specific to least-specific.
 
-    (default-dispatch-values [:x :y] :default)
-    ->
-    ([:x :default]        ; if no method for [:x :y] exists, look for [:x :default]...
-     [:default :y]        ; or [:default :y] ...
-     [:default :default])"
+  ```clj
+  (default-dispatch-values [:x :y] :default)
+  ->
+  ([:x :default]        ; if no method for [:x :y] exists, look for [:x :default]...
+   [:default :y]        ; or [:default :y] ...
+   [:default :default])
+  ```"
   [dispatch-value default-value]
   (when (and (sequential? dispatch-value)
              (not (sequential? default-value)))
@@ -193,4 +196,12 @@
      :dispatch-fn   dispatch-fn
      :default-value default-value
      :hierarchy     hierarchy-var
-     :prefs         prefs}))
+     :prefs         prefs})
+
+  describe/Describeable
+  (describe [this]
+    (format "It uses the dispatcher %s\nwith hierarchy %s\nand prefs %s.\n\nThe default value is %s."
+            (.getCanonicalName (class this))
+            (pr-str hierarchy-var)
+            (pr-str prefs)
+            (pr-str default-value))))
