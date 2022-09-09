@@ -61,14 +61,6 @@ of args:
 
 ![Kondo](assets/kondo.png)
 
-
-You can copy clj-kondo config from Methodical and other libraries into your project's `.clj-kondo/` directory like
-this:
-
-```sh
-clj-kondo --copy-configs --dependencies --lint "$(clojure -Spath)"
-```
-
 ## Auxiliary Methods: `:before`, `:after`, and `:around`
 
 Inspired by the CLOS, Methodical multimethods support both *primary methods* and *auxiliary methods*. Primary methods
