@@ -2,6 +2,8 @@
   (:refer-clojure :exclude [isa? prefers])
   (:require clojure.core))
 
+(set! *warn-on-reflection* true)
+
 ;; this is a dummy dependency until Cloverage 1.3.0 is released -- see
 ;; https://github.com/cloverage/cloverage/issues/318
 (comment clojure.core/keep-me)
@@ -48,7 +50,7 @@
   (add-aux-method ^methodical.interface.MethodTable [method-table qualifier dispatch-value f]
     "Add an auxiliary method implementation for `qualifier` (e.g. `:before`) and `dispatch-value`. Unlike primary
     methods, auxiliary methods are not limited to one method per dispatch value; thus this method does not remove
-    existing methods for this dispatch value. existing ")
+    existing methods for this dispatch value.")
 
   (remove-aux-method ^methodical.interface.MethodTable [method-table qualifier dispatch-val method]
     "Remove an auxiliary method from a method table. Because multiple auxiliary methods are allowed for the same

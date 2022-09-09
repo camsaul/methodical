@@ -5,6 +5,8 @@
             methodical.interface)
   (:import methodical.interface.MethodTable))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (t/deftest partially-specialized-default-dispatch-values-test

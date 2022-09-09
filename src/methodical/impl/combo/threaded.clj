@@ -6,6 +6,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (defn reducer-fn
@@ -22,7 +24,7 @@
 (defn combine-with-threader
   "Combine primary and auxiliary methods using a threading invoker, i.e. something you'd get by calling
   `threading-invoker`. The way these methods are combined/reduced is the same, regardless of how args are threaded;
-  thus, various strategies such as `:thread-first` and `:thread-last` can both share the same `reducer-fn`. "
+  thus, various strategies such as `:thread-first` and `:thread-last` can both share the same `reducer-fn`."
   ([threader before-primary-afters]
    (comp (reducer-fn before-primary-afters) threader))
 

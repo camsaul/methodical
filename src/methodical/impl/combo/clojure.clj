@@ -6,6 +6,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (p.types/deftype+ ClojureMethodCombination []

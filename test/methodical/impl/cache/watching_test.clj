@@ -6,6 +6,8 @@
   (:import methodical.impl.cache.watching.WatchingCache
            methodical.interface.Cache))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (defn- cache

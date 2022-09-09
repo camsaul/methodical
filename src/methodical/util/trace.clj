@@ -5,6 +5,8 @@
             [pretty.core :as pretty]
             [puget.printer :as puget]))
 
+(set! *warn-on-reflection* true)
+
 (def ^:dynamic *color*
   "Whether or not to print the trace in color. True by default, unless the env var `NO_COLOR` is true."
   (if-let [env-var-value (System/getenv "NO_COLOR")]

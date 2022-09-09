@@ -1,56 +1,106 @@
 (ns methodical.macros
-  "Methodical versions of vanilla Clojure `defmulti` and `defmethod` macros."
+  "Methodical versions of vanilla Clojure `defmulti` and [[defmethod]] macros."
   (:refer-clojure :exclude [defmulti defmethod])
-  (:require [clojure.string :as str]
-            [methodical.impl :as impl]
-            [methodical.interface :as i]
-            [methodical.util :as u]
-            [pretty.core :as pretty])
-  (:import methodical.impl.standard.StandardMultiFn))
+  (:require
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [methodical.impl :as impl]
+   [methodical.interface :as i]
+   [methodical.util :as u])
+  (:import
+   (methodical.impl.standard StandardMultiFn)))
 
-(defmacro ^:no-doc defmulti***
-  "Impl for `defmulti` macro."
-  [name-symb dispatcher & {:keys [hierarchy combo method-table cache]
-                           :or   {combo        `(impl/thread-last-method-combination)
-                                  method-table `(impl/standard-method-table)
-                                  cache        (if hierarchy
-                                                 `(impl/watching-cache (impl/simple-cache) [~hierarchy])
-                                                 `(impl/simple-cache))}}]
-  (let [mta {:ns *ns*, :name (list 'quote (with-meta name-symb nil))}]
+(set! *warn-on-reflection* true)
+
+(s/def ::fn-tail
+  (s/alt :arity-1 :clojure.core.specs.alpha/params+body
+         :arity-n (s/+ (s/spec :clojure.core.specs.alpha/params+body))))
+
+(s/def ::defmulti-args
+  (s/cat :name-symb   (every-pred symbol? (complement namespace))
+         :docstring   (s/? string?)
+         :attr-map    (s/? map?)
+         :dispatch-fn (s/? any?)
+         :options     (s/* (s/cat :k keyword?
+                                  :v any?))))
+
+(defn- emit-defmulti
+  [name-symb dispatch-fn {:keys [hierarchy dispatcher combo method-table cache default-value]
+                          :or   {combo        `(impl/thread-last-method-combination)
+                                 method-table `(impl/standard-method-table)
+                                 cache        (if hierarchy
+                                                `(impl/watching-cache (impl/simple-cache) [~hierarchy])
+                                                `(impl/simple-cache))
+                                 hierarchy    '#'clojure.core/global-hierarchy}
+                          prefs :prefers}]
+  (let [dispatch-fn (or dispatch-fn `identity)
+        dispatcher  (or dispatcher
+                        `(impl/multi-default-dispatcher ~dispatch-fn
+                                                        :hierarchy ~hierarchy
+                                                        ~@(when default-value
+                                                            [:default-value default-value])
+                                                        ~@(when prefs
+                                                            [:prefers prefs])))
+        ;; attach the var metadata to the multimethod itself as well so we can use it for cool stuff e.g.
+        ;; `:dispatch-value-spec` or `:arglists`.
+        mta         (merge (meta name-symb)
+                           {:ns *ns*, :name (list 'quote (with-meta name-symb nil))})]
     `(def ~name-symb
        (let [impl# (impl/standard-multifn-impl ~combo ~dispatcher ~method-table)]
          (impl/multifn impl# ~mta ~cache)))))
 
-(defmacro ^:no-doc defmulti**
-  "Impl for `defmulti` macro."
-  [name-symb dispatch-fn & {:keys [hierarchy dispatcher], :as options}]
-  (let [dispatcher    (or dispatcher
-                          (let [dispatcher-options (select-keys options [:hierarchy :default-value :prefers])]
-                            `(impl/multi-default-dispatcher ~dispatch-fn ~@(apply concat dispatcher-options))))
-        other-options (dissoc options :hierarchy :dispatcher :default-value :prefers)]
-    `(defmulti*** ~name-symb ~dispatcher
-       ~@(when-not (contains? options :dispatcher)
-           [:hierarchy (or hierarchy #'clojure.core/global-hierarchy)])
-       ~@(apply concat other-options))))
+(defn default-dispatch-value-spec
+  "A dispatch value as parsed to [[defmethod]] (i.e., not-yet-evaluated) can be ANYTHING other than the following two
+  things:
+
+  1. an legal aux qualifier for the current method combination, e.g. `:after` or `:around`
+
+     It makes the parse for
+
+     ```clj
+     (m/defmethod mf :after \"str\" [_])
+     ```
+
+     ambiguous -- Is this an `:after` aux method with dispatch value `\"str\"`, or a primary method with dispatch value
+     `:after` and a docstring? Since there's no clear way to decide which is which, we're going to have to disallow this.
+     It's probably a good thing anyway since you're absolutely going to confuse the hell out of people if you use something
+     like `:before` or `:around` as a *dispatch value*.
+
+  2. A list that can be interpreted as part of a n-arity fn tail i.e. `([args ...] body ...)`
+
+     I know, theoretically it should be possible to do something dumb like this:
+
+     ```clj
+     (doseq [i    [0 1]
+             :let [toucan :toucan pigeon :pigeon]]
+       (m/defmethod my-multimethod :before ([toucan pigeon] i)
+         ([x]
+          ...)))
+     ```
+
+      but we are just UNFORTUNATELY going to have to throw up our hands and say we don't support it. The reason is in
+      the example above it's ambiguous whether this is a `:before` aux method with dispatch value `([toucan pigeon] i)`,
+      or a primary method with dispatch value `:before`. It's just impossible to tell what you meant. If you really want
+      to do something wacky like this, let-bind the dispatch value to a symbol or something.
+
+  Note that if you specify a custom `:dispatch-value-spec` it overrides this spec. Hopefully your spec is stricter than
+  this one is and it won't be a problem."
+  [allowed-aux-qualifiers]
+  (fn valid-dispatch-value? [x]
+    (and (not (contains? allowed-aux-qualifiers x))
+         (or (not (seq? x))
+             (not (s/valid? :clojure.core.specs.alpha/params+body x))))))
 
 (defmacro ^:no-doc defmulti*
-  "Impl for `defmulti` macro."
+  "Impl for [[defmulti]] macro."
   [name-symb & args]
-  (let [[docstring & args]            (if (string? (first args))
-                                        args
-                                        (cons nil args))
-        [attr-map & args]             (if (map? (first args))
-                                        args
-                                        (cons nil args))
-        [dispatch-fn & {:as options}] (if (even? (count args))
-                                        (cons identity args)
-                                        args)
-        metadata                      (merge {:tag methodical.impl.standard.StandardMultiFn}
-                                             (when docstring {:doc docstring})
-                                             attr-map)
-        name-symb                     (vary-meta name-symb merge metadata)]
-    (assert (or dispatch-fn (:dispatcher options)) "Missing dispatch function!")
-    `(defmulti** ~name-symb ~dispatch-fn ~@(apply concat options))))
+  (let [{:keys [docstring attr-map dispatch-fn options]} (s/conform ::defmulti-args (cons name-symb args))
+        options                                          (into {} (map (juxt :k :v)) options)
+        metadata                                         (merge {:tag methodical.impl.standard.StandardMultiFn}
+                                                                (when docstring {:doc docstring})
+                                                                attr-map)
+        name-symb                                        (vary-meta name-symb merge metadata)]
+    (emit-defmulti name-symb dispatch-fn options)))
 
 (defmacro defmulti
   "Creates a new Methodical multimethod named by a Var. Usage of this macro mimics usage of vanilla Clojure `defmulti`,
@@ -107,13 +157,17 @@
                            (= ~'old-hash ~'current-hash))
                          (some-> (ns-resolve *ns* '~name-symb) deref u/multifn?))]
        (when-not skip-redef?#
-         (defmulti* ~(vary-meta name-symb assoc ::defmulti-hash current-hash) ~@args)))))
+         (defmulti* ~(vary-meta name-symb assoc ::defmulti-hash current-hash)
+           ~@args)))))
 
+(s/fdef defmulti
+  :args ::defmulti-args
+  :ret  any?)
 
-;;;; ### `defmethod`
+;;;; [[defmethod]]
 
 (defn- dispatch-val-name
-  "Generate a name based on a dispatch value. Used by `method-fn-name` below."
+  "Generate a name based on a dispatch value. Used by [[method-fn-symbol]] below."
   [dispatch-val]
   (let [s (cond
             (sequential? dispatch-val)
@@ -132,85 +186,106 @@
         (str/replace #"\s+" "-")
         (str/replace  #"\." "-"))))
 
-(defn- method-fn-name
+(defn- method-fn-symbol
   "Generate a nice name for a primary or auxiliary method's implementing function. Named functions are used rather than
   anonymous functions primarily to aid in debugging and improve stacktraces."
   ([multifn qualifier dispatch-val]
-   (symbol (format "%s-%s-method-%s" (name multifn) (name qualifier) (dispatch-val-name dispatch-val))))
+   (method-fn-symbol multifn qualifier dispatch-val nil))
 
-  ([multifn qualifier dispatch-val hashh]
-   (symbol (format "%s-%s" (name (method-fn-name multifn qualifier dispatch-val)) hashh))))
+  ([multifn qualifier dispatch-val unique-key]
+   (let [s (cond-> (format "%s-%s-method-%s" (name multifn) (name qualifier) (dispatch-val-name dispatch-val))
+             unique-key
+             (str "-" unique-key))]
+     (vary-meta (symbol s) assoc :private true))))
 
-(defmacro define-primary-method
-  "Define a new primary method. Used primarily as part of the implementation of `defmethod`; prefer that macro to using
-  this directly."
-  {:style/indent [2 :defn]}
-  [multifn-symb dispatch-val & fn-tail]
-  (let [multifn (deref (resolve multifn-symb))
-        _       (assert (contains? (i/allowed-qualifiers multifn) nil)
-                  (format "Method combination %s does not allow primary methods."
-                          (pretty/pretty (i/method-combination multifn))))
-        fn-name (method-fn-name multifn "primary" dispatch-val)]
+(defn- emit-primary-method
+  "Impl for [[defmethod]] for primary methods."
+  [multifn {:keys [multifn-symb dispatch-value docstring fn-tail]}]
+  (let [fn-symb (method-fn-symbol multifn "primary" dispatch-value)]
     `(do
-       (defn ~(vary-meta fn-name assoc :private true) ~@(i/transform-fn-tail multifn nil fn-tail))
-       (u/add-primary-method! (var ~multifn-symb) ~dispatch-val ~fn-name))))
+       (defn ~fn-symb
+         ~@(when docstring
+             [docstring])
+         ~@(i/transform-fn-tail multifn nil fn-tail))
+       (u/add-primary-method! (var ~multifn-symb) ~dispatch-value (vary-meta ~fn-symb merge (meta (var ~fn-symb)))))))
 
-(defn- assert-allows-qualifiers [multifn qualifier]
-  (assert (contains? (i/allowed-qualifiers multifn) qualifier)
-          (format "Method combination %s does not support %s auxiliary methods."
-                  (pretty/pretty (i/method-combination multifn)) qualifier)))
-
-(defmacro ^:no-doc define-aux-method*
-  "Impl for `define-aux-method*`."
-  [multifn-symb qualifier dispatch-val unique-key fn-name & fn-tail]
-  (let [multifn (deref (resolve multifn-symb))
-        _       (assert-allows-qualifiers multifn qualifier)
-        fn-tail (i/transform-fn-tail multifn qualifier fn-tail)]
+(defn- emit-aux-method
+  "Impl for [[defmethod]] for aux methods."
+  [multifn {:keys [multifn-symb qualifier dispatch-value unique-key docstring fn-tail]}]
+  (let [fn-symb    (method-fn-symbol multifn qualifier dispatch-value unique-key)
+        unique-key (or unique-key (list 'quote (ns-name *ns*)))]
     `(do
-       (defn ~(vary-meta fn-name assoc :private true) ~@fn-tail)
-       (u/add-aux-method-with-unique-key! (var ~multifn-symb) ~qualifier ~dispatch-val ~fn-name ~unique-key))))
+       (defn ~fn-symb
+         ~@(when docstring
+             [docstring])
+         ~@(i/transform-fn-tail multifn qualifier fn-tail))
+       (u/add-aux-method-with-unique-key! (var ~multifn-symb)
+                                          ~qualifier
+                                          ~dispatch-value
+                                          (vary-meta ~fn-symb merge (meta (var ~fn-symb)))
+                                          ~unique-key))))
 
-(defmacro define-aux-method
-  "Define a new auxiliary method. Used primarily as part of the implementation of `defmethod`; prefer that macro to
-  using this directly."
-  {:arglists     '([multifn-symb qualifier dispatch-val unique-key? & fn-tail])
-   :style/indent :defn}
-  [multifn-symb qualifier dispatch-val & args]
-  (let [[unique-key & fn-tail] (if (sequential? (first args)) (cons nil args)
-                                   args)
-        multifn                (deref (resolve multifn-symb))
-        _                      (assert multifn)
-        fn-name                (if unique-key
-                                 (method-fn-name multifn qualifier dispatch-val unique-key)
-                                 (method-fn-name multifn qualifier dispatch-val))
-        unique-key             (name (or unique-key (ns-name *ns*)))]
-    `(define-aux-method* ~multifn-symb ~qualifier ~dispatch-val ~unique-key ~fn-name ~@fn-tail)))
+(defn- defmethod-args-spec [multifn]
+  (let [allowed-qualifiers       (i/allowed-qualifiers multifn)
+        primary-methods-allowed? (contains? allowed-qualifiers nil)
+        allowed-aux-qualifiers   (disj allowed-qualifiers nil)
+        dispatch-value-spec      (get (meta multifn) :dispatch-value-spec (default-dispatch-value-spec allowed-aux-qualifiers))]
+    (s/cat :args-for-method-type (s/alt :primary (if primary-methods-allowed?
+                                                   (s/cat :dispatch-value dispatch-value-spec)
+                                                   (constantly false))
+                                        :aux     (s/cat :qualifier      allowed-aux-qualifiers
+                                                        :dispatch-value dispatch-value-spec
+                                                        :unique-key     (s/? (complement (some-fn string? sequential?)))))
+           :docstring            (s/? string?)
+           :fn-tail              (s/& (s/+ any?) (s/nonconforming ::fn-tail)))))
+
+(defn- parse-defmethod-args [multifn args]
+  (let [spec      (defmethod-args-spec multifn)
+        conformed (s/conform spec args)]
+    (if (s/invalid? conformed)
+      (s/explain-str spec args)
+      (let [{[method-type type-args] :args-for-method-type} conformed]
+        (-> (merge conformed {:method-type method-type} type-args)
+            (dissoc :args-for-method-type))))))
+
+(defn- resolve-multifn [multifn-symb]
+  (doto (some-> (resolve multifn-symb) deref)
+    (assert (format "Could not resolve multifn %s" multifn-symb))))
 
 (defmacro defmethod
-  "Define a new multimethod method implementation. Syntax is the same as for vanilla Clojure `defmethod`, but you may
+  "Define a new multimethod method implementation. Syntax is the same as for vanilla Clojure [[defmethod]], but you may
   also define auxiliary methods by passing an optional auxiliary method qualifier before the dispatch value:
 
-    ;; define a new primary method
-    (defmethod some-multifn Bird
-      [_]
-      ...)
+  ```clj
+  ;; define a new primary method
+  (defmethod some-multifn Bird
+  [_]
+  ...)
 
-    ;; define a new *auxiliary* method
-    (defmethod some-multifn :before Toucan
-      [_]
-      ...)"
-  {:arglists     '([multifn-symb dispatch-val & fn-tail]
-                   [multifn-symb aux-qualifier dispatch-val unique-key? & fn-tail])
+  ;; define a new *auxiliary* method
+  (defmethod some-multifn :before Toucan
+  [_]
+  ...)
+  ```"
+  {:arglists     '([multifn-symb dispatch-val docstring? & fn-tail]
+                   [multifn-symb aux-qualifier dispatch-val unique-key? docstring? & fn-tail])
    :style/indent :defn}
   [multifn-symb & args]
-  (let [multifn
-        (deref (or (resolve multifn-symb)
-                   (throw (IllegalArgumentException. (format "Could not resolve multifn %s" multifn-symb)))))
+  (let [multifn     (resolve-multifn multifn-symb)
+        parsed-args (assoc (parse-defmethod-args multifn args) :multifn multifn, :multifn-symb multifn-symb)]
+    ((case (:method-type parsed-args)
+       :aux     emit-aux-method
+       :primary emit-primary-method) multifn parsed-args)))
 
-        [qualifier dispatch-val & fn-tail]
-        (if (contains? (disj (i/allowed-qualifiers multifn) nil) (first args))
-          args
-          (cons nil args))]
-    (if qualifier
-      `(define-aux-method ~multifn-symb ~qualifier ~dispatch-val ~@fn-tail)
-      `(define-primary-method ~multifn-symb ~dispatch-val ~@fn-tail))))
+(s/fdef defmethod
+  :args (s/& (s/cat :multifn-symb (every-pred symbol? resolve)
+                    :args         (s/+ any?))
+             ;; not sure if there's an easier way to do this.
+             (fn [{:keys [multifn-symb args]}]
+               (let [multifn   (resolve-multifn multifn-symb)
+                     spec      (defmethod-args-spec multifn)
+                     conformed (s/conform spec args)]
+                 (when (s/invalid? conformed)
+                   (throw (ex-info (s/explain-str spec args) (s/explain-data spec args))))
+                 true)))
+  :ret any?)

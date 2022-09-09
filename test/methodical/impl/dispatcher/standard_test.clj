@@ -4,6 +4,8 @@
             [methodical.interface :as i])
   (:import methodical.interface.MethodTable))
 
+(set! *warn-on-reflection* true)
+
 (t/deftest equality-test
   (t/is (= (impl/standard-dispatcher keyword)
            (impl/standard-dispatcher keyword))

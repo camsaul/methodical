@@ -9,6 +9,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.MethodCombination))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 ;; TODO - I'm 90% sure we can leverage the `reducing-operator` stuff in `combo.operator` to implement this

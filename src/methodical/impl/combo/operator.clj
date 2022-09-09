@@ -37,11 +37,16 @@
       [city]
       ...)"
   (:refer-clojure :exclude [methods])
-  (:require [methodical.impl.combo.common :as combo.common]
-            methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.MethodCombination))
+  (:require
+   [clojure.spec.alpha :as s]
+   [methodical.impl.combo.common :as combo.common]
+   [methodical.interface]
+   [potemkin.types :as p.types]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface MethodCombination)))
+
+(set! *warn-on-reflection* true)
 
 (comment methodical.interface/keep-me)
 
@@ -84,16 +89,23 @@
        [~'_]
        fn#)))
 
+(s/fdef defoperator
+  :args (s/cat :operator-name keyword?
+               :bindings      (s/spec (s/cat :methods :clojure.core.specs.alpha/binding-form
+                                             :invoke  symbol?))
+               :body          (s/+ any?))
+  :ret any?)
+
 ;;;; ### Predefined operators
 
-(defoperator do [methods invoke]
+(defoperator :do [methods invoke]
   (loop [[method & more] methods]
     (let [result (invoke method)]
       (if (seq more)
         (recur more)
         result))))
 
-(defoperator seq [methods invoke]
+(defoperator :seq [methods invoke]
   ((fn seq* [[method & more]]
      (lazy-seq
       (cons
@@ -102,7 +114,7 @@
          (seq* more)))))
    methods))
 
-(defoperator concat [methods invoke]
+(defoperator :concat [methods invoke]
   ((fn seq* [[method & more]]
      (lazy-seq
       (concat
@@ -111,20 +123,20 @@
          (seq* more)))))
    methods))
 
-(defoperator and [methods invoke]
+(defoperator :and [methods invoke]
   (loop [[method & more] methods]
     (let [result (invoke method)]
       (if (and result (seq more))
         (recur more)
         result))))
 
-(defoperator or [methods invoke]
+(defoperator :or [methods invoke]
   (loop [[method & more] methods]
     (or (invoke method)
         (when (seq more)
           (recur more)))))
 
-(defoperator max [methods invoke]
+(defoperator :max [methods invoke]
   (loop [current-max nil, [method & more] methods]
     (let [result  (invoke method)
           new-max (if current-max
@@ -134,7 +146,7 @@
         (recur new-max more)
         new-max))))
 
-(defoperator min [methods invoke]
+(defoperator :min [methods invoke]
   (loop [current-min nil, [method & more] methods]
     (let [result  (invoke method)
           new-min (if current-min
@@ -144,7 +156,7 @@
         (recur new-min more)
         new-min))))
 
-(defoperator + [methods invoke]
+(defoperator :+ [methods invoke]
   (loop [sum 0, [method & more] methods]
     (let [sum (+ (invoke method) sum)]
       (if (seq more)
@@ -180,7 +192,7 @@
 
 (defn operator-method-combination
   "Create a new method combination using the operator named by `operator-name`, a keyword name of one of the
-  `defoperator` forms above or defined externallly.
+  `defoperator`: forms above or defined externallly.
 
     (operator-method-combination :max)"
   [operator-name]

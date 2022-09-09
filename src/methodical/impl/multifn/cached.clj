@@ -5,6 +5,8 @@
   (:import clojure.lang.Named
            [methodical.interface Cache MultiFnImpl]))
 
+(set! *warn-on-reflection* true)
+
 (p.types/deftype+ CachedMultiFnImpl [^MultiFnImpl impl, ^Cache cache]
   pretty/PrettyPrintable
   (pretty [_]

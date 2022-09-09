@@ -13,7 +13,8 @@
           [(constantly :a)] {:before [(constantly :b)]}))
         "Clojure method combinations should thrown an Exception if you try to combine aux methods with them."))
 
-(m/defmulti ^:private clojure-multifn class
+(m/defmulti ^:private clojure-multifn
+  class
   :combo (m/clojure-method-combination))
 
 (m/defmethod clojure-multifn Object
@@ -37,8 +38,8 @@
                                            Integer Number}]
     (t/testing (format "%s with default? %s" (pr-str klass) default?)
       (t/is (= (when expected-dispatch-value
-                 {:dispatch-value expected-dispatch-value})
-               (meta (m/effective-primary-method clojure-multifn klass))))
+                 expected-dispatch-value)
+               (:dispatch-value (meta (m/effective-primary-method clojure-multifn klass)))))
       (t/is (= (when expected-dispatch-value
-                 {:dispatch-value expected-dispatch-value})
-               (meta (m/effective-method clojure-multifn klass)))))))
+                 expected-dispatch-value)
+               (:dispatch-value (meta (m/effective-method clojure-multifn klass))))))))

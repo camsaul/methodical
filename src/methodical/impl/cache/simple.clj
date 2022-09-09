@@ -7,6 +7,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.Cache))
 
+(set! *warn-on-reflection* true)
+
 (comment methodical.interface/keep-me)
 
 (p.types/deftype+ SimpleCache [atomm]

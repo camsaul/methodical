@@ -8,6 +8,8 @@
             [pretty.core :as pretty])
   (:import methodical.interface.Dispatcher))
 
+(set! *warn-on-reflection* true)
+
 (defn matching-primary-pairs-excluding-default
   "Return a sequence of pairs of `[dispatch-value method]` for all applicable dispatch values, excluding the default
   method (if any); pairs are sorted in order from most-specific to least-specific."

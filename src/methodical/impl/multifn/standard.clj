@@ -6,6 +6,8 @@
             [pretty.core :as pretty])
   (:import [methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl]))
 
+(set! *warn-on-reflection* true)
+
 ;; "composite dispatch value" below just means a dispatch value consisting of multiple parts e.g. `[:x :y]` as opposed
 ;; to a single value like `:x`.
 
