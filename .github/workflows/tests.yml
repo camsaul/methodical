@@ -119,6 +119,4 @@ jobs:
         files: ./target/coverage/codecov.json
 
   codespell:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: codespell-project/actions-codespell@master
+    uses: codespell-project/actions-codespell@master

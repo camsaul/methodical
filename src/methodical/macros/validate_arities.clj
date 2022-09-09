@@ -14,8 +14,7 @@
   (:require
    [clojure.data :as data]
    [clojure.set :as set]
-   [clojure.spec.alpha :as s]
-   [methodical.macros.validate-arities :as validate-arities]))
+   [clojure.spec.alpha :as s]))
 
 (defn- int-between-zero-and-twenty-inclusive? [n]
   (and (integer? n)
