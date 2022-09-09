@@ -528,6 +528,9 @@ and the `describe` utility, which outputs Markdown-formatted documentation, for 
 
 ![Describe](assets/describe.png)
 
+This extra information is automatically generated and appened to a multimethod's docstring whenever methods or
+preferences are added or removed.
+
 Methodical multimethods also implement `datafy`:
 
 ```clj
