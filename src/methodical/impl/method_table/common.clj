@@ -44,7 +44,7 @@
      (str/join
       \space
       [(when method-ns
-         (format "defined in %s" (ns-name method-ns)))
+         (format "defined in [[%s]]" (ns-name method-ns)))
        (cond
          (and file line)
          (format "(%s:%d)" file line)
@@ -55,9 +55,9 @@
          (format "\n\nIt has the following documentation:\n\n%s" doc))])))
 
   ([dispatch-value f]
-   (format "* %s, %s" (pr-str dispatch-value) (str/join
-                                               "\n  "
-                                               (str/split-lines (describe-method f))))))
+   (format "* `%s`, %s" (pr-str dispatch-value) (str/join
+                                                 "\n  "
+                                                 (str/split-lines (describe-method f))))))
 
 (defn describe-primary-methods
   "Helper for [[methodical.util.describe/describe]]ing the primary methods in a method table."
@@ -80,7 +80,7 @@
       "\n\n"
       (for [[qualifier dispatch-value->methods] (sort-by first qualifier->dispatch-value->methods)]
         (format
-         "%s methods:\n\n%s"
+         "`%s` methods:\n\n%s"
          (pr-str qualifier)
          (str/join
           "\n\n"

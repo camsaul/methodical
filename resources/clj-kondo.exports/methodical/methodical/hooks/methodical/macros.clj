@@ -1,6 +1,7 @@
 (ns hooks.methodical.macros
   (:refer-clojure :exclude [defmulti defmethod])
-  (:require [clj-kondo.hooks-api :as hooks]))
+  (:require
+   [clj-kondo.hooks-api :as hooks]))
 
 ;;; The code below is basically simulating the spec for parsing defmethod args without using spec. It uses a basic
 ;;; backtracking algorithm to achieve a similar result. Parsing defmethod args is kinda complicated.
@@ -116,7 +117,9 @@
                         [(hooks/list-node
                           (list*
                            (hooks/token-node 'fn)
-                           (hooks/token-node 'next-method)
+                           (hooks/token-node (if (contains? #{nil :around} (some-> (:qualifier parsed) hooks/sexpr))
+                                               'next-method
+                                               '__FN__NAME__THAT__YOU__CANNOT__REFER__TO__))
                            fn-tail))]))]
       #_(println "=>")
       #_(clojure.pprint/pprint (hooks/sexpr result))

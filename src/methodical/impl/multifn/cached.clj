@@ -81,7 +81,7 @@
            :class (class this)
            :cache (datafy/datafy cache)))
 
-  describe/Describeable
+  describe/Describable
   (describe [_this]
     (str (describe/describe cache)
          \newline \newline

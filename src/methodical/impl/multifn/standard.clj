@@ -149,7 +149,7 @@
      :dispatcher   (datafy/datafy dispatcher)
      :method-table (datafy/datafy method-table)})
 
-  describe/Describeable
+  describe/Describable
   (describe [_this]
     (str (describe/describe combo)
          \newline \newline

@@ -38,6 +38,6 @@
     {:class (class this)
      :cache @atomm})
 
-  describe/Describeable
+  describe/Describable
   (describe [this]
-    (format "It caches methods using a %s." (.getCanonicalName (class this)))))
+    (format "It caches methods using a [[%s]]." (.getCanonicalName (class this)))))

@@ -55,6 +55,11 @@ next method. In vanilla Clojure multimethods, you'd have to do something like th
 
 If you're not sure whether a `next-method` exists, you can check whether it's `nil` before calling it.
 
+Methodical exports custom [clj-kondo](https://github.com/clj-kondo/clj-kondo) configuration and hooks for `defmulti`
+and `defmethod`; with the exported configuration it will even tell you if you call `next-method` with the wrong number
+of args:
+
+![Kondo](assets/kondo.png)
 
 ## Auxiliary Methods: `:before`, `:after`, and `:around`
 
@@ -485,11 +490,94 @@ following summarizes all component implementations that currently ship with Meth
 
 *  `cached-multifn-impl` -- wraps another multifn impl and an instance of `Cache` to implement caching.
 
+### Validation
+
+Methodical offers a few opportunities for validation above and beyond what normal Clojure multimethods offer.
+
+#### `:dispatch-value-spec`
+
+If you include a `:dispatch-value-spec` in the metadata of a `defmulti`, it will automatically be used to validate the
+dispatch value form of any `defmethod` forms at macroexpansion time:
+
+```clj
+(macros/defmulti mfx
+  {:arglists '([x y]), :dispatch-value-spec (s/cat :x keyword?, :y int?)}
+  (fn [x y] [x y]))
+
+(macros/defmethod mfx [:x 1]
+  [x y]
+  {:x x, :y y})
+;; => #'methodical.macros-test/mfx
+
+(macros/defmethod mfx [:x]
+  [x y]
+  {:x x, :y y})
+;; failed: Insufficient input in: [0] at: [:args-for-method-type :primary :dispatch-value :y] [:x]
+```
+
+This is a great way to make sure people use your multimethods correctly and catch errors right away.
+
 ### Debugging
 
 Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility:
 
 ![Trace](assets/tracing.png)
+
+and the `describe` utility, which outputs Markdown-formatted documentation, for human-friendly viewing in tools like
+[CIDER](https://github.com/clojure-emacs/cider):
+
+![Describe](assets/describe.png)
+
+Methodical multimethods also implement `datafy`:
+
+```clj
+(clojure.datafy/datafy mf)
+
+=>
+
+{:ns           'methodical.datafy-test
+ :name         'methodical.datafy-test/mf
+ :file         "methodical/datafy_test.clj"
+ :line         11
+ :column       1
+ :arglists     '([x y])
+ :class        methodical.impl.standard.StandardMultiFn
+ :combo        {:class          methodical.impl.combo.threaded.ThreadingMethodCombination
+                :threading-type :thread-last}
+ :dispatcher   {:class         methodical.impl.dispatcher.multi_default.MultiDefaultDispatcher
+                :dispatch-fn   methodical.datafy-test/dispatch-first
+                :default-value :default
+                :hierarchy     #'clojure.core/global-hierarchy
+                :prefs         {:x #{:y}}}
+ :method-table {:class   methodical.impl.method_table.standard.StandardMethodTable
+                :primary {:default
+                          {:ns       'methodical.datafy-test
+                           :name     'methodical.datafy-test/mf-primary-method-default
+                           :doc      "Here is a docstring."
+                           :file     "methodical/datafy_test.clj"
+                           :line     15
+                           :column   1
+                           :arglists '([next-method x y])}}
+                :aux     {:before {[:x :default] [{:ns                    'methodical.datafy-test
+                                                   :name                  'methodical.datafy-test/mf-before-method-x-default
+                                                   :doc                   "Another docstring."
+                                                   :file                  "methodical/datafy_test.clj"
+                                                   :column                1
+                                                   :line                  20
+                                                   :arglists              '([_x y])
+                                                   :methodical/unique-key 'methodical.datafy-test}]}
+                          :around {[:x :y] [{:ns                    'methodical.datafy-test
+                                             :name                  'methodical.datafy-test/mf-around-method-x-y
+                                             :file                  "methodical/datafy_test.clj"
+                                             :column                1
+                                             :line                  25
+                                             :arglists              '([next-method x y])
+                                             :methodical/unique-key 'methodical.datafy-test}]}}}
+ :cache        {:class methodical.impl.cache.watching.WatchingCache
+                :cache {:class methodical.impl.cache.simple.SimpleCache
+                        :cache {}}
+                :refs  #{#'clojure.core/global-hierarchy}}}
+```
 
 ## Performance
 
