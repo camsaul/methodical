@@ -1,11 +1,12 @@
 (ns methodical.macros
-  "Methodical versions of vanilla Clojure `defmulti` and [[defmethod]] macros."
+  "Methodical versions of vanilla Clojure [[defmulti]] and [[defmethod]] macros."
   (:refer-clojure :exclude [defmulti defmethod])
   (:require
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
    [methodical.impl :as impl]
    [methodical.interface :as i]
+   [methodical.macros.validate-arities :as validate-arities]
    [methodical.util :as u])
   (:import
    (methodical.impl.standard StandardMultiFn)))
@@ -16,13 +17,29 @@
   (s/alt :arity-1 :clojure.core.specs.alpha/params+body
          :arity-n (s/+ (s/spec :clojure.core.specs.alpha/params+body))))
 
+(s/def :methodical.macros.defmulti.attr-map/dispatch-value-spec
+  ;; not sure how to validate this. Is there a predicate for something that can be used as a
+  ;; spec? [[clojure.spec.alpha/spec]] will happily turn random things into specs for us
+  any?)
+
+(s/def :methodical.macros.defmulti.attr-map/defmethod-arities
+  (s/nilable ::validate-arities/arities-set))
+
+(s/def :methodical.macros.defmulti/attr-map
+  (s/keys :opt-un [:methodical.macros.defmulti.attr-map/dispatch-value-spec
+                   :methodical.macros.defmulti.attr-map/defmethod-arities]))
+
 (s/def ::defmulti-args
-  (s/cat :name-symb   (every-pred symbol? (complement namespace))
-         :docstring   (s/? string?)
-         :attr-map    (s/? map?)
-         :dispatch-fn (s/? any?)
-         :options     (s/* (s/cat :k keyword?
-                                  :v any?))))
+  (s/& (s/cat :name-symb   (every-pred symbol? (complement namespace))
+              :docstring   (s/? string?)
+              :attr-map    (s/? map?)
+              :dispatch-fn (s/? any?)
+              :options     (s/* (s/cat :k keyword?
+                                       :v any?)))
+       ;; do a "soft" cut here where any map argument is always interpreted as an attribute map, and only later subject
+       ;; it to stricter validation. See my questions in Slack here
+       ;; https://clojurians.slack.com/archives/C1B1BB2Q3/p1662755403589769
+       (s/keys :opt-un [:methodical.macros.defmulti/attr-map])))
 
 (defn- emit-defmulti
   [name-symb dispatch-fn {:keys [hierarchy dispatcher combo method-table cache default-value]
@@ -49,7 +66,7 @@
        (let [impl# (impl/standard-multifn-impl ~combo ~dispatcher ~method-table)]
          (vary-meta (impl/multifn impl# ~mta ~cache) merge (meta (var ~name-symb)))))))
 
-(defn default-dispatch-value-spec
+(defn- default-dispatch-value-spec
   "A dispatch value as parsed to [[defmethod]] (i.e., not-yet-evaluated) can be ANYTHING other than the following two
   things:
 
@@ -78,10 +95,10 @@
           ...)))
      ```
 
-      but we are just UNFORTUNATELY going to have to throw up our hands and say we don't support it. The reason is in
-      the example above it's ambiguous whether this is a `:before` aux method with dispatch value `([toucan pigeon] i)`,
-      or a primary method with dispatch value `:before`. It's just impossible to tell what you meant. If you really want
-      to do something wacky like this, let-bind the dispatch value to a symbol or something.
+     but we are just UNFORTUNATELY going to have to throw up our hands and say we don't support it. The reason is in
+     the example above it's ambiguous whether this is a `:before` aux method with dispatch value `([toucan pigeon] i)`,
+     or a primary method with dispatch value `:before`. It's just impossible to tell what you meant. If you really want
+     to do something wacky like this, let-bind the dispatch value to a symbol or something.
 
   Note that if you specify a custom `:dispatch-value-spec` it overrides this spec. Hopefully your spec is stricter than
   this one is and it won't be a problem."
@@ -103,7 +120,7 @@
     (emit-defmulti name-symb dispatch-fn options)))
 
 (defmacro defmulti
-  "Creates a new Methodical multimethod named by a Var. Usage of this macro mimics usage of vanilla Clojure `defmulti`,
+  "Creates a new Methodical multimethod named by a Var. Usage of this macro mimics usage of [[clojure.core/defmulti]],
   and it can be used as a drop-in replacement; it does, however, support a larger set of options. Note the dispatch-fn
   is optional (if omitted, then identity will be used). In addition to the usual `:default` and `:hierarchy` options,
   you many specify:
@@ -132,14 +149,93 @@
      value -> methods. The default implementation is a pair of simple maps.
 
   The above options comprise the main constituent parts of a Methodical multimethod, and the majority of those parts
-  have several alternative implementations available in `methodical.impl`. Defining additional implementations is
-  straightforward as well: see `methodical.interface` for more details.
+  have several alternative implementations available in [[methodical.impl]]. Defining additional implementations is
+  straightforward as well: see [[methodical.interface]] for more details.
 
-  Other improvements over vanilla Clojure `defmulti`:
+  Other improvements over [[clojure.core/defmulti]]:
 
   * Evaluating the form a second time (e.g., when reloading a namespace) will *not* redefine the multimethod, unless
     you have modified its form -- unlike vanilla Clojure multimethods, which need to be unmapped from the namespace to
-    make such minor tweaks as changing the dispatch function."
+    make such minor tweaks as changing the dispatch function.
+
+  Attribute map options:
+
+  `defmulti` supports a few additional options in its attributes map that will be used to validate `defmethod` forms
+  during macroexpansion time. These are meant to help the users of your multimethods use them correctly by catching
+  mistakes right away rather than waiting for them to pull their hair out later wondering why a method they added isn't
+  getting called.
+
+  * `:dispatch-value-spec` -- a spec for the `defmethod` dispatch value:
+
+    ```clj
+    (m/defmulti mf
+      {:arglists '([x y]), :dispatch-value-spec (s/cat :x keyword?, :y int?)}
+      (fn [x y] [x y]))
+
+    (m/defmethod mf [:x 1]
+      [x y]
+      {:x x, :y y})
+    ;; => ok
+
+    (m/defmethod mf [:x]
+      [x y]
+      {:x x, :y y})
+    ;; failed: Insufficient input in: [0] at: [:args-for-method-type :primary :dispatch-value :y] [:x]
+    ```
+
+    Note that this spec is applied to the unevaluated arguments at macroexpansion time, not the actual evaluated values.
+    Note also that if you want to allow a `:default` method your spec will have to support it.
+
+  * `:defmethod-arities` -- a set of allowed/required arities that `defmethod` forms are allowed to have. `defmethod`
+    forms must have arities that match *all* of the specified `:defmethod-arities`, and all of its arities must be
+    allowed by `:defmethod-arities`:
+
+    ```clj
+    (m/defmulti ^:private mf
+      {:arglists '([x]), :defmethod-arities #{1}}
+      keyword)
+
+    (m/defmethod mf :x [x] x)
+    ;; => ok
+
+    (m/defmethod mf :x ([x] x) ([x y] x y))
+    ;; => error: {:arities {:disallowed #{2}}}
+
+    (m/defmethod mf :x [x y] x y)
+    ;; => error: {:arities {:required #{1}}}
+
+
+    (m/defmethod mf :x [x y] x)
+    ;; => error: {:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}
+    ```
+
+    `:defmethod-arities` must be a set of either integers or `[:> n]` forms to represent arities with `&` rest
+    arguments, e.g. `[:>= 3]` to mean an arity of three *or-more* arguments:
+
+    ```clj
+    ;; methods must both a 1-arity and a 3+-arity
+    (m/defmulti ^:private mf
+      {:arglists '([x] [x y z & more]), :defmethod-arities #{1 [:>= 3]}}
+      keyword)
+
+    (m/defmethod mf :x ([x] x) ([x y z & more] x))
+    ;; => ok
+    ```
+
+    When rest-argument arities are used, Methodical is smart enough to allow them when appropriate even if they do not
+    specifically match an arity specified in `:defmethod-arities`:
+
+    ```clj
+    (m/defmulti ^:private mf
+      {:arglists '([x y z & more]), :defmethod-arities #{[:>= 3]}}
+      keyword)
+
+    (m/defmethod mf :x
+      ([a b c] x)
+      ([a b c d] x)
+      ([a b c d & more] x))
+    ;; => ok, because everything required by [:>= 3] is covered, and everything present is allowed by [:>= 3]
+    ```"
   {:arglists     '([name-symb docstring? attr-map? dispatch-fn?
                     & {:keys [hierarchy default-value prefers combo method-table cache]}]
                    [name-symb docstring? attr-map? & {:keys [dispatcher combo method-table cache]}])
@@ -230,7 +326,8 @@
         primary-methods-allowed? (contains? allowed-qualifiers nil)
         allowed-aux-qualifiers   (disj allowed-qualifiers nil)
         dispatch-value-spec      (or (some-> (get (meta multifn) :dispatch-value-spec) s/spec)
-                                     (default-dispatch-value-spec allowed-aux-qualifiers))]
+                                     (default-dispatch-value-spec allowed-aux-qualifiers))
+        arities-spec             (validate-arities/allowed-arities-fn-tail-spec (:defmethod-arities (meta multifn)))]
     (s/cat :args-for-method-type (s/alt :primary (if primary-methods-allowed?
                                                    (s/cat :dispatch-value dispatch-value-spec)
                                                    (constantly false))
@@ -238,7 +335,8 @@
                                                         :dispatch-value dispatch-value-spec
                                                         :unique-key     (s/? (complement (some-fn string? sequential?)))))
            :docstring            (s/? string?)
-           :fn-tail              (s/& (s/+ any?) (s/nonconforming ::fn-tail)))))
+           :fn-tail              (s/& (s/+ any?)
+                                      (s/nonconforming (s/& ::fn-tail arities-spec))))))
 
 (defn- parse-defmethod-args [multifn args]
   (let [spec      (defmethod-args-spec multifn)

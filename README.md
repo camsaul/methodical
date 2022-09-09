@@ -517,6 +517,58 @@ dispatch value form of any `defmethod` forms at macroexpansion time:
 
 This is a great way to make sure people use your multimethods correctly and catch errors right away.
 
+#### `:defmethod-arities`
+
+A set of allowed/required arities that `defmethod` forms are allowed to have. `defmethod` forms must have arities that
+match *all* of the specified `:defmethod-arities`, and all of its arities must be allowed by `:defmethod-arities`:
+
+```clj
+(m/defmulti ^:private mf
+  {:arglists '([x]), :defmethod-arities #{1}}
+  keyword)
+
+(m/defmethod mf :x [x] x)
+;; => ok
+
+(m/defmethod mf :x ([x] x) ([x y] x y))
+;; => error: {:arities {:disallowed #{2}}}
+
+(m/defmethod mf :x [x y] x y)
+;; => error: {:arities {:required #{1}}}
+
+
+(m/defmethod mf :x [x y] x)
+;; => error: {:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}
+```
+
+`:defmethod-arities` must be a set of either integers or `[:> n]` forms to represent arities with `&` rest
+arguments, e.g. `[:>= 3]` to mean an arity of three *or-more* arguments:
+
+```clj
+;; methods must both a 1-arity and a 3+-arity
+(m/defmulti ^:private mf
+  {:arglists '([x] [x y z & more]), :defmethod-arities #{1 [:>= 3]}}
+  keyword)
+
+(m/defmethod mf :x ([x] x) ([x y z & more] x))
+;; => ok
+```
+
+When rest-argument arities are used, Methodical is smart enough to allow them when appropriate even if they do not
+specifically match an arity specified in `:defmethod-arities`:
+
+```clj
+(m/defmulti ^:private mf
+  {:arglists '([x y z & more]), :defmethod-arities #{[:>= 3]}}
+  keyword)
+
+(m/defmethod mf :x
+  ([a b c] x)
+  ([a b c d] x)
+  ([a b c d & more] x))
+;; => ok, because everything required by [:>= 3] is covered, and everything present is allowed by [:>= 3]
+```
+
 ### Debugging
 
 Methodical offers debugging facilities so you can see what's going on under the hood, such as the `trace` utility:
@@ -528,7 +580,7 @@ and the `describe` utility, which outputs Markdown-formatted documentation, for 
 
 ![Describe](assets/describe.png)
 
-This extra information is automatically generated and appened to a multimethod's docstring whenever methods or
+This extra information is automatically generated and appended to a multimethod's docstring whenever methods or
 preferences are added or removed.
 
 Methodical multimethods also implement `datafy`:

@@ -8,10 +8,26 @@
    [methodical.util :as u]
    [potemkin.namespaces :as p.namespaces]))
 
+(set! *warn-on-reflection* true)
+
 ;;; so the tests that do macroexansion work correctly regardless of namespace
 (t/use-fixtures :each (fn [thunk]
                         (binding [*ns* (the-ns 'methodical.macros-test)]
                           (thunk))))
+
+(defn- re-quote [^String s]
+  (re-pattern (java.util.regex.Pattern/quote s)))
+
+(defmethod t/assert-expr 'macroexpansion-spec-error? [message [_ error form]]
+  (t/assert-expr
+   message
+   `(~'thrown-with-msg?
+     Exception
+     ~(re-quote error)
+     (try
+       (macroexpand ~form)
+       (catch clojure.lang.Compiler$CompilerException e#
+         (throw (or (ex-cause e#) e#)))))))
 
 (t/deftest parse-defmulti-args-test
   (t/are [args parsed] (= (quote parsed)
@@ -24,12 +40,11 @@
      :options     [{:k :combo, :v (macros/clojure-method-combination)}]})
 
   (t/testing "Throw error on invalid args (#36)"
-    (t/is (thrown?
-           clojure.lang.Compiler$CompilerException
-           (macroexpand
-            '(macros/defmulti multifn :default
-               [x y z]
-               :ok))))))
+    (t/is (macroexpansion-spec-error?
+           "Call to methodical.macros/defmulti did not conform to spec."
+           '(macros/defmulti multifn :default
+              [x y z]
+              :ok)))))
 
 (t/deftest method-fn-symbol-test
   (letfn [(method-fn-symbol [dispatch-value]
@@ -199,23 +214,25 @@
   (assoc m :method :x))
 
 (t/deftest validate-defmethod-args-test
-  (t/are [invalid-form] (thrown?
-                         clojure.lang.Compiler$CompilerException
-                         (macroexpand (quote invalid-form)))
+  (t/are [invalid-form msg] (macroexpansion-spec-error? msg (quote invalid-form))
 
     ;; bad aux method
     (macros/defmethod mf1 :arounds :x
       [m]
       (assoc m :method :x))
+    ":x - failed: vector? in: [0] at: [:fn-tail :arity-1 :params]"
 
     ;; missing function tail
     (macros/defmethod mf1 :around :x)
+    "failed: Insufficient input at: [:fn-tail]"
 
     ;; invalid function tail
     (macros/defmethod mf1 :around :x {} a b c)
+    "failed: Insufficient input"
 
     ;; string unique key
-    (macros/defmethod mf1 :around :x "unique-key" "docstr" [a] b c)))
+    (macros/defmethod mf1 :around :x "unique-key" "docstr" [a] b c)
+    "failed: Insufficient input"))
 
 (s/def ::arg-validation-spec
   (s/or :default (partial = :default)
@@ -239,13 +256,18 @@
       (macros/defmethod validate-args-spec-mf [:x :y] [x y])))
 
   (t/testing "invalid"
-    (t/are [form] (thrown?
-                   clojure.lang.Compiler$CompilerException
-                   (macroexpand (quote form)))
+    (t/are [form msg] (macroexpansion-spec-error? msg (quote form))
       (macros/defmethod validate-args-spec-mf :x [x y])
+      ":x - failed: (partial = :default) in: [0]"
+
       (macros/defmethod validate-args-spec-mf [:x 1] [x y])
+      "failed: keyword? in: [0 1] at: [:args-for-method-type :primary :dispatch-value :x-y :y]"
+
       (macros/defmethod validate-args-spec-mf [:x] [x y])
-      (macros/defmethod validate-args-spec-mf [:x :y :z] [x y]))))
+      "failed: Insufficient input in: [0] at: [:args-for-method-type :primary :dispatch-value :x-y :y]"
+
+      (macros/defmethod validate-args-spec-mf [:x :y :z] [x y])
+      "failed: Extra input in: [0 2] at: [:args-for-method-type :primary :dispatch-value :x-y]")))
 
 (t/deftest defmethod-primary-methods-test
   (t/is (= mf1 (let [impl    (impl/standard-multifn-impl
@@ -378,9 +400,124 @@
             '(macros/defmethod mf-dispatch-value-spec-2 [:x 1]
                [x y]
                {:x x, :y y}))))
-    (t/is (thrown?
-           clojure.lang.Compiler$CompilerException
-           (macroexpand
-            '(macros/defmethod mf-dispatch-value-spec-2 [:x]
-               [x y]
-               {:x x, :y y}))))))
+    (t/is (macroexpansion-spec-error?
+           "failed: Insufficient input in: [0] at: [:args-for-method-type :primary :dispatch-value :y]"
+           '(macros/defmethod mf-dispatch-value-spec-2 [:x]
+              [x y]
+              {:x x, :y y})))))
+
+(t/deftest defmulti-validate-defmethod-arities-metadata-test
+  (t/testing "ok"
+    (t/are [arities] (some?
+                      (macroexpand
+                       '(macros/defmulti my-mf {:defmethod-arities arities} identity)))
+      nil
+      #{0}
+      #{0 1 [:>= 3]}
+      #{20}))
+
+  (t/testing "bad"
+    (t/are [arities] (macroexpansion-spec-error?
+                      "Call to methodical.macros/defmulti did not conform to spec."
+                      '(macros/defmulti my-mf {:defmethod-arities arities} identity))
+      #{}
+      #{-1}
+      #{21}
+      [0]
+      {0 1}
+      1
+      [:>= 3]
+      #{[:> 3]}
+      #{:more})))
+
+(macros/defmulti ^:private validate-arg-counts-mf
+  ;; actually allowed:
+  ;;
+  ;; * x (1 arg)
+  ;; * x y z (3 args)
+  ;; * x y z :k v ... (5 + args, odd)
+  ;;
+  ;; 2 ARGS ARE NOT ALLOWED.
+  {:arglists '([x] [x y z & {:as options}]), :defmethod-arities #{1 [:>= 3]}}
+  (fn [x & _]
+    x))
+
+(t/deftest validate-defmethod-arities-test
+  (t/testing "We should be able to validate arg counts in defmethod forms (#59)"
+    (t/testing "valid"
+      (t/are [fn-tail] (some?
+                        (macroexpand
+                         (list* `macros/defmethod `validate-arg-counts-mf :x (quote fn-tail))))
+        [([x] :ok)
+         ([x y z & more] :ok)]
+        [([x] :ok)
+         ([x y z & {:as options}] :ok)]
+        ;; this should be ok.
+        [([x] :ok)
+         ([x y z] :ok)
+         ([x y z & more] :ok)]
+        ;; so should this one.
+        [([x] :ok)
+         ([x y z] :ok)
+         ([x y z k] :ok)
+         ([x y z k v & more] :ok)]
+        ;; not sure about this one or not. TECHNICALLY this should be disallowed because it allows 4 args and we're
+        ;; doing key-value destructuring... but worrying about that might be too much for us right now.
+        [([x] :ok)
+         ([x y z] :ok)
+         ([x y z k] :ok)
+         ([x y z k v & more] :ok)]))
+    (t/testing "invalid"
+      (t/are [fn-tail msg] (macroexpansion-spec-error?
+                            msg
+                            (list* `macros/defmethod `validate-arg-counts-mf :x 'fn-tail))
+        ;; missing 3+
+        [([x] :ok)]
+        "{:arities {:required #{[:>= 3]}}}"
+
+        [[x] :ok]
+        "{:arities {:required #{[:>= 3]}}}"
+
+        ;; missing 1
+        [([x y z & {:as options}] :ok)]
+        "{:arities {:required #{1}}}"
+
+        [[x y z & {:as options}] :ok]
+        "{:arities {:required #{1}}}"
+
+        ;; missing &
+        [([x] :ok) ([x y z] :ok)]
+        "{:arities {:required #{[:>= 3]}}}"
+
+        ;; 2 is not allowed
+        [([x] :ok)
+         ([x y] :ok)
+         ([x y z & more] :ok)]
+        "{:arities {:disallowed #{2}}}"
+
+        ;; 0 is not allowed
+        [([] :ok)
+         ([x] :ok)
+         ([x y z & more] :ok)]
+        "{:arities {:disallowed #{0}}}"
+
+        ;; This one also would theoretically work for 1, 3, or 3+ args... Not sure about this one. Should this be
+        ;; allowed or not? I guess maybe not since you would be able to invoke it with 2 args which isn't allowed.
+        [[x & [y z & {:as options}]]
+         :ok]
+        "{:arities {:disallowed #{[:>= 1]}}}"
+
+        ;; 2 or more is not ok. We only want 3 or more.
+        [([x] :ok)
+         ([x y & more] :ok)]
+        "{:arities {:disallowed #{[:>= 2]}}}"
+
+        ;; not ok because while this handles 3 or 4 it doesn't handle 5+
+        [([a] :ok)
+         ([a b c] :ok)
+         ([a b c d] :ok)]
+        "{:arities {:required #{[:>= 3]}}}"
+
+        ;; missing arities and disallowed arities
+        ([x y] :ok)
+        "{:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}"))))
