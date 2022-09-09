@@ -1,24 +1,36 @@
 (ns methodical.impl.method-table.standard
-  (:require methodical.interface
-            [potemkin.types :as p.types]
-            [pretty.core :as pretty])
-  (:import methodical.interface.MethodTable))
+  (:require
+   [methodical.interface]
+   [pretty.core :as pretty])
+  (:import
+   (methodical.interface MethodTable)))
+
+(set! *warn-on-reflection* true)
 
 (comment methodical.interface/keep-me)
 
-(p.types/deftype+ StandardMethodTable [primary aux]
+(defn- dispatch-value-map
+  "Create a representation of `primary` and `aux` methods using their dispatch values for pretty-printing a method table."
+  [primary aux]
+  (not-empty
+   (merge
+    (when-let [dvs (not-empty (vec (sort (keys primary))))]
+      {:primary dvs})
+    (when-let [aux-methods (not-empty
+                            (into {} (for [[qualifier dv->fns] aux
+                                           :let                [dvs (for [[dv fns] dv->fns
+                                                                          _f       fns]
+                                                                      dv)]
+                                           :when               (seq dvs)]
+                                       [qualifier (vec (sort dvs))])))]
+      {:aux aux-methods}))))
+
+(deftype StandardMethodTable [primary aux]
   pretty/PrettyPrintable
   (pretty [_]
-    (cons
-     'standard-method-table
-     (apply
-      concat
-      (when (seq primary)
-        [(count primary) 'primary])
-      (for [[qualifier dispatch-val->methods] (sort-by first aux)
-            :let                              [countt (reduce + (map count (vals dispatch-val->methods)))]
-            :when                             (pos? countt)]
-        [countt qualifier]))))
+    (if-let [m (not-empty (dispatch-value-map primary aux))]
+      (list 'standard-method-table m)
+      (list 'standard-method-table)))
 
   Object
   (equals [_ another]
