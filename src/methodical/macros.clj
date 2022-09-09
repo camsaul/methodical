@@ -53,7 +53,7 @@
   "A dispatch value as parsed to [[defmethod]] (i.e., not-yet-evaluated) can be ANYTHING other than the following two
   things:
 
-  1. an legal aux qualifier for the current method combination, e.g. `:after` or `:around`
+  1. A legal aux qualifier for the current method combination, e.g. `:after` or `:around`
 
      It makes the parse for
 

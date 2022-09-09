@@ -500,16 +500,16 @@ If you include a `:dispatch-value-spec` in the metadata of a `defmulti`, it will
 dispatch value form of any `defmethod` forms at macroexpansion time:
 
 ```clj
-(macros/defmulti mfx
+(m/defmulti mfx
   {:arglists '([x y]), :dispatch-value-spec (s/cat :x keyword?, :y int?)}
   (fn [x y] [x y]))
 
-(macros/defmethod mfx [:x 1]
+(m/defmethod mfx [:x 1]
   [x y]
   {:x x, :y y})
 ;; => #'methodical.macros-test/mfx
 
-(macros/defmethod mfx [:x]
+(m/defmethod mfx [:x]
   [x y]
   {:x x, :y y})
 ;; failed: Insufficient input in: [0] at: [:args-for-method-type :primary :dispatch-value :y] [:x]
