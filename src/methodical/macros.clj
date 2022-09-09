@@ -229,7 +229,8 @@
   (let [allowed-qualifiers       (i/allowed-qualifiers multifn)
         primary-methods-allowed? (contains? allowed-qualifiers nil)
         allowed-aux-qualifiers   (disj allowed-qualifiers nil)
-        dispatch-value-spec      (get (meta multifn) :dispatch-value-spec (default-dispatch-value-spec allowed-aux-qualifiers))]
+        dispatch-value-spec      (or (some-> (get (meta multifn) :dispatch-value-spec) s/spec)
+                                     (default-dispatch-value-spec allowed-aux-qualifiers))]
     (s/cat :args-for-method-type (s/alt :primary (if primary-methods-allowed?
                                                    (s/cat :dispatch-value dispatch-value-spec)
                                                    (constantly false))

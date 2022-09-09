@@ -365,3 +365,22 @@
     #_{:clj-kondo/ignore [:unresolved-symbol]} #'docstring-multifn-primary-method-docstring
     (first (u/aux-methods docstring-multifn :around :docstring))
     #_{:clj-kondo/ignore [:unresolved-symbol]} #'docstring-multifn-around-method-docstring))
+
+
+(macros/defmulti mf-dispatch-value-spec-2
+  {:arglists '([x y]), :dispatch-value-spec (s/cat :x keyword?, :y int?)}
+  (fn [x y] [x y]))
+
+(t/deftest dispatch-value-spec-test-2
+  (t/testing "We should specize :dispatch-value-spec if needed"
+    (t/is (some?
+           (macroexpand
+            '(macros/defmethod mf-dispatch-value-spec-2 [:x 1]
+               [x y]
+               {:x x, :y y}))))
+    (t/is (thrown?
+           clojure.lang.Compiler$CompilerException
+           (macroexpand
+            '(macros/defmethod mf-dispatch-value-spec-2 [:x]
+               [x y]
+               {:x x, :y y}))))))
