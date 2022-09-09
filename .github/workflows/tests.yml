@@ -119,4 +119,5 @@ jobs:
         files: ./target/coverage/codecov.json
 
   codespell:
-    uses: codespell-project/actions-codespell@master
+    steps:
+      - uses: codespell-project/actions-codespell@master
