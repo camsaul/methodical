@@ -144,9 +144,10 @@
   (with-local-vars [hierarchy (make-ambiguous-hierarchy)]
     (let [multifn (ambiguous-hierarchy-multifn hierarchy)]
       (t/testing "Ambiguous invocation"
-        (t/is (thrown-with-msg? IllegalArgumentException
-                              #"Multiple methods match dispatch value: :child -> :parent-1 and :parent-2"
-                              (multifn :child))
+        (t/is (thrown-with-msg?
+               clojure.lang.ExceptionInfo
+               #"Multimethod: multiple methods match dispatch value: :child -> :parent-1 and :parent-2"
+               (multifn :child))
               "Should throw Exception if multiple methods match dispatch value"))
 
       (t/testing "Ambiguous ancestor values"

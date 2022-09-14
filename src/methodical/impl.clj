@@ -167,7 +167,6 @@
    {:pre [(map? m)]}
    (method-table.clojure/->ClojureMethodTable m)))
 
-
 (defn standard-method-table
   "Create a new standard method table that supports both primary and auxiliary methods."
   (^MethodTable []

@@ -1,8 +1,11 @@
 (ns methodical.impl.dispatcher.standard-test
-  (:require [clojure.test :as t]
-            [methodical.impl :as impl]
-            [methodical.interface :as i])
-  (:import methodical.interface.MethodTable))
+  (:require
+   [clojure.test :as t]
+   [methodical.core :as m]
+   [methodical.impl :as impl]
+   [methodical.interface :as i])
+  (:import
+   (methodical.interface MethodTable)))
 
 (set! *warn-on-reflection* true)
 
@@ -93,3 +96,44 @@
           (t/testing "should return ^:dispatch-value metadata"
             (t/is (= {:before [{:dispatch-value :parent} {:dispatch-value :grandparent}]}
                      (aux-methods-metadata (i/matching-aux-methods dispatcher method-table :parent))))))))))
+
+(derive ::parroty ::parrot)
+(derive ::parroty ::friend)
+
+(m/defmulti ^:private ambiguous-mf
+  type)
+
+(m/defmethod ambiguous-mf ::parrot
+  [m]
+  (assoc m :parrot? true))
+
+(m/defmethod ambiguous-mf ::friend
+  [m]
+  (assoc m :friend? true))
+
+(t/deftest ambiguous-methods-test
+  (t/testing "Ambiguous primary method errors should be meaningful (#126)"
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           (re-pattern
+            (java.util.regex.Pattern/quote
+             (str "methodical.impl.dispatcher.standard-test/ambiguous-mf: "
+                  "multiple methods match dispatch value: "
+                  ":methodical.impl.dispatcher.standard-test/parroty -> :methodical.impl.dispatcher.standard-test/parrot "
+                  "and :methodical.impl.dispatcher.standard-test/friend, "
+                  "and neither is preferred.")))
+           (ambiguous-mf (vary-meta {} assoc :type ::parroty))))
+    (t/testing "Exception info should include location where methods were defined"
+      (try
+        (ambiguous-mf (vary-meta {} assoc :type ::parroty))
+        (t/is (= :here false) "should never get here")
+        (catch Exception e
+          (t/is (= {:method-1 {:ns             (the-ns 'methodical.impl.dispatcher.standard-test)
+                               :file           "methodical/impl/dispatcher/standard_test.clj"
+                               :line           106
+                               :dispatch-value ::parrot}
+                    :method-2 {:ns             (the-ns 'methodical.impl.dispatcher.standard-test)
+                               :file           "methodical/impl/dispatcher/standard_test.clj"
+                               :line           110
+                               :dispatch-value ::friend}}
+                   (ex-data e))))))))

@@ -292,7 +292,9 @@
    (let [s (cond-> (format "%s-%s-method-%s" (name multifn) (name qualifier) (dispatch-val-name dispatch-val))
              unique-key
              (str "-" unique-key))]
-     (vary-meta (symbol s) assoc :private true))))
+     (vary-meta (symbol s) assoc :private true, :multifn (when-let [ns-symb (some-> (:ns (meta multifn)) ns-name name)]
+                                                           (when-let [symb (some-> (:name (meta multifn)) name)]
+                                                             (list 'var (symbol ns-symb symb))))))))
 
 (defn- emit-primary-method
   "Impl for [[defmethod]] for primary methods."

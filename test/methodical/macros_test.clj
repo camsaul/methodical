@@ -51,7 +51,11 @@
             (#'macros/method-fn-symbol 'my-multimethod "primary" dispatch-value))]
     (t/testing "Keyword dispatch value"
       (t/is (= 'my-multimethod-primary-method-something
-               (method-fn-symbol :something))))
+               (method-fn-symbol :something)))
+      (t/is (= {:private true, :multifn nil} ; `:multifn` is `nil` here because we can't calculate it since technically
+                                             ; `method-fn-symbol` is supposed to be called with the multimethod itself
+                                             ; rather than a symbol.
+               (meta (method-fn-symbol :something)))))
     (t/testing "Symbol dispatch value"
       (t/is (= 'my-multimethod-primary-method-String
                (method-fn-symbol 'String)))
@@ -521,3 +525,8 @@
         ;; missing arities and disallowed arities
         ([x y] :ok)
         "{:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}"))))
+
+(t/deftest defmethod-methods-should-include-multifn-metadata
+  (t/testing "Methods defined by defmethod should include the multifn they were defined for so we can use this info later"
+    (t/is (= #'methodical.macros-test/mf1
+             (:multifn (meta #_{:clj-kondo/ignore [:unresolved-symbol]} #'mf1-primary-method-x))))))
