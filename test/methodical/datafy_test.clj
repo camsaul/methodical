@@ -51,7 +51,8 @@
                                       :file     "methodical/datafy_test.clj"
                                       :line     15
                                       :column   1
-                                      :arglists '([next-method x y])}}
+                                      :arglists '([next-method x y])
+                                      :multifn  #'methodical.datafy-test/mf}}
                            :aux     {:before {[:x :default] [{:ns                    'methodical.datafy-test
                                                               :name                  'methodical.datafy-test/mf-before-method-x-default
                                                               :doc                   "Another docstring."
@@ -59,6 +60,7 @@
                                                               :column                1
                                                               :line                  20
                                                               :arglists              '([_x y])
+                                                              :multifn               #'methodical.datafy-test/mf
                                                               :methodical/unique-key 'methodical.datafy-test}]}
                                      :around {[:x :y] [{:ns                    'methodical.datafy-test
                                                         :name                  'methodical.datafy-test/mf-around-method-x-y
@@ -66,6 +68,7 @@
                                                         :column                1
                                                         :line                  25
                                                         :arglists              '([next-method x y])
+                                                        :multifn               #'methodical.datafy-test/mf
                                                         :methodical/unique-key 'methodical.datafy-test}]}}}
             :cache        {:class methodical.impl.cache.watching.WatchingCache
                            :cache {:class methodical.impl.cache.simple.SimpleCache

@@ -24,12 +24,20 @@
     (when (seq matches)
       (sort-by first (dispatcher.common/domination-comparator hierarchy prefs dispatch-value) matches))))
 
-(defn- ambiguous-error-fn [dispatch-val this-dispatch-val next-dispatch-val]
+(defn- ambiguous-error-fn [dispatch-val method-1 dispatch-val-1 method-2 dispatch-val-2]
   (fn [& _]
-    (throw
-     (IllegalArgumentException.
-      (format "Multiple methods match dispatch value: %s -> %s and %s, and neither is preferred."
-              dispatch-val this-dispatch-val next-dispatch-val)))))
+    (let [multimethod-name (or (some-> (:multifn (meta method-1)) symbol)
+                               (some-> (:multifn (meta method-2)) symbol)
+                               ;; if we don't have the multimethod name for whatever reason then just use 'Multimethod'
+                               ;; as a placeholder. The error message will still make sense.
+                               "Multimethod")]
+      (throw
+       (ex-info (format "%s: multiple methods match dispatch value: %s -> %s and %s, and neither is preferred."
+                        multimethod-name dispatch-val dispatch-val-1 dispatch-val-2)
+                {:method-1 (assoc (select-keys (meta method-1) [:ns :file :line])
+                                  :dispatch-value dispatch-val-1)
+                 :method-2 (assoc (select-keys (meta method-2) [:ns :file :line])
+                                  :dispatch-value dispatch-val-2)})))))
 
 (defn unambiguous-pairs-seq
   "Given a sequence of `[dispatch-value primary-method]` pairs, return a sequence that replaces the method in each pair
@@ -37,15 +45,15 @@
   [{:keys [hierarchy prefs dispatch-value ambiguous-fn]
     :or   {ambiguous-fn dispatcher.common/ambiguous?}
     :as   opts}
-   [[this-dispatch-val this-method]
-    [next-dispatch-val :as next-pair]
+   [[this-dispatch-val this-method :as _this-pair]
+    [next-dispatch-val next-method :as next-pair]
     & more-pairs :as pairs]]
   {:pre [(every? sequential? pairs)]}
   (when (seq pairs)
     (let [this-pair [this-dispatch-val
                      (if (and next-pair
                               (ambiguous-fn hierarchy prefs dispatch-value this-dispatch-val next-dispatch-val))
-                       (ambiguous-error-fn dispatch-value this-dispatch-val next-dispatch-val)
+                       (ambiguous-error-fn dispatch-value this-method this-dispatch-val next-method next-dispatch-val)
                        this-method)]]
       (cons this-pair (when next-pair
                         (unambiguous-pairs-seq opts (cons next-pair more-pairs)))))))

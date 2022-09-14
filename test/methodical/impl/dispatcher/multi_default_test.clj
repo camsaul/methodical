@@ -1,9 +1,11 @@
 (ns methodical.impl.dispatcher.multi-default-test
-  (:require [clojure.test :as t]
-            [methodical.core :as m]
-            [methodical.impl.dispatcher.multi-default :as dispatcher.multi-default]
-            methodical.interface)
-  (:import methodical.interface.MethodTable))
+  (:require
+   [clojure.test :as t]
+   [methodical.core :as m]
+   [methodical.impl.dispatcher.multi-default :as dispatcher.multi-default]
+   [methodical.interface])
+  (:import
+   (methodical.interface MethodTable)))
 
 (set! *warn-on-reflection* true)
 
@@ -133,8 +135,8 @@
           (t/testing (str "If two partially-specialized default methods are ambiguous, we should throw an Exception the"
                           " same we would for other methods")
             (t/is (thrown-with-msg?
-                   IllegalArgumentException
-                   (re-pattern (str "Multiple methods match dispatch value: \\[:toucan 100] ->"
+                   clojure.lang.ExceptionInfo
+                   (re-pattern (str "Multimethod: multiple methods match dispatch value: \\[:toucan 100] ->"
                                     (format " \\[:large-beak %s\\] and \\[:eats-fruit %s\\], and neither is preferred."
                                             (pr-str default) (pr-str default))))
                    (invoke-with-prefs nil [:toucan 100]))))
@@ -257,3 +259,44 @@
         (t/is (= 'dd
                  (m :Y nil)
                  (m nil nil)))))))
+
+(derive ::parroty ::parrot)
+(derive ::parroty ::friend)
+
+(m/defmulti ^:private ambiguous-mf
+  type)
+
+(m/defmethod ambiguous-mf ::parrot
+  [m]
+  (assoc m :parrot? true))
+
+(m/defmethod ambiguous-mf ::friend
+  [m]
+  (assoc m :friend? true))
+
+(t/deftest ambiguous-methods-test
+  (t/testing "Ambiguous primary method errors should be meaningful (#126)"
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           (re-pattern
+            (java.util.regex.Pattern/quote
+             (str "methodical.impl.dispatcher.multi-default-test/ambiguous-mf: "
+                  "multiple methods match dispatch value: "
+                  ":methodical.impl.dispatcher.multi-default-test/parroty -> :methodical.impl.dispatcher.multi-default-test/parrot "
+                  "and :methodical.impl.dispatcher.multi-default-test/friend, "
+                  "and neither is preferred.")))
+           (ambiguous-mf (vary-meta {} assoc :type ::parroty))))
+    (t/testing "Exception info should include location where methods were defined"
+      (try
+        (ambiguous-mf (vary-meta {} assoc :type ::parroty))
+        (t/is (= :here false) "should never get here")
+        (catch Exception e
+          (t/is (= {:method-1 {:ns             (the-ns 'methodical.impl.dispatcher.multi-default-test)
+                               :file           "methodical/impl/dispatcher/multi_default_test.clj"
+                               :line           269
+                               :dispatch-value ::parrot}
+                    :method-2 {:ns             (the-ns 'methodical.impl.dispatcher.multi-default-test)
+                               :file           "methodical/impl/dispatcher/multi_default_test.clj"
+                               :line           273
+                               :dispatch-value ::friend}}
+                   (ex-data e))))))))
