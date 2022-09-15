@@ -228,6 +228,19 @@
 
 ;;;; #### Low-level destructive operations
 
+(defn ^:no-doc docstring-with-describe-output-appended
+  "Build a docstring by taking the original user-supplied `:doc` and the output of [[describe/describe]]."
+  (^String [varr]
+   (let [original-doc  ((some-fn :original-doc :doc) (meta varr))
+         updated-value (var-get varr)]
+     (docstring-with-describe-output-appended original-doc updated-value)))
+
+  (^String [original-doc updated-value]
+   (str
+    (when (seq original-doc)
+      (str original-doc \newline \newline))
+    (describe/describe updated-value))))
+
 (defn alter-var-root+
   "Like [[clojure.core/alter-var-root]], but handles vars that are aliases of other vars, e.g. ones that have been
   imported via Potemkin [[potemkin/import-vars]]."
@@ -236,13 +249,9 @@
         varr                         (if (and var-ns var-name)
                                        (ns-resolve var-ns var-name)
                                        multifn-var)
-        original-doc ((some-fn :original-doc :doc) (meta multifn-var))]
+        original-doc                 ((some-fn :original-doc :doc) (meta multifn-var))]
     (apply alter-var-root varr f args)
-    (let [updated-value (var-get varr)
-          new-doc       (str
-                         (when original-doc
-                           (str original-doc \newline \newline))
-                         (describe/describe updated-value))]
+    (let [new-doc (docstring-with-describe-output-appended varr)]
       (alter-meta! multifn-var assoc :original-doc original-doc, :doc new-doc))
     multifn-var))
 

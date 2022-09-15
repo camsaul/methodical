@@ -41,7 +41,8 @@
        ;; https://clojurians.slack.com/archives/C1B1BB2Q3/p1662755403589769
        (s/keys :opt-un [:methodical.macros.defmulti/attr-map])))
 
-(defn- emit-defmulti
+(defmacro ^:no-doc redefine-multimethod
+  "Impl for the [[defmulti]] macro."
   [name-symb dispatch-fn {:keys [hierarchy dispatcher combo method-table cache default-value]
                           :or   {combo        `(impl/thread-last-method-combination)
                                  method-table `(impl/standard-method-table)
@@ -66,58 +67,20 @@
        (let [impl# (impl/standard-multifn-impl ~combo ~dispatcher ~method-table)]
          (vary-meta (impl/multifn impl# ~mta ~cache) merge (meta (var ~name-symb)))))))
 
-(defn- default-dispatch-value-spec
-  "A dispatch value as parsed to [[defmethod]] (i.e., not-yet-evaluated) can be ANYTHING other than the following two
-  things:
-
-  1. A legal aux qualifier for the current method combination, e.g. `:after` or `:around`
-
-     It makes the parse for
-
-     ```clj
-     (m/defmethod mf :after \"str\" [_])
-     ```
-
-     ambiguous -- Is this an `:after` aux method with dispatch value `\"str\"`, or a primary method with dispatch value
-     `:after` and a docstring? Since there's no clear way to decide which is which, we're going to have to disallow this.
-     It's probably a good thing anyway since you're absolutely going to confuse the hell out of people if you use something
-     like `:before` or `:around` as a *dispatch value*.
-
-  2. A list that can be interpreted as part of a n-arity fn tail i.e. `([args ...] body ...)`
-
-     I know, theoretically it should be possible to do something dumb like this:
-
-     ```clj
-     (doseq [i    [0 1]
-             :let [toucan :toucan pigeon :pigeon]]
-       (m/defmethod my-multimethod :before ([toucan pigeon] i)
-         ([x]
-          ...)))
-     ```
-
-     but we are just UNFORTUNATELY going to have to throw up our hands and say we don't support it. The reason is in
-     the example above it's ambiguous whether this is a `:before` aux method with dispatch value `([toucan pigeon] i)`,
-     or a primary method with dispatch value `:before`. It's just impossible to tell what you meant. If you really want
-     to do something wacky like this, let-bind the dispatch value to a symbol or something.
-
-  Note that if you specify a custom `:dispatch-value-spec` it overrides this spec. Hopefully your spec is stricter than
-  this one is and it won't be a problem."
-  [allowed-aux-qualifiers]
-  (fn valid-dispatch-value? [x]
-    (and (not (contains? allowed-aux-qualifiers x))
-         (or (not (seq? x))
-             (not (s/valid? :clojure.core.specs.alpha/params+body x))))))
-
-(defmacro ^:no-doc defmulti*
-  "Impl for [[defmulti]] macro."
-  [name-symb & args]
-  (let [{:keys [docstring attr-map dispatch-fn options]} (s/conform ::defmulti-args (cons name-symb args))
-        options                                          (into {} (map (juxt :k :v)) options)
-        metadata                                         (merge {:tag methodical.impl.standard.StandardMultiFn}
-                                                                (when docstring {:doc docstring})
-                                                                attr-map)
-        name-symb                                        (vary-meta name-symb merge metadata)]
-    (emit-defmulti name-symb dispatch-fn options)))
+(defn ^:no-doc update-multimethod-metadata!
+  "Part of the implementation for [[defmulti]]. Don't call this directly."
+  [varr new-metadata]
+  (let [new-doc (u/docstring-with-describe-output-appended (:doc new-metadata) (var-get varr))]
+    (letfn [(merge-metadata [old-metadata]
+              (merge (select-keys old-metadata [:ns :name :file :line :column])
+                     new-metadata
+                     {:original-doc (:doc new-metadata)
+                      :doc          new-doc}))]
+      (alter-meta! varr merge-metadata)
+      ;; update the metadata on the multifn itself too.
+      (alter-var-root varr (fn [multifn]
+                             (vary-meta multifn merge-metadata)))))
+  varr)
 
 (defmacro defmulti
   "Creates a new Methodical multimethod named by a Var. Usage of this macro mimics usage of [[clojure.core/defmulti]],
@@ -241,26 +204,77 @@
                    [name-symb docstring? attr-map? & {:keys [dispatcher combo method-table cache]}])
    :style/indent :defn}
   [name-symb & args]
-  (let [varr         (ns-resolve *ns* name-symb)
-        old-val      (some->> varr deref (instance? StandardMultiFn))
-        old-hash     (when old-val
-                       (-> varr meta ::defmulti-hash))
-        current-hash (hash &form)]
+  (let [varr                                             (ns-resolve *ns* name-symb)
+        {:keys [docstring attr-map dispatch-fn options]} (s/conform ::defmulti-args (cons name-symb args))
+        options                                          (into {} (map (juxt :k :v)) options)
+        metadata                                         (merge {:tag methodical.impl.standard.StandardMultiFn}
+                                                                (when docstring {:doc docstring})
+                                                                attr-map)
+        old-val                                          (some->> varr deref (instance? StandardMultiFn))
+        old-hash                                         (when old-val
+                                                           (-> varr meta ::defmulti-hash))
+        ;; hash should not include any metadata... do not redefine a multimethod if only metadata changes
+        current-hash                                     (hash {:dispatch-fn dispatch-fn
+                                                                :options     options})
+        metadata                                         (assoc metadata ::defmulti-hash current-hash)
+        name-symb                                        (vary-meta name-symb merge metadata)]
     ;; hashes and the like are expanded out into the macro to make what's going on more obvious when you expand it
     `(let [skip-redef?# (and
                          (let [~'old-hash     ~old-hash
                                ~'current-hash ~current-hash]
                            (= ~'old-hash ~'current-hash))
                          (some-> (ns-resolve *ns* '~name-symb) deref u/multifn?))]
-       (when-not skip-redef?#
-         (defmulti* ~(vary-meta name-symb assoc ::defmulti-hash current-hash)
-           ~@args)))))
+       (if-not skip-redef?#
+         (redefine-multimethod ~name-symb ~dispatch-fn ~options)
+         (update-multimethod-metadata! (var ~name-symb) ~(merge (meta name-symb) metadata))))))
 
 (s/fdef defmulti
   :args ::defmulti-args
   :ret  any?)
 
 ;;;; [[defmethod]]
+
+(defn- default-dispatch-value-spec
+  "A dispatch value as parsed to [[defmethod]] (i.e., not-yet-evaluated) can be ANYTHING other than the following two
+  things:
+
+  1. A legal aux qualifier for the current method combination, e.g. `:after` or `:around`
+
+     It makes the parse for
+
+     ```clj
+     (m/defmethod mf :after \"str\" [_])
+     ```
+
+     ambiguous -- Is this an `:after` aux method with dispatch value `\"str\"`, or a primary method with dispatch value
+     `:after` and a docstring? Since there's no clear way to decide which is which, we're going to have to disallow this.
+     It's probably a good thing anyway since you're absolutely going to confuse the hell out of people if you use something
+     like `:before` or `:around` as a *dispatch value*.
+
+  2. A list that can be interpreted as part of a n-arity fn tail i.e. `([args ...] body ...)`
+
+     I know, theoretically it should be possible to do something dumb like this:
+
+     ```clj
+     (doseq [i    [0 1]
+             :let [toucan :toucan pigeon :pigeon]]
+       (m/defmethod my-multimethod :before ([toucan pigeon] i)
+         ([x]
+          ...)))
+     ```
+
+     but we are just UNFORTUNATELY going to have to throw up our hands and say we don't support it. The reason is in
+     the example above it's ambiguous whether this is a `:before` aux method with dispatch value `([toucan pigeon] i)`,
+     or a primary method with dispatch value `:before`. It's just impossible to tell what you meant. If you really want
+     to do something wacky like this, let-bind the dispatch value to a symbol or something.
+
+  Note that if you specify a custom `:dispatch-value-spec` it overrides this spec. Hopefully your spec is stricter than
+  this one is and it won't be a problem."
+  [allowed-aux-qualifiers]
+  (fn valid-dispatch-value? [x]
+    (and (not (contains? allowed-aux-qualifiers x))
+         (or (not (seq? x))
+             (not (s/valid? :clojure.core.specs.alpha/params+body x))))))
 
 (defn- dispatch-val-name
   "Generate a name based on a dispatch value. Used by [[method-fn-symbol]] below."

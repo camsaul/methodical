@@ -1,7 +1,9 @@
 (ns methodical.macros-test
   (:require
    [clojure.spec.alpha :as s]
+   [clojure.string :as str]
    [clojure.test :as t]
+   [methodical.core :as m]
    [methodical.impl :as impl]
    [methodical.interface :as i]
    [methodical.macros :as macros]
@@ -248,6 +250,11 @@
   (fn [x y]
     [(keyword x) (keyword y)]))
 
+(t/deftest attach-attribute-map-metadata-to-var-test
+  (t/testing "Metadata from attribute map should be attached to the var itself"
+    (t/is (= '([x y])
+             (:arglists (meta #'validate-args-spec-mf))))))
+
 (t/deftest validate-defmethod-dispatch-value-test
   (t/testing ":dispatch-value-spec metadata should be attached to var and to the multifn itself"
     (t/are [x] (= ::arg-validation-spec
@@ -273,17 +280,43 @@
       (macros/defmethod validate-args-spec-mf [:x :y :z] [x y])
       "failed: Extra input in: [0 2] at: [:args-for-method-type :primary :dispatch-value :x-y]")))
 
+(t/deftest defmulti-is-equivalent-test
+  (t/testing (str "A Methodical multifn defined via `defmulti` macros should be equivalent to one created using "
+                  "various `impl/`constructors.")
+    (let [impl (impl/standard-multifn-impl
+                (impl/thread-last-method-combination)
+                (impl/multi-default-dispatcher :type)
+                (impl/standard-method-table))
+
+          ^methodical.impl.standard.StandardMultiFn multifn
+          (-> (impl/multifn impl nil (impl/watching-cache
+                                      (impl/simple-cache)
+                                      [#'clojure.core/global-hierarchy]))
+              (i/add-primary-method :x (u/primary-method mf1 :x)))]
+      (t/testing "Sanity check"
+        (t/testing 'mf1
+          (t/is (= 1
+                   (count (m/primary-methods mf1)))))
+        (t/testing 'multifn
+          (t/is (= 1
+                   (count (m/primary-methods multifn))))))
+      (t/testing "impl"
+        (t/testing "combo"
+          (t/is (= (i/method-combination (.impl mf1))
+                   (i/method-combination (.impl multifn)))))
+        (t/testing "dispatcher"
+          (t/is (= (i/dispatcher (.impl mf1))
+                   (i/dispatcher (.impl multifn)))))
+        (t/testing "method-table"
+          (t/is (= (i/method-table (.impl mf1))
+                   (i/method-table (.impl multifn)))))
+        (t/is (= (.impl mf1)
+                 (.impl multifn))))
+      (t/testing "entire multifn"
+        (t/is (= mf1
+                 multifn))))))
+
 (t/deftest defmethod-primary-methods-test
-  (t/is (= mf1 (let [impl    (impl/standard-multifn-impl
-                              (impl/thread-last-method-combination)
-                              (impl/multi-default-dispatcher :type)
-                              (impl/standard-method-table))
-                     multifn (impl/multifn impl nil (impl/watching-cache
-                                                     (impl/simple-cache)
-                                                     [#'clojure.core/global-hierarchy]))]
-                 (i/add-primary-method multifn :x (u/primary-method mf1 :x))))
-        "A Methodical multifn defined via `defmulti` macros should be equivalent to one created using various `impl/`
-      constructors.")
   (t/is (= (mf1 {:type :x})
            {:type :x, :method :x})
         "We should be able to define new primary methods using `defmethod`"))
@@ -530,3 +563,110 @@
   (t/testing "Methods defined by defmethod should include the multifn they were defined for so we can use this info later"
     (t/is (= #'methodical.macros-test/mf1
              (:multifn (meta #_{:clj-kondo/ignore [:unresolved-symbol]} #'mf1-primary-method-x))))))
+
+(t/deftest capture-metadata-updates-test
+  (t/testing "Var/multimethod metadata should get updated when defmulti form changes (don't skip because form hasn't changed -- #129)\n"
+    (letfn [(num-primary-methods []
+              (count (m/primary-methods @(resolve 'methodical.macros-test/metadata-updates-mf))))]
+      (ns-unmap *ns* 'metadata-updates-mf)
+      (eval '(m/defmulti metadata-updates-mf {:arglists '([x])} keyword))
+      (t/is (= 0
+               (count (m/primary-methods @(resolve 'methodical.macros-test/metadata-updates-mf)))))
+      (eval '(m/defmethod metadata-updates-mf :default [_x] :x))
+      (t/is (= 1
+               (num-primary-methods)))
+      (t/testing "Sanity check"
+        (eval '(m/defmulti metadata-updates-mf {:arglists '([x])} keyword))
+        (t/is (= 1
+                 (num-primary-methods))))
+      (let [original-hash (::macros/defmulti-hash (meta (resolve 'methodical.macros-test/metadata-updates-mf)))
+            expected-doc  ["metadata-updates-mf is defined in [[methodical.macros-test]] (methodical/macros_test.clj:572)."
+                           ""
+                           "It caches methods using a [[methodical.impl.cache.watching.WatchingCache]]."
+                           ""
+                           "It uses the method combination [[methodical.impl.combo.threaded.ThreadingMethodCombination]]"
+                           "with the threading strategy `:thread-last`."
+                           ""
+                           "It uses the dispatcher [[methodical.impl.dispatcher.multi_default.MultiDefaultDispatcher]]"
+                           "with hierarchy `#'clojure.core/global-hierarchy`"
+                           "and prefs `{}`."
+                           ""
+                           "The default value is `:default`."
+                           ""
+                           "It uses the method table [[methodical.impl.method_table.standard.StandardMethodTable]]."
+                           ""
+                           "These primary methods are known:"
+                           ""
+                           "* `:default`, defined in [[methodical.macros-test]] (methodical/macros_test.clj:575) "]]
+        (t/is (integer? original-hash))
+        (letfn [(relevant-metadata [metadata]
+                  (let [metadata (select-keys metadata [:name :private :amazing? :doc ::macros/defmulti-hash])]
+                    (cond-> metadata
+                      (:doc metadata) (update :doc (fn [s]
+                                                     (-> s
+                                                         ;; depending on who is running the tests since these actually
+                                                         ;; only get defined while the test is running they might not
+                                                         ;; actually have a source path...
+                                                         (str/replace #"NO_SOURCE_PATH" "methodical/macros_test.clj")
+                                                         str/split-lines))))))
+                (var-meta []
+                  (relevant-metadata (meta (resolve 'methodical.macros-test/metadata-updates-mf))))
+                (multifn-meta []
+                  (relevant-metadata (meta @(resolve 'methodical.macros-test/metadata-updates-mf))))]
+          (t/testing "sanity check"
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (multifn-meta)))))
+          (t/testing "symbol metadata updated"
+            (eval '(m/defmulti ^:private metadata-updates-mf {:arglists '([x])} keyword))
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :private               true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :private               true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (multifn-meta))))
+            (t/is (= 1
+                     (num-primary-methods))))
+          (t/testing "attribute map updated"
+            (eval '(m/defmulti metadata-updates-mf {:arglists '([x]), :amazing? true} keyword))
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :amazing?              true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :amazing?              true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (multifn-meta))))
+            (t/is (= 1
+                     (num-primary-methods))))
+          (t/testing "docstring updated"
+            (eval '(m/defmulti metadata-updates-mf "Dox" {:arglists '([x])} keyword))
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   (into ["Dox" ""] expected-doc)}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   (into ["Dox" ""] expected-doc)}
+                       (multifn-meta))))
+            (t/is (= 1
+                     (num-primary-methods)))))))))
