@@ -61,7 +61,7 @@
 
 (defn describe-primary-methods
   "Helper for [[methodical.util.describe/describe]]ing the primary methods in a method table."
-  [dispatch-value->method]
+  ^String [dispatch-value->method]
   (when (seq dispatch-value->method)
     (format
      "\n\nThese primary methods are known:\n\n%s"
@@ -72,7 +72,7 @@
 
 (defn describe-aux-methods
   "Helper for [[methodical.util.describe/describe]]ing the aux methods in a method table."
-  [qualifier->dispatch-value->methods]
+  ^String [qualifier->dispatch-value->methods]
   (when (seq qualifier->dispatch-value->methods)
     (format
      "\n\nThese aux methods are known:\n\n%s"

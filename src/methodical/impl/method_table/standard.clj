@@ -97,7 +97,6 @@
 
   describe/Describable
   (describe [this]
-    (format "It uses the method table [[%s]].%s%s"
-            (.getCanonicalName (class this))
-            (method-table.common/describe-primary-methods primary)
-            (method-table.common/describe-aux-methods aux))))
+    (str (format "It uses the method table [[%s]]." (.getCanonicalName (class this)))
+         (method-table.common/describe-primary-methods primary)
+         (method-table.common/describe-aux-methods aux))))
