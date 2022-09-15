@@ -4,7 +4,8 @@
   (:refer-clojure :exclude [prefers prefer-method remove-all-methods])
   (:require [methodical.impl.standard :as impl.standard]
             [methodical.interface :as i]
-            [methodical.util.describe :as describe]))
+            [methodical.util.describe :as describe]
+            [methodical.core :as m]))
 
 (set! *warn-on-reflection* true)
 
@@ -224,6 +225,28 @@
                       dispatch-val-y))))
     (let [new-prefs (update prefs dispatch-val-x #(conj (set %) dispatch-val-y))]
       (i/with-prefers multifn new-prefs))))
+
+(defn is-default-effective-method?
+  "When `multifn` is invoked with args that have `dispatch-val`, will we end up using the default effective
+  method (assuming one exists)?"
+  [multifn dispatch-val]
+  ;; we need to make sure that a default method is present before calculating this stuff,
+  ;; otherwise [[i/effective-method]] and [[default-effective-method]] will both return `nil`, giving us a false
+  ;; positive here, even if there is an applicable non-default aux method. Also we need to make sure `{:dispatch-value
+  ;; nil}` doesn't get confused with `nil` because there is no matching default method.
+  (let [multifn (m/add-primary-method multifn (i/default-dispatch-value multifn) (constantly nil))]
+    (= (:dispatch-value (meta (i/effective-method multifn dispatch-val)))
+       (:dispatch-value (meta (default-effective-method multifn))))))
+
+(defn is-default-primary-method?
+  "When `multifn` is invoked with args that have `dispatch-val`, will we end up using the default primary method (assuming
+  one exists)?"
+  [multifn dispatch-val]
+  ;; We need to make sure `{:dispatch-value nil}` for the effective primary method doesn't get confused with `nil`
+  ;; if `(default-primary-method multifn)` doesn't return anything because there is no default method.
+  (let [multifn (m/add-primary-method multifn (i/default-dispatch-value multifn) (constantly nil))]
+    (= (:dispatch-value (meta (effective-primary-method multifn dispatch-val)))
+       (:dispatch-value (meta (default-primary-method multifn))))))
 
 
 ;;;; #### Low-level destructive operations

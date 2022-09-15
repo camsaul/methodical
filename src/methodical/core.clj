@@ -86,37 +86,39 @@
   default-multifn]
 
  [methodical.util
-  primary-method
-  matching-primary-methods
+  add-aux-method-with-unique-key
   applicable-primary-method
-  effective-primary-method
   aux-methods
-  matching-aux-methods
-  default-primary-method
   default-aux-methods
   default-effective-method
+  default-primary-method
   dispatch-fn
   dispatch-value
   effective-dispatch-value
-  remove-all-primary-methods
+  effective-primary-method
+  is-default-effective-method?
+  is-default-primary-method?
+  matching-aux-methods
+  matching-primary-methods
+  prefer-method
+  primary-method
   remove-all-aux-methods
   remove-all-aux-methods-for-dispatch-val
-  add-aux-method-with-unique-key
-  remove-aux-method-with-unique-key
   remove-all-methods
-  prefer-method
+  remove-all-primary-methods
+  remove-aux-method-with-unique-key
   ;; destructive ops
-  add-primary-method!
-  remove-primary-method!
-  remove-all-primary-methods!
   add-aux-method!
-  remove-aux-method!
+  add-aux-method-with-unique-key!
+  add-primary-method!
+  prefer-method!
   remove-all-aux-methods!
   remove-all-aux-methods-for-dispatch-val!
-  add-aux-method-with-unique-key!
-  remove-aux-method-with-unique-key!
   remove-all-methods!
-  prefer-method!
+  remove-all-primary-methods!
+  remove-aux-method!
+  remove-aux-method-with-unique-key!
+  remove-primary-method!
   with-prefers!]
 
  [methodical.util.describe
