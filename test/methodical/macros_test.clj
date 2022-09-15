@@ -640,34 +640,33 @@
                        (multifn-meta))))
             (t/is (= 1
                      (num-primary-methods))))
-          ;; (t/testing "attribute map updated"
-          ;;   (eval '(m/defmulti metadata-updates-mf {:arglists '([x]), :amazing? true} keyword))
-          ;;   (t/testing "var metadata"
-          ;;     (t/is (= {:name                  'metadata-updates-mf
-          ;;               :amazing?              true
-          ;;               ::macros/defmulti-hash original-hash
-          ;;               :doc                   expected-doc}
-          ;;              (var-meta))))
-          ;;   (t/testing "multifn metadata"
-          ;;     (t/is (= {:name                  'metadata-updates-mf
-          ;;               :amazing?              true
-          ;;               ::macros/defmulti-hash original-hash
-          ;;               :doc                   expected-doc}
-          ;;              (multifn-meta))))
-          ;;   (t/is (= 1
-          ;;            (num-primary-methods))))
-          ;; (t/testing "docstring updated"
-          ;;   (eval '(m/defmulti metadata-updates-mf "Dox" {:arglists '([x])} keyword))
-          ;;   (t/testing "var metadata"
-          ;;     (t/is (= {:name                  'metadata-updates-mf
-          ;;               ::macros/defmulti-hash original-hash
-          ;;               :doc                   (into ["Dox" ""] expected-doc)}
-          ;;              (var-meta))))
-          ;;   (t/testing "multifn metadata"
-          ;;     (t/is (= {:name                  'metadata-updates-mf
-          ;;               ::macros/defmulti-hash original-hash
-          ;;               :doc                   (into ["Dox" ""] expected-doc)}
-          ;;              (multifn-meta))))
-          ;;   (t/is (= 1
-          ;;            (num-primary-methods))))
-          )))))
+          (t/testing "attribute map updated"
+            (eval '(m/defmulti metadata-updates-mf {:arglists '([x]), :amazing? true} keyword))
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :amazing?              true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        :amazing?              true
+                        ::macros/defmulti-hash original-hash
+                        :doc                   expected-doc}
+                       (multifn-meta))))
+            (t/is (= 1
+                     (num-primary-methods))))
+          (t/testing "docstring updated"
+            (eval '(m/defmulti metadata-updates-mf "Dox" {:arglists '([x])} keyword))
+            (t/testing "var metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   (into ["Dox" ""] expected-doc)}
+                       (var-meta))))
+            (t/testing "multifn metadata"
+              (t/is (= {:name                  'metadata-updates-mf
+                        ::macros/defmulti-hash original-hash
+                        :doc                   (into ["Dox" ""] expected-doc)}
+                       (multifn-meta))))
+            (t/is (= 1
+                     (num-primary-methods)))))))))
