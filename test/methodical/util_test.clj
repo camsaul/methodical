@@ -430,3 +430,37 @@
                    (re-pattern (format "Preference conflict in multimethod: cannot prefer %s over its descendant :toucan."
                                        k))
                    (u/prefer-method mf2 k :toucan)))))))))
+
+(t/deftest is-default-effective-method?-test
+  (doseq [with-default-method? [true false]]
+    (t/testing (format "with-default-method? => %s" with-default-method?)
+      (let [mf (cond-> (-> (m/default-multifn keyword)
+                           (m/add-primary-method :bird (fn [& _args] :bird))
+                           (m/add-primary-method nil (fn [& _args] nil))
+                           (m/add-aux-method :around :default (fn [& _args] :whatever))
+                           (m/add-aux-method :around :octopus (fn [& _args] :octopus)))
+                 with-default-method? (m/add-primary-method :default (fn [& _args] :default)))]
+        (t/are [dispatch-value expected] (= expected
+                                            (m/is-default-effective-method? mf dispatch-value))
+          :default true
+          :octopus false
+          :rhino   true
+          :bird    false
+          nil      false)))))
+
+(t/deftest is-default-primary-method?-test
+  (doseq [with-default-method? [true false]]
+    (t/testing (format "with-default-method? => %s" with-default-method?)
+      (let [mf (cond-> (-> (m/default-multifn keyword)
+                           (m/add-primary-method :bird (fn [& _args] :bird))
+                           (m/add-primary-method nil (fn [& _args] nil))
+                           (m/add-aux-method :around :default (fn [& _args] :whatever))
+                           (m/add-aux-method :around :octopus (fn [& _args] :octopus)))
+                 with-default-method? (m/add-primary-method :default (fn [& _args] :default)))]
+        (t/are [dispatch-value expected] (= expected
+                                            (m/is-default-primary-method? mf dispatch-value))
+          :default true
+          :octopus true
+          :rhino   true
+          :bird    false
+          nil      false)))))
