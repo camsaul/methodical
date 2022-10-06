@@ -455,6 +455,27 @@
         (t/testing "Original multifn should have been returned"
           (t/is (identical? m m2)))))))
 
+(t/deftest remove-all-preferences-test
+  (let [m (-> (m/default-multifn :k)
+              (u/prefer-method :x :y)
+              (u/prefer-method :x :z))]
+    (t/is (= {:x #{:y :z}}
+             (i/prefers m)))
+    (let [m2 (u/remove-all-preferences m)]
+      (t/is (= {}
+               (i/prefers m2)))
+      (t/testing "Original multifn should be unaffected"
+        (t/is (= {:x #{:y :z}}
+                 (i/prefers m))))))
+  (t/testing "Should no-op if there are no preferences"
+    (let [m (m/default-multifn :k)]
+      (t/is (= {}
+               (i/prefers m)))
+      (let [m2 (u/remove-all-preferences m)]
+        (t/is (= {}
+                 (i/prefers m2)))
+        (t/is (identical? m m2))))))
+
 (t/deftest is-default-effective-method?-test
   (doseq [with-default-method? [true false]]
     (t/testing (format "with-default-method? => %s" with-default-method?)

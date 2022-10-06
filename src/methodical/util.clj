@@ -235,8 +235,8 @@
       updated-preferences)))
 
 (defn unprefer-method
-  "Remove the preference of `dispatch-val-x` over `dispatch-val-y` in `multifn` if one exists. Opposite
-  of [[prefer-method]]."
+  "Remove the preference of `dispatch-val-x` over `dispatch-val-y` in `multifn` if one exists. If no such preference
+  exists, this returns `multifn` as-is. Opposite of [[prefer-method]]."
   [multifn dispatch-val-x dispatch-val-y]
   {:pre [(some? multifn)]}
   (let [preferences         (i/prefers multifn)
@@ -245,6 +245,14 @@
       ;; return multifn as is if nothing has changed.
       multifn
       (i/with-prefers multifn updated-preferences))))
+
+(defn remove-all-preferences
+  "Remove all preferences for all dispatch values in `multifn`."
+  [multifn]
+  {:pre [(some? multifn)]}
+  (if (empty? (i/prefers multifn))
+    multifn
+    (i/with-prefers multifn {})))
 
 (defn is-default-effective-method?
   "When `multifn` is invoked with args that have `dispatch-val`, will we end up using the default effective
