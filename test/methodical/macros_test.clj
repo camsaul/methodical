@@ -198,12 +198,6 @@
      :dispatch-value ({:a 1} [2 3])
      :fn-tail        [([x] {:x x, :y y})
                       ([x y] {:x x, :y y})]}
-
-    ;; despite looking a little ambiguous, this is actually invalid because neither `:before` nor `([x] x)` are allowed
-    ;; as dispatch values; see [[methodical.macros/default-dispatch-value-spec]] for reasons why.
-    [:before ([x] x) ([x y] x)]
-    "([x] x) - failed: dispatch-value-spec in: [1] at: [:args-for-method-type :aux :dispatch-value]\n"
-
     ;; here's another ambiguous one. Is this an `:after` aux method with dispatch value `"str"`, or a primary
     ;; method with dispatch value `:after` and a docstring?
     ;;
@@ -213,7 +207,15 @@
     {:method-type    :aux
      :qualifier      :after
      :dispatch-value "str"
-     :fn-tail        [[_x]]}))
+     :fn-tail        [[_x]]})
+
+  (t/testing "Errors"
+    ;; despite looking a little ambiguous, this is actually invalid because neither `:before` nor `([x] x)` are allowed
+    ;; as dispatch values; see [[methodical.macros/default-dispatch-value-spec]] for reasons why.
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           (re-quote "([x] x) - failed: dispatch-value-spec in: [1] at: [:args-for-method-type :aux :dispatch-value]\n")
+           (#'macros/parse-defmethod-args mf1 '[:before ([x] x) ([x y] x)])))))
 
 (macros/defmethod mf1 :x
   [m]
