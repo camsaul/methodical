@@ -90,11 +90,9 @@
   (default-dispatch-value [dispatcher]
     "Default dispatch value to use if no other dispatch value matches.")
 
-  ;; TODO -- consider whether this should be renamed `preferences` -- seems a little clearer
   (prefers [dispatcher]
     "Return a map of preferred dispatch value -> set of other dispatch values.")
 
-  ;; TODO -- consider renaming this to `with-preferences`
   (^methodical.interface.Dispatcher ^{:style/indent :defn} with-prefers [dispatcher new-prefs]
     "Return a copy of `dispatcher` with its preferences map replaced with `new-prefs`.")
 
