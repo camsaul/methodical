@@ -455,6 +455,22 @@
         (t/testing "Original multifn should have been returned"
           (t/is (identical? m m2)))))))
 
+(t/deftest unprefer-method!-test
+  (def unprefer-method-mf nil)
+  (m/defmulti unprefer-method-mf :k)
+  (m/prefer-method! #'unprefer-method-mf :x :y)
+  (m/prefer-method! #'unprefer-method-mf :x :z)
+  (t/is (= {:x #{:y :z}}
+           (i/prefers unprefer-method-mf)))
+  (t/testing "No-op if no such preference exists"
+    (u/unprefer-method! #'unprefer-method-mf :y :x)
+    (t/is (= {:x #{:y :z}}
+             (i/prefers unprefer-method-mf))))
+  (t/testing "Destructively remove a preference"
+    (u/unprefer-method! #'unprefer-method-mf :x :y)
+    (t/is (= {:x #{:z}}
+             (i/prefers unprefer-method-mf)))))
+
 (t/deftest remove-all-preferences-test
   (let [m (-> (m/default-multifn :k)
               (u/prefer-method :x :y)
@@ -475,6 +491,18 @@
         (t/is (= {}
                  (i/prefers m2)))
         (t/is (identical? m m2))))))
+
+(t/deftest remove-all-preferences!-test
+  (def remove-all-preferences-mf nil)
+  (m/defmulti remove-all-preferences-mf :k)
+  (m/prefer-method! #'remove-all-preferences-mf :x :y)
+  (m/prefer-method! #'remove-all-preferences-mf :x :z)
+  (t/is (= {:x #{:y :z}}
+           (i/prefers remove-all-preferences-mf)))
+  (t/testing "Destructively remove all preferences"
+    (u/remove-all-preferences! #'remove-all-preferences-mf)
+    (t/is (= {}
+             (i/prefers remove-all-preferences-mf)))))
 
 (t/deftest is-default-effective-method?-test
   (doseq [with-default-method? [true false]]

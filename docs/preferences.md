@@ -23,6 +23,9 @@ You can also non-destructively replace the entire preferences table with a new o
 to make sure any preferences you add are valid (e.g., no conflicts between preferences), but
 [[methodical.core/with-prefers]] will not.
 
+[[methodical.core/with-prefers!]] is a destructive version of [[methodical.core/with-prefers]] for use on multimethod
+vars.
+
 ## Inspecting Preferences
 
 [[methodical.core/prefers]] works just like `clojure.core/prefers` and can be used to get the preferences map for a

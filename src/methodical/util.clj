@@ -235,8 +235,10 @@
       updated-preferences)))
 
 (defn unprefer-method
-  "Remove the preference of `dispatch-val-x` over `dispatch-val-y` in `multifn` if one exists. If no such preference
-  exists, this returns `multifn` as-is. Opposite of [[prefer-method]]."
+  "Return a copy of `multifn` with any preferences of `dispatch-val-x` over `dispatch-val-y` removed. If no such
+  preference exists, this returns `multifn` as-is. Opposite of [[prefer-method]].
+
+  To destructively remove a dispatch value preference, use [[unprefer-method!]]."
   [multifn dispatch-val-x dispatch-val-y]
   {:pre [(some? multifn)]}
   (let [preferences         (i/prefers multifn)
@@ -247,7 +249,9 @@
       (i/with-prefers multifn updated-preferences))))
 
 (defn remove-all-preferences
-  "Remove all preferences for all dispatch values in `multifn`."
+  "Return a copy of `multifn` with all of its preferences for all dispatch values removed.
+
+  To destructively remove all preferences, use [[remove-all-preferences!]]."
   [multifn]
   {:pre [(some? multifn)]}
   (if (empty? (i/prefers multifn))
@@ -376,3 +380,13 @@
   table."
   [multifn-var dispatch-val-x dispatch-val-y]
   (alter-var-root+ multifn-var prefer-method dispatch-val-x dispatch-val-y))
+
+(defn unprefer-method!
+  "Destructive version of [[unprefer-method]]. Operates on a var defining a Methodical multifn."
+  [multifn-var dispatch-val-x dispatch-val-y]
+  (alter-var-root+ multifn-var unprefer-method dispatch-val-x dispatch-val-y))
+
+(defn remove-all-preferences!
+  "Destructive version of [[remove-all-preferences]]. Operates on a var defining a Methodical multifn."
+  [multifn-var]
+  (alter-var-root+ multifn-var remove-all-preferences))
