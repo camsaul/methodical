@@ -582,7 +582,7 @@
         (t/is (= 1
                  (num-primary-methods))))
       (let [original-hash (::macros/defmulti-hash (meta (resolve 'methodical.macros-test/metadata-updates-mf)))
-            expected-doc  ["metadata-updates-mf is defined in [[methodical.macros-test]] (methodical/macros_test.clj:572)."
+            expected-doc  ["metadata-updates-mf is defined in [[methodical.macros-test]] (methodical/macros_test.clj:574)."
                            ""
                            "It caches methods using a [[methodical.impl.cache.watching.WatchingCache]]."
                            ""
@@ -599,7 +599,7 @@
                            ""
                            "These primary methods are known:"
                            ""
-                           "* `:default`, defined in [[methodical.macros-test]] (methodical/macros_test.clj:575) "]]
+                           "* `:default`, defined in [[methodical.macros-test]] (methodical/macros_test.clj:577) "]]
         (t/is (integer? original-hash))
         (letfn [(relevant-metadata [metadata]
                   (let [metadata (select-keys metadata [:name :private :amazing? :doc ::macros/defmulti-hash])]
