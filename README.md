@@ -534,11 +534,7 @@ match *all* of the specified `:defmethod-arities`, and all of its arities must b
 ;; => error: {:arities {:disallowed #{2}}}
 
 (m/defmethod mf :x [x y] x y)
-;; => error: {:arities {:required #{1}}}
-
-
-(m/defmethod mf :x [x y] x)
-;; => error: {:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}
+;; => error: {:required #{1}, :disallowed #{2}}
 ```
 
 `:defmethod-arities` must be a set of either integers or `[:> n]` forms to represent arities with `&` rest

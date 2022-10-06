@@ -358,7 +358,7 @@
   (let [spec      (defmethod-args-spec multifn)
         conformed (s/conform spec args)]
     (if (s/invalid? conformed)
-      (s/explain-str spec args)
+      (throw (ex-info (s/explain-str spec args) (s/explain-data spec args)))
       (let [{[method-type type-args] :args-for-method-type} conformed]
         (-> (merge conformed {:method-type method-type} type-args)
             (dissoc :args-for-method-type))))))

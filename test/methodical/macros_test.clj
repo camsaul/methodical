@@ -198,12 +198,6 @@
      :dispatch-value ({:a 1} [2 3])
      :fn-tail        [([x] {:x x, :y y})
                       ([x y] {:x x, :y y})]}
-
-    ;; despite looking a little ambiguous, this is actually invalid because neither `:before` nor `([x] x)` are allowed
-    ;; as dispatch values; see [[methodical.macros/default-dispatch-value-spec]] for reasons why.
-    [:before ([x] x) ([x y] x)]
-    "([x] x) - failed: dispatch-value-spec in: [1] at: [:args-for-method-type :aux :dispatch-value]\n"
-
     ;; here's another ambiguous one. Is this an `:after` aux method with dispatch value `"str"`, or a primary
     ;; method with dispatch value `:after` and a docstring?
     ;;
@@ -213,7 +207,15 @@
     {:method-type    :aux
      :qualifier      :after
      :dispatch-value "str"
-     :fn-tail        [[_x]]}))
+     :fn-tail        [[_x]]})
+
+  (t/testing "Errors"
+    ;; despite looking a little ambiguous, this is actually invalid because neither `:before` nor `([x] x)` are allowed
+    ;; as dispatch values; see [[methodical.macros/default-dispatch-value-spec]] for reasons why.
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           (re-quote "([x] x) - failed: dispatch-value-spec in: [1] at: [:args-for-method-type :aux :dispatch-value]\n")
+           (#'macros/parse-defmethod-args mf1 '[:before ([x] x) ([x y] x)])))))
 
 (macros/defmethod mf1 :x
   [m]
@@ -580,7 +582,7 @@
         (t/is (= 1
                  (num-primary-methods))))
       (let [original-hash (::macros/defmulti-hash (meta (resolve 'methodical.macros-test/metadata-updates-mf)))
-            expected-doc  ["metadata-updates-mf is defined in [[methodical.macros-test]] (methodical/macros_test.clj:572)."
+            expected-doc  ["metadata-updates-mf is defined in [[methodical.macros-test]] (methodical/macros_test.clj:574)."
                            ""
                            "It caches methods using a [[methodical.impl.cache.watching.WatchingCache]]."
                            ""
@@ -597,7 +599,7 @@
                            ""
                            "These primary methods are known:"
                            ""
-                           "* `:default`, defined in [[methodical.macros-test]] (methodical/macros_test.clj:575) "]]
+                           "* `:default`, defined in [[methodical.macros-test]] (methodical/macros_test.clj:577) "]]
         (t/is (integer? original-hash))
         (letfn [(relevant-metadata [metadata]
                   (let [metadata (select-keys metadata [:name :private :amazing? :doc ::macros/defmulti-hash])]
