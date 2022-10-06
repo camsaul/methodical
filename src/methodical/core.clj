@@ -107,6 +107,7 @@
   remove-all-methods
   remove-all-primary-methods
   remove-aux-method-with-unique-key
+  unprefer-method
   ;; destructive ops
   add-aux-method!
   add-aux-method-with-unique-key!

@@ -431,6 +431,30 @@
                                        k))
                    (u/prefer-method mf2 k :toucan)))))))))
 
+(t/deftest unprefer-method-test
+  (let [m (-> (m/default-multifn :k)
+              (u/prefer-method :x :y)
+              (u/prefer-method :x :z))]
+    (t/is (= {:x #{:y :z}}
+             (i/prefers m)))
+    (t/testing "Should be able to remove a preference from a multifn"
+      (let [m2 (u/unprefer-method m :x :y)]
+        (t/is (= {:x #{:z}}
+                 (i/prefers m2)))
+        (t/testing "Original multimethod should be unaffected"
+          (t/is (= {:x #{:y :z}}
+                   (i/prefers m))))
+        (t/testing "If this was the last preference for x, remove the entry for x"
+          (let [m3 (u/unprefer-method m2 :x :z)]
+            (t/is (= {}
+                     (i/prefers m3)))))))
+    (t/testing "Should no-op if preference does not exist"
+      (let [m2 (u/unprefer-method m :y :x)]
+        (t/is (= {:x #{:y :z}}
+                 (i/prefers m2)))
+        (t/testing "Original multifn should have been returned"
+          (t/is (identical? m m2)))))))
+
 (t/deftest is-default-effective-method?-test
   (doseq [with-default-method? [true false]]
     (t/testing (format "with-default-method? => %s" with-default-method?)
