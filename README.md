@@ -541,13 +541,16 @@ match *all* of the specified `:defmethod-arities`, and all of its arities must b
 arguments, e.g. `[:>= 3]` to mean an arity of three *or-more* arguments:
 
 ```clj
-;; methods must both a 1-arity and a 3+-arity
+;; methods must have both a 1-arity and a 3+-arity
 (m/defmulti ^:private mf
   {:arglists '([x] [x y z & more]), :defmethod-arities #{1 [:>= 3]}}
   keyword)
 
 (m/defmethod mf :x ([x] x) ([x y z & more] x))
 ;; => ok
+
+(m/defmethod mf :x [x y] x)
+;; => error: {:arities {:required #{1 [:>= 3]}, :disallowed #{2}}}
 ```
 
 When rest-argument arities are used, Methodical is smart enough to allow them when appropriate even if they do not
