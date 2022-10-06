@@ -105,8 +105,10 @@
   remove-all-aux-methods
   remove-all-aux-methods-for-dispatch-val
   remove-all-methods
+  remove-all-preferences
   remove-all-primary-methods
   remove-aux-method-with-unique-key
+  unprefer-method
   ;; destructive ops
   add-aux-method!
   add-aux-method-with-unique-key!
@@ -115,10 +117,12 @@
   remove-all-aux-methods!
   remove-all-aux-methods-for-dispatch-val!
   remove-all-methods!
+  remove-all-preferences!
   remove-all-primary-methods!
   remove-aux-method!
   remove-aux-method-with-unique-key!
   remove-primary-method!
+  unprefer-method!
   with-prefers!]
 
  [methodical.util.describe
