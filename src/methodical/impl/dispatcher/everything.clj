@@ -4,7 +4,6 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
-   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Dispatcher)))
@@ -71,7 +70,7 @@
      :hierarchy hierarchy-var
      :prefs     prefs})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (format "It uses the dispatcher [[%s]]\nwith hierarchy `%s`\nand prefs `%s`."
             (.getCanonicalName (class this))

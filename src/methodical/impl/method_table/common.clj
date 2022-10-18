@@ -60,7 +60,7 @@
                                                  (str/split-lines (describe-method f))))))
 
 (defn describe-primary-methods
-  "Helper for [[methodical.util.describe/describe]]ing the primary methods in a method table."
+  "Helper for [[methodical.interface/describe]]ing the primary methods in a method table."
   ^String [dispatch-value->method]
   (when (seq dispatch-value->method)
     (format
@@ -71,7 +71,7 @@
         (describe-method dispatch-value f))))))
 
 (defn describe-aux-methods
-  "Helper for [[methodical.util.describe/describe]]ing the aux methods in a method table."
+  "Helper for [[methodical.interface/describe]]ing the aux methods in a method table."
   ^String [qualifier->dispatch-value->methods]
   (when (seq qualifier->dispatch-value->methods)
     (format

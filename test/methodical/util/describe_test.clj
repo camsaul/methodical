@@ -3,7 +3,7 @@
    [clojure.string :as str]
    [clojure.test :as t]
    [methodical.core :as m]
-   [methodical.util.describe :as describe]))
+   [methodical.interface :as i]))
 
 (defonce ^:private dispatch-first
   (fn [x _y]
@@ -70,7 +70,7 @@
 
 (t/deftest describe-test
   (t/is (= expected-description
-           (str/split-lines (describe/describe mf)))))
+           (str/split-lines (i/describe mf)))))
 
 (t/deftest update-docstrings-test
   (t/is (= (concat

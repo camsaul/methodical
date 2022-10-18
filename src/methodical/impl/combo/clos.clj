@@ -6,8 +6,7 @@
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.combo.common :as combo.common]
-   [methodical.interface]
-   [methodical.util.describe :as describe]
+   [methodical.interface :as i]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -87,6 +86,6 @@
   (datafy [this]
     {:class (class this)})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (format "It uses the method combination [[%s]]." (.getCanonicalName (class this)))))

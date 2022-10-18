@@ -3,41 +3,62 @@
   offers no facilities to deduplicate identical methods for the same dispatch value. This behaves similarly to the
   caching mechanism in vanilla Clojure."
   (:require
-   [clojure.core.protocols :as clojure.protocols]
-   [methodical.interface]
-   [methodical.util.describe :as describe]
-   [pretty.core :as pretty])
+    [clojure.core.protocols :as clojure.protocols]
+    [methodical.interface :as i]
+    [pretty.core :as pretty])
   (:import
-   (methodical.interface Cache)))
+    (methodical.interface
+      Cache)))
+
 
 (set! *warn-on-reflection* true)
 
 (comment methodical.interface/keep-me)
 
-(deftype SimpleCache [atomm]
+
+(deftype SimpleCache
+  [atomm]
+
   pretty/PrettyPrintable
-  (pretty [_]
+
+  (pretty
+    [_]
     '(simple-cache))
 
+
   Cache
-  (cached-method [_ dispatch-value]
+
+  (cached-method
+    [_ dispatch-value]
     (get @atomm dispatch-value))
 
-  (cache-method! [_ dispatch-value method]
+
+  (cache-method!
+    [_ dispatch-value method]
     (swap! atomm assoc dispatch-value method))
 
-  (clear-cache! [this]
+
+  (clear-cache!
+    [this]
     (reset! atomm {})
     this)
 
-  (empty-copy [_]
+
+  (empty-copy
+    [_]
     (SimpleCache. (atom {})))
 
+
   clojure.protocols/Datafiable
-  (datafy [this]
+
+  (datafy
+    [this]
     {:class (class this)
      :cache @atomm})
 
-  describe/Describable
-  (describe [this]
+
+  i/Describable
+
+  (describe
+    [this]
     (format "It caches methods using a [[%s]]." (.getCanonicalName (class this)))))

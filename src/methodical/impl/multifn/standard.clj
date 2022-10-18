@@ -1,16 +1,21 @@
 (ns methodical.impl.multifn.standard
   "Standard Methodical MultiFn impl."
   (:require
-   [clojure.core.protocols :as clojure.protocols]
-   [clojure.datafy :as datafy]
-   [methodical.impl.dispatcher.common :as dispatcher.common]
-   [methodical.interface :as i]
-   [methodical.util.describe :as describe]
-   [pretty.core :as pretty])
+    [clojure.core.protocols :as clojure.protocols]
+    [clojure.datafy :as datafy]
+    [methodical.impl.dispatcher.common :as dispatcher.common]
+    [methodical.interface :as i]
+    [pretty.core :as pretty])
   (:import
-   (methodical.interface Dispatcher MethodCombination MethodTable MultiFnImpl)))
+    (methodical.interface
+      Dispatcher
+      MethodCombination
+      MethodTable
+      MultiFnImpl)))
+
 
 (set! *warn-on-reflection* true)
+
 
 ;; "composite dispatch value" below just means a dispatch value consisting of multiple parts e.g. `[:x :y]` as opposed
 ;; to a single value like `:x`.
@@ -19,9 +24,10 @@
   "Sort dispatch values in order from most-specific-overall to least-specific-overall."
   [dispatcher dispatch-values]
   (sort-by
-   identity
-   (dispatcher.common/domination-comparator (partial i/dominates? dispatcher))
-   dispatch-values))
+    identity
+    (dispatcher.common/domination-comparator (partial i/dominates? dispatcher))
+    dispatch-values))
+
 
 (defn non-composite-effective-dispatch-value
   "Operates only on non-composite dispatch values. Determine the effective (most-specific) dispatch value that will be
@@ -54,6 +60,7 @@
       most-specific-dispatch-value
       actual-dispatch-value)))
 
+
 (defn composite-effective-dispatch-value
   "Combine multiple composite dispatch values into a single composite dispatch value that has the overall most-specific
   arg for each position, e.g.
@@ -81,19 +88,21 @@
                                                            (filter sequential? method-dispatch-values))))
             (range (count actual-dispatch-value))))))
 
+
 (defn effective-dispatch-value
   "Given matching `primary-methods` and `aux-methods` for the `actual-dispatch-value`, determine the effective dispatch
   value."
   [dispatcher actual-dispatch-value primary-methods aux-methods]
   (let [dispatch-values (transduce
-                         (comp cat
-                               (map meta)
-                               (filter #(contains? % :dispatch-value))
-                               (map :dispatch-value))
-                         conj
-                         []
-                         (cons primary-methods (vals aux-methods)))]
+                          (comp cat
+                                (map meta)
+                                (filter #(contains? % :dispatch-value))
+                                (map :dispatch-value))
+                          conj
+                          []
+                          (cons primary-methods (vals aux-methods)))]
     (composite-effective-dispatch-value dispatcher actual-dispatch-value dispatch-values)))
+
 
 (defn standard-effective-method
   "Build an effective method using the 'standard' technique, taking the dispatch-value-method pairs in the
@@ -104,55 +113,82 @@
     (some-> (i/combine-methods method-combination primary-methods aux-methods)
             (with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
 
-(deftype StandardMultiFnImpl [^MethodCombination combo
-                              ^Dispatcher dispatcher
-                              ^MethodTable method-table]
+
+(deftype StandardMultiFnImpl
+  [^MethodCombination combo
+   ^Dispatcher dispatcher
+   ^MethodTable method-table]
+
   pretty/PrettyPrintable
-  (pretty [_this]
+
+  (pretty
+    [_this]
     (list 'standard-multifn-impl combo dispatcher method-table))
 
+
   Object
-  (equals [_ another]
+
+  (equals
+    [_ another]
     (and (instance? StandardMultiFnImpl another)
          (let [^StandardMultiFnImpl another another]
            (and (= combo (.combo another))
                 (= dispatcher (.dispatcher another))
                 (= method-table (.method-table another))))))
 
+
   MultiFnImpl
-  (method-combination [_this]
+
+  (method-combination
+    [_this]
     combo)
 
-  (dispatcher [_this]
+
+  (dispatcher
+    [_this]
     dispatcher)
 
-  (with-dispatcher [this new-dispatcher]
+
+  (with-dispatcher
+    [this new-dispatcher]
     (if (= dispatcher new-dispatcher)
       this
       (StandardMultiFnImpl. combo new-dispatcher method-table)))
 
-  (method-table [_this]
+
+  (method-table
+    [_this]
     method-table)
 
-  (with-method-table [this new-method-table]
+
+  (with-method-table
+    [this new-method-table]
     (if (= method-table new-method-table)
       this
       (StandardMultiFnImpl. combo dispatcher new-method-table)))
 
-  (effective-method [_this dispatch-value]
+
+  (effective-method
+    [_this dispatch-value]
     (standard-effective-method combo dispatcher method-table dispatch-value))
 
+
   clojure.protocols/Datafiable
-  (datafy [this]
+
+  (datafy
+    [this]
     {:class        (class this)
      :combo        (datafy/datafy combo)
      :dispatcher   (datafy/datafy dispatcher)
      :method-table (datafy/datafy method-table)})
 
-  describe/Describable
-  (describe [_this]
-    (str (describe/describe combo)
+
+  i/Describable
+
+  (describe
+    [_this]
+    (str (i/describe combo)
          \newline \newline
-         (describe/describe dispatcher)
+         (i/describe dispatcher)
          \newline \newline
-         (describe/describe method-table))))
+         (i/describe method-table))))

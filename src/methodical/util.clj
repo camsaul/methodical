@@ -4,8 +4,7 @@
   (:refer-clojure :exclude [prefers prefer-method remove-all-methods])
   (:require
    [methodical.impl.standard :as impl.standard]
-   [methodical.interface :as i]
-   [methodical.util.describe :as describe]))
+   [methodical.interface :as i]))
 
 (set! *warn-on-reflection* true)
 
@@ -284,7 +283,7 @@
 ;;;; #### Low-level destructive operations
 
 (defn ^:no-doc docstring-with-describe-output-appended
-  "Build a docstring by taking the original user-supplied `:doc` and the output of [[describe/describe]]."
+  "Build a docstring by taking the original user-supplied `:doc` and the output of [[i/describe]]."
   (^String [varr]
    (let [original-doc  ((some-fn :original-doc :doc) (meta varr))
          updated-value (var-get varr)]
@@ -294,7 +293,7 @@
    (str
     (when (seq original-doc)
       (str original-doc \newline \newline))
-    (describe/describe updated-value))))
+    (i/describe updated-value))))
 
 (defn alter-var-root+
   "Like [[clojure.core/alter-var-root]], but handles vars that are aliases of other vars, e.g. ones that have been

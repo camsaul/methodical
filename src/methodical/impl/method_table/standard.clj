@@ -2,8 +2,7 @@
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.method-table.common :as method-table.common]
-   [methodical.interface]
-   [methodical.util.describe :as describe]
+   [methodical.interface :as i]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodTable)))
@@ -95,7 +94,7 @@
      :primary (method-table.common/datafy-primary-methods primary)
      :aux     (method-table.common/datafy-aux-methods aux)})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (str (format "It uses the method table [[%s]]." (.getCanonicalName (class this)))
          (method-table.common/describe-primary-methods primary)

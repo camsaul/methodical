@@ -15,7 +15,6 @@
    [clojure.core.protocols :as clojure.protocols]
    [clojure.datafy :as datafy]
    [methodical.interface :as i]
-   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (java.lang.ref WeakReference)
@@ -55,7 +54,7 @@
      :cache (datafy/datafy cache)
      :refs  refs})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (format "It caches methods using a [[%s]]." (.getCanonicalName (class this)))))
 

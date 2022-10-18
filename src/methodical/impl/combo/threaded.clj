@@ -3,8 +3,7 @@
   (:require
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.combo.common :as combo.common]
-   [methodical.interface]
-   [methodical.util.describe :as describe]
+   [methodical.interface :as i]
    [pretty.core :as pretty])
   (:import
    (methodical.interface MethodCombination)))
@@ -105,7 +104,7 @@
     {:class          (class this)
      :threading-type threading-type})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (format "It uses the method combination [[%s]]\nwith the threading strategy `%s`."
             (.getCanonicalName (class this))

@@ -3,7 +3,6 @@
    [clojure.core.protocols :as clojure.protocols]
    [clojure.datafy :as datafy]
    [methodical.interface :as i]
-   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (clojure.lang Named)
@@ -243,7 +242,7 @@
                       {:class (class this)})
       mta))
 
-  describe/Describable
+  i/Describable
   (describe [_this]
     (let [{mf-name :name, mf-ns :ns, :keys [file line]} mta]
       (str (pr-str mf-name)
@@ -257,7 +256,7 @@
              (when (seq message)
                (format " is defined in %s." message)))
            \newline \newline
-           (describe/describe impl)))))
+           (i/describe impl)))))
 
 (defn multifn?
   "True if `x` is an instance of `StandardMultiFn`."

@@ -7,7 +7,6 @@
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.impl.dispatcher.standard :as dispatcher.standard]
    [methodical.interface :as i]
-   [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
    (methodical.interface Dispatcher)))
@@ -198,7 +197,7 @@
      :hierarchy     hierarchy-var
      :prefs         prefs})
 
-  describe/Describable
+  i/Describable
   (describe [this]
     (format "It uses the dispatcher [[%s]]\nwith hierarchy `%s`\nand prefs `%s`.\n\nThe default value is `%s`."
             (.getCanonicalName (class this))

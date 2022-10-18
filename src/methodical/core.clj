@@ -6,7 +6,6 @@
             methodical.interface
             methodical.macros
             methodical.util
-            methodical.util.describe
             methodical.util.dispatch
             methodical.util.trace
             [potemkin :as p]))
@@ -16,7 +15,6 @@
   methodical.impl/keep-me
   methodical.interface/keep-me
   methodical.macros/keep-me
-  methodical.util.describe/keep-me
   methodical.util.dispatch/keep-me
   methodical.util.trace/keep-me
   methodical.util/keep-me)
@@ -48,7 +46,8 @@
   with-dispatcher
   method-table
   with-method-table
-  effective-method]
+  effective-method
+  describe]
 
  [methodical.impl
   ;; method combinations
@@ -125,8 +124,6 @@
   unprefer-method!
   with-prefers!]
 
- [methodical.util.describe
-  describe]
 
  [methodical.util.dispatch
   dispatch-on-first-arg
