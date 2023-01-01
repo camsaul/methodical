@@ -19,10 +19,12 @@
 (defn- handle-effective-method-exception [^Exception e mta]
   (if-let [dispatch-val (::unmatched-dispatch-value (ex-data e))]
     (throw (UnsupportedOperationException.
-             (format "No matching%s method for dispatch value %s" (if-let [nm (:name mta)]
-                                                                    (str " " nm)
-                                                                    "")
-                                                                  (pr-str dispatch-val))))
+            (format "No matching%s method for dispatch value %s" (if-let [nm (if (:ns mta)
+                                                                               (str (:ns mta) "/" (:name mta))
+                                                                               (:name mta))]
+                                                                   (str " " nm)
+                                                                   "")
+                    (pr-str dispatch-val))))
     ;; this wasn't an :unmatched-dispatch-value situation; just rethrow it
     (throw e)))
 
