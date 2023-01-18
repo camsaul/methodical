@@ -2,6 +2,7 @@
   "Methodical versions of vanilla Clojure [[defmulti]] and [[defmethod]] macros."
   (:refer-clojure :exclude [defmulti defmethod])
   (:require
+   [clojure.core.specs.alpha]
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
    [methodical.impl :as impl]
@@ -12,6 +13,8 @@
    (methodical.impl.standard StandardMultiFn)))
 
 (set! *warn-on-reflection* true)
+
+(comment clojure.core.specs.alpha/keep-me) ; for the specs below
 
 (s/def ::fn-tail
   (s/alt :arity-1 :clojure.core.specs.alpha/params+body
