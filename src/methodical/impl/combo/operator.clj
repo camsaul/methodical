@@ -206,7 +206,7 @@
 
   describe/Describable
   (describe [this]
-    (format "It uses the method combination [[%s]]\nwith the operator `%s`."
+    (format "It uses the method combination `%s`\nwith the operator `%s`."
             (.getCanonicalName (class this))
             (pr-str operator-name))))
 

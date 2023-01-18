@@ -89,4 +89,4 @@
 
   describe/Describable
   (describe [this]
-    (format "It uses the method combination [[%s]]." (.getCanonicalName (class this)))))
+    (format "It uses the method combination `%s`." (.getCanonicalName (class this)))))
