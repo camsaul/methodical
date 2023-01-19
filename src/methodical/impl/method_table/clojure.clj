@@ -56,6 +56,6 @@
 
   describe/Describable
   (describe [this]
-    (format "It uses the method table [[%s]]. These primary methods are known:\n\n%s"
+    (format "It uses the method table `%s`. These primary methods are known:\n\n%s"
             (.getCanonicalName (class this))
             (method-table.common/describe-primary-methods m))))

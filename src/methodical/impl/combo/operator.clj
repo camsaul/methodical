@@ -43,6 +43,7 @@
   (:refer-clojure :exclude [methods])
   (:require
    [clojure.core.protocols :as clojure.protocols]
+   [clojure.core.specs.alpha]
    [clojure.spec.alpha :as s]
    [methodical.impl.combo.common :as combo.common]
    [methodical.interface]
@@ -53,7 +54,8 @@
 
 (set! *warn-on-reflection* true)
 
-(comment methodical.interface/keep-me)
+(comment clojure.core.specs.alpha/keep-me ; for the specs
+         methodical.interface/keep-me)
 
 (defmulti operator
   "Define a new operator that can be used as part of an `OperatorMethodCombination`. See examples below for more
@@ -204,7 +206,7 @@
 
   describe/Describable
   (describe [this]
-    (format "It uses the method combination [[%s]]\nwith the operator `%s`."
+    (format "It uses the method combination `%s`\nwith the operator `%s`."
             (.getCanonicalName (class this))
             (pr-str operator-name))))
 
