@@ -59,7 +59,7 @@
     dispatch value, existing implementations of `MethodTable` are currently only able to remove exact matches -- for
     functions, this usually means identical objects.
 
-    In the future, I hope to fix this by storing unique indentifiers in the metadata of methods in the map."))
+    In the future, I hope to fix this by storing unique identifiers in the metadata of methods in the map."))
 
 (defprotocol Dispatcher
   "A *dispatcher* decides which dispatch value should be used for a given set of arguments, which primary and
