@@ -148,6 +148,10 @@ the last argument of the next function:
 ;; -> [:default :object :string]
 ```
 
+An example usecase for `:after` is chess. When looking up legal moves, you
+implement how each piece can move, then in `:after :default` limit it to only
+spaces on the board.
+
 #### `:around` methods
 
 `:around` methods are called around all other methods and give you the power to choose how or when to invoke those

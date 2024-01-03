@@ -374,12 +374,12 @@
     (u/add-aux-method-with-unique-key! #'unique-key-multifn :before ::key #(conj % :before) "Florida key")
     (t/is (= 1
              (count (u/aux-methods unique-key-multifn :before ::key)))
-          "should be able to desctructively add an aux method with a unique key")
+          "should be able to destructively add an aux method with a unique key")
 
     (u/remove-aux-method-with-unique-key! #'unique-key-multifn :before ::key "Florida key")
     (t/is (= 0
              (count (u/aux-methods unique-key-multifn :before ::key)))
-          "should be able to desctructively remove an aux method with a unique key")))
+          "should be able to destructively remove an aux method with a unique key")))
 
 (t/deftest remove-all-methods-test
   (let [f (-> (m/default-multifn class)
