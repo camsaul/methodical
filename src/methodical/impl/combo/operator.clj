@@ -167,7 +167,7 @@
 
 (defoperator :+ [methods invoke]
   (loop [sum 0, [method & more] methods]
-    (let [sum (long (+ (invoke method) sum))]
+    (let [sum (long (+ (long (invoke method)) sum))]
       (if (seq more)
         (recur sum more)
         sum))))
