@@ -8,7 +8,7 @@
 
 (def scm-url    "git@github.com:camsaul/methodical.git")
 (def github-url "https://github.com/camsaul/methodical")
-(def lib        methodical/methodical)
+(def lib        'methodical/methodical)
 
 (def major-minor-version "1.0")
 
