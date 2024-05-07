@@ -10,16 +10,18 @@ jobs:
     runs-on: ubuntu-20.04
     environment: Deployment
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.0
+      with:
+        fetch-depth: 0
     - name: Prepare JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: 17
         distribution: 'temurin'
     - name: Setup Clojure
-      uses: DeLaGuardo/setup-clojure@9.5
+      uses: DeLaGuardo/setup-clojure@12.1
       with:
-        cli: 1.11.1.1155
+        cli: 1.11.1.1413
     - name: Restore cache
       uses: actions/cache@v3
       with:
