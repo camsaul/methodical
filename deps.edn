@@ -61,5 +61,6 @@
 
   ;; clojure -T:build
   :build
-  {:deps       {io.github.seancorfield/build-clj {:git/tag "v0.8.3", :git/sha "7ac1f8d"}}
+  {:deps       {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}
+                slipset/deps-deploy           {:mvn/version "0.2.2"}}
    :ns-default build}}}
