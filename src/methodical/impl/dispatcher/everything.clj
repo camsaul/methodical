@@ -32,12 +32,15 @@
         (= prefs (.prefs another))))))
 
   Dispatcher
-  (dispatch-value [_]                   nil)
-  (dispatch-value [_ _a]                nil)
-  (dispatch-value [_ _a _b]             nil)
-  (dispatch-value [_ _a _b _c]          nil)
-  (dispatch-value [_ _a _b _c _d]       nil)
-  (dispatch-value [_ _a _b _c _d _more] nil)
+  (dispatch-value [_]                            nil)
+  (dispatch-value [_ _a]                         nil)
+  (dispatch-value [_ _a _b]                      nil)
+  (dispatch-value [_ _a _b _c]                   nil)
+  (dispatch-value [_ _a _b _c _d]                nil)
+  (dispatch-value [_ _a _b _c _d _e]             nil)
+  (dispatch-value [_ _a _b _c _d _e _f]          nil)
+  (dispatch-value [_ _a _b _c _d _e _f _g]       nil)
+  (dispatch-value [_ _a _b _c _d _e _f _g _more] nil)
 
   (matching-primary-methods [_ method-table _]
     (let [primary-methods (i/primary-methods method-table)

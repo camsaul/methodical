@@ -155,12 +155,15 @@
         (= prefs         (.prefs another))))))
 
   Dispatcher
-  (dispatch-value [_]              (dispatch-fn))
-  (dispatch-value [_ a]            (dispatch-fn a))
-  (dispatch-value [_ a b]          (dispatch-fn a b))
-  (dispatch-value [_ a b c]        (dispatch-fn a b c))
-  (dispatch-value [_ a b c d]      (dispatch-fn a b c d))
-  (dispatch-value [_ a b c d more] (apply dispatch-fn a b c d more))
+  (dispatch-value [_]                    (dispatch-fn))
+  (dispatch-value [_ a]                  (dispatch-fn a))
+  (dispatch-value [_ a b]                (dispatch-fn a b))
+  (dispatch-value [_ a b c]              (dispatch-fn a b c))
+  (dispatch-value [_ a b c d]            (dispatch-fn a b c d))
+  (dispatch-value [_ a b c d e]          (dispatch-fn a b c d e))
+  (dispatch-value [_ a b c d e f]        (dispatch-fn a b c d e f))
+  (dispatch-value [_ a b c d e f g]      (dispatch-fn a b c d e f g))
+  (dispatch-value [_ a b c d e f g more] (apply dispatch-fn a b c d e f g more))
 
   (matching-primary-methods [_ method-table dispatch-value]
     (matching-primary-methods

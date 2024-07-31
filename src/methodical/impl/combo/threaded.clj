@@ -38,12 +38,15 @@
            optimized-one-arg-fn (apply comp (reverse methods))]
        (combo.common/apply-around-methods
         (-> (fn
-              ([]               (optimized-one-arg-fn))
-              ([a]              (optimized-one-arg-fn a))
-              ([a b]            (threaded-fn a b))
-              ([a b c]          (threaded-fn a b c))
-              ([a b c d]        (threaded-fn a b c d))
-              ([a b c d & more] (apply threaded-fn a b c d more)))
+              ([]                     (optimized-one-arg-fn))
+              ([a]                    (optimized-one-arg-fn a))
+              ([a b]                  (threaded-fn a b))
+              ([a b c]                (threaded-fn a b c))
+              ([a b c d]              (threaded-fn a b c d))
+              ([a b c d e]            (threaded-fn a b c d e))
+              ([a b c d e f]          (threaded-fn a b c d e f))
+              ([a b c d e f g]        (threaded-fn a b c d e f g))
+              ([a b c d e f g & more] (apply threaded-fn a b c d e f g more)))
             (vary-meta assoc :methodical/combined-method? true))
         around)))))
 
@@ -59,21 +62,27 @@
 (defmethod threading-invoker :thread-first
   [_]
   (fn
-    ([a b]            [a (fn [method a*] (method a* b))])
-    ([a b c]          [a (fn [method a*] (method a* b c))])
-    ([a b c d]        [a (fn [method a*] (method a* b c d))])
-    ([a b c d & more] [a (fn [method a*] (apply method a* b c d more))])))
+    ([a b]                  [a (fn [method a*] (method a* b))])
+    ([a b c]                [a (fn [method a*] (method a* b c))])
+    ([a b c d]              [a (fn [method a*] (method a* b c d))])
+    ([a b c d e]            [a (fn [method a*] (method a* b c d e))])
+    ([a b c d e f]          [a (fn [method a*] (method a* b c d e f))])
+    ([a b c d e f g]        [a (fn [method a*] (method a* b c d e f g))])
+    ([a b c d e f g & more] [a (fn [method a*] (apply method a* b c d e f g more))])))
 
 (defmethod threading-invoker :thread-last
   [_]
   (fn
-    ([a b]     [b (fn [method b*] (method a b*))])
-    ([a b c]   [c (fn [method c*] (method a b c*))])
-    ([a b c d] [d (fn [method d*] (method a b c d*))])
+    ([a b]           [b (fn [method b*] (method a b*))])
+    ([a b c]         [c (fn [method c*] (method a b c*))])
+    ([a b c d]       [d (fn [method d*] (method a b c d*))])
+    ([a b c d e]     [e (fn [method e*] (method a b c d e*))])
+    ([a b c d e f]   [f (fn [method f*] (method a b c d e f*))])
+    ([a b c d e f g] [g (fn [method g*] (method a b c d e f g*))])
 
-    ([a b c d & more]
+    ([a b c d e f g & more]
      (let [last-val (last more)
-           butlast* (vec (concat [a b c d] (butlast more)))]
+           butlast* (vec (concat [a b c d e f g] (butlast more)))]
        [last-val
         (fn [method last*]
           (apply method (conj butlast* last*)))]))))
