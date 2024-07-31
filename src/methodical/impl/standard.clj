@@ -60,9 +60,20 @@
   ([^MultiFnImpl impl mta a b c d]
    (invoke-multi impl mta a b c d))
 
-  ([^MultiFnImpl impl mta a b c d & more]
+  ([^MultiFnImpl impl mta a b c d e]
+   #_(println "invoke-multifn 5-arity")
+   (invoke-multi impl mta a b c d e))
+
+  ([^MultiFnImpl impl mta a b c d e f]
+   (invoke-multi impl mta a b c d e f))
+
+  ([^MultiFnImpl impl mta a b c d e f g]
+   (invoke-multi impl mta a b c d e f g))
+
+  ([^MultiFnImpl impl mta a b c d e f g & more]
    ;; TODO: possible to use the macro somehow in this case?
-   (try (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more)) a b c d more)
+   (try (apply (effective-method impl (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d e f g more))
+               a b c d e f g more)
         (catch Exception e
           (handle-effective-method-exception e mta)))))
 
@@ -109,8 +120,14 @@
     (.dispatch-value ^Dispatcher (.dispatcher impl) a b c))
   (dispatch-value [_ a b c d]
     (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d))
-  (dispatch-value [_ a b c d more]
-    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d more))
+  (dispatch-value [_ a b c d e]
+    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d e))
+  (dispatch-value [_ a b c d e f]
+    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d e f))
+  (dispatch-value [_ a b c d e f g]
+    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d e f g))
+  (dispatch-value [_ a b c d e f g more]
+    (.dispatch-value ^Dispatcher (.dispatcher impl) a b c d e f g more))
 
   (matching-primary-methods [_ method-table dispatch-value]
     (i/matching-primary-methods (.dispatcher impl) method-table dispatch-value))
