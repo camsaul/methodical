@@ -6,6 +6,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
+   [methodical.util :as u]
    [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
@@ -71,10 +72,10 @@
                          (get (i/primary-methods method-table) default-value))]
     (concat
      (for [[dispatch-value method] pairs]
-       (vary-meta method assoc :dispatch-value dispatch-value))
+       (u/fn-vary-meta method assoc :dispatch-value dispatch-value))
      (when (and default-method
                 (not (contains? (set (map first pairs)) default-value)))
-       [(vary-meta default-method assoc :dispatch-value default-value)]))))
+       [(u/fn-vary-meta default-method assoc :dispatch-value default-value)]))))
 
 (defn- matching-aux-pairs-excluding-default
   "Return pairs of `[dispatch-value method]` of applicable aux methods, *excluding* default aux methods. Pairs are
@@ -106,7 +107,7 @@
                  :let        [pairs (matching-aux-pairs qualifier opts)]
                  :when       (seq pairs)]
              [qualifier (for [[dispatch-value method] pairs]
-                          (vary-meta method assoc :dispatch-value dispatch-value))])))
+                          (u/fn-vary-meta method assoc :dispatch-value dispatch-value))])))
 
 (deftype StandardDispatcher [dispatch-fn hierarchy-var default-value prefs]
   pretty/PrettyPrintable

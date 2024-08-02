@@ -92,19 +92,19 @@
 
 (defn- trace-primary-method [primary-method]
   (-> (trace-method primary-method)
-      (with-meta (meta primary-method))))
+      (u/fn-with-meta (meta primary-method))))
 
 (defn- trace-primary-methods [primary-methods]
   (map trace-primary-method primary-methods))
 
 (defn- trace-aux-method [aux-method]
   (-> (trace-method aux-method)
-      (with-meta (meta aux-method))))
+      (u/fn-with-meta (meta aux-method))))
 
 (defn- trace-aux-methods [qualifier->ms]
   (into {} (for [[qualifier aux-methods] qualifier->ms]
              [qualifier (for [aux-method aux-methods]
-                          (trace-aux-method (vary-meta aux-method assoc :qualifier qualifier)))])))
+                          (trace-aux-method (u/fn-vary-meta aux-method assoc :qualifier qualifier)))])))
 
 (defn trace*
   "Function version of [[trace]] macro. The only difference is this doesn't capture the form of `multifn` passed to
@@ -114,7 +114,7 @@
         primary-methods (trace-primary-methods (u/matching-primary-methods multifn dispatch-value))
         aux-methods     (trace-aux-methods (u/matching-aux-methods multifn dispatch-value))
         combined        (-> (i/combine-methods multifn primary-methods aux-methods)
-                            (with-meta (meta multifn))
+                            (u/fn-with-meta (meta multifn))
                             trace-method)]
     (apply combined args)))
 

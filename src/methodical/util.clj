@@ -14,6 +14,55 @@
   [x]
   (impl.standard/multifn? x))
 
+(declare unwrap-fn-with-meta)
+
+(defmacro generate-FnWithMeta
+  "Generate FnWithMeta deftype declaration."
+  []
+  (let [make-args (fn [arity]
+                    (mapv #(symbol (str "a" (inc %)))
+                          (range 0 arity)))]
+    `(deftype ~'FnWithMeta [~(with-meta 'fn {:tag 'clojure.lang.IFn}) ~'mta]
+       ~'Object
+       (~'equals [~'_ ~'o]
+        (= ~'fn (unwrap-fn-with-meta ~'o)))
+
+       clojure.lang.IObj
+       (~'meta [~'_] ~'mta)
+       (~'withMeta [~'_ ~'newMta] (~'FnWithMeta. ~'fn ~'newMta))
+
+       clojure.lang.Fn
+       clojure.lang.IFn
+       ~@(for [arity (range 0 21)]
+           (let [args (make-args arity)]
+             (list 'invoke (vec (cons '_ args))
+                   (list* '.invoke 'fn args))))
+       (~'invoke ~(vec (cons '_ (conj (make-args 20) 'rest)))
+        (~'.invoke ~'fn ~(conj (make-args 20) 'rest)))
+
+       (~'applyTo [~'_ ~'arglist]
+        (clojure.lang.AFn/applyToHelper ~'fn ~'arglist)))))
+
+(generate-FnWithMeta)
+
+(defn unwrap-fn-with-meta
+  "If the provided argument is a FnWithMeta object, extract the function it wraps, otherwise return the argument."
+  [fun]
+  (if (instance? FnWithMeta fun)
+    (.fn ^FnWithMeta fun)
+    fun))
+
+(defn fn-with-meta
+  "Construct a new FnWithMeta from the provided arguments. Unwrap `fun` if it an FnWithMeta too."
+  [fun mta]
+  (->FnWithMeta (unwrap-fn-with-meta fun) mta))
+
+(defn fn-vary-meta
+  "Construct a new FnWithMeta with the same underlying function (possibly unwrapped) but with the meta that is the result
+  of `(apply f (meta obj) args)`."
+  [fun f & args]
+  (fn-with-meta (unwrap-fn-with-meta fun) (apply f (meta fun) args)))
+
 (defn primary-method
   "Get the primary method *explicitly specified* for `dispatch-value`. This function does not return methods that would
   otherwise still be applicable (e.g., methods for ancestor dispatch values) -- just the methods explicitly defined
@@ -51,7 +100,7 @@
   [multifn dispatch-val]
   (let [[most-specific-primary-method :as primary-methods] (matching-primary-methods multifn dispatch-val)]
     (some-> (i/combine-methods multifn primary-methods nil)
-            (with-meta (meta most-specific-primary-method)))))
+            (fn-with-meta (meta most-specific-primary-method)))))
 
 (defn aux-methods
   "Get all auxiliary methods *explicitly specified* for `dispatch-value`. This function does not include methods that
@@ -186,7 +235,7 @@
   {:pre [(some? multifn)]}
   (-> multifn
       (remove-aux-method-with-unique-key qualifier dispatch-val unique-key)
-      (i/add-aux-method qualifier dispatch-val (vary-meta f assoc :methodical/unique-key unique-key))))
+      (i/add-aux-method qualifier dispatch-val (fn-vary-meta f assoc :methodical/unique-key unique-key))))
 
 (defn remove-all-methods
   "Remove all primary and auxiliary methods, including default implementations."

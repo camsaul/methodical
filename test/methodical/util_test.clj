@@ -5,6 +5,7 @@
    [methodical.core :as m]
    [methodical.impl :as impl]
    [methodical.interface :as i]
+   [methodical.test-utils :as tu]
    [methodical.util :as u]))
 
 (t/deftest multifn?-test
@@ -29,7 +30,7 @@
     (t/testing "primary-method"
       (t/testing "primary-method should return primary methods with exactly the same dispatch value."
         (t/is (= 'm1
-                 (u/primary-method f CharSequence))))
+                 (tu/unwrap-fns-with-meta (u/primary-method f CharSequence)))))
       (t/testing "`primary-method` should not return default or parent primary methods -- just the exact match."
         (t/is (= nil
                  (u/primary-method f String))))
@@ -41,7 +42,7 @@
   (let [f (test-multifn)]
     (t/testing "applicable-primary-method should give you the primary method that will be used for a dispatch value."
       (t/is (= 'm1
-               (u/applicable-primary-method f String)))
+               (tu/unwrap-fns-with-meta (u/applicable-primary-method f String))))
       (t/testing "Should include dispatch value metadata"
         (t/is (= {:dispatch-value CharSequence}
                  (meta (u/applicable-primary-method f String))))
@@ -120,7 +121,7 @@
                    (m/add-aux-method :before :default 'm4)
                    (m/add-aux-method :before :default 'm5))]
         (t/is (= {:before ['m4 'm5]}
-                 (u/default-aux-methods f')))))
+                 (tu/unwrap-fns-with-meta (u/default-aux-methods f'))))))
 
     (t/testing "default-effective-method"
       (t/is (= [:default]
@@ -299,7 +300,7 @@
     (t/testing "remove-all-aux-methods-for-dispatch-val"
       (t/is (= {:before {Object ['m2]}
                 :after  {Object ['m2 'm4]}}
-               (m/aux-methods (u/remove-all-aux-methods-for-dispatch-val f String)))))
+               (tu/unwrap-fns-with-meta (m/aux-methods (u/remove-all-aux-methods-for-dispatch-val f String))))))
     ;; TODO
 
     (t/testing "remove-all-aux-methods!"
@@ -316,7 +317,7 @@
                 :after  {String ['m2 'm3]
                          Object ['m2 'm4]}
                 :around {String ['m1]}}
-               (m/aux-methods add-aux-method-multifn))))
+               (tu/unwrap-fns-with-meta (m/aux-methods add-aux-method-multifn)))))
 
     (t/testing "remove-aux-method!"
       (def ^:private remove-aux-method-multifn f)
@@ -325,13 +326,13 @@
                          Object ['m2]}
                 :after  {String ['m3]
                          Object ['m2 'm4]}}
-               (m/aux-methods remove-aux-method-multifn)))
+               (tu/unwrap-fns-with-meta (m/aux-methods remove-aux-method-multifn))))
 
       (u/remove-aux-method! #'remove-aux-method-multifn :before String 'm1)
       (t/is (= {:before {Object ['m2]}
                 :after  {String ['m3]
                          Object ['m2 'm4]}}
-               (m/aux-methods remove-aux-method-multifn))
+               (tu/unwrap-fns-with-meta (m/aux-methods remove-aux-method-multifn)))
             "Removing the last method for the dispatch value should remove that dispatch value entirely."))
 
     (t/testing "remove-all-aux-methods-for-dispatch-val!"
@@ -339,13 +340,13 @@
       (u/remove-all-aux-methods-for-dispatch-val! #'remove-all-aux-methods-for-dispatch-val-multifn String)
       (t/is (= {:before {Object ['m2]}
                 :after  {Object ['m2 'm4]}}
-               (m/aux-methods remove-all-aux-methods-for-dispatch-val-multifn))))
+               (tu/unwrap-fns-with-meta (m/aux-methods remove-all-aux-methods-for-dispatch-val-multifn)))))
 
     (t/testing "matching-aux-methods"
       (t/is (= {:before '[m1 m2]
                 :after  '[m2 m3 m2 m4]}
-               (u/matching-aux-methods f String)
-               (u/matching-aux-methods f f String))))))
+               (tu/unwrap-fns-with-meta (u/matching-aux-methods f String))
+               (tu/unwrap-fns-with-meta (u/matching-aux-methods f f String)))))))
 
 (t/deftest aux-methods-unique-key-test
   (t/testing "non-destructive operations")

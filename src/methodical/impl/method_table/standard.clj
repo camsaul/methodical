@@ -3,6 +3,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.method-table.common :as method-table.common]
    [methodical.interface]
+   [methodical.util :as u]
    [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
@@ -49,7 +50,7 @@
     aux)
 
   (add-primary-method [this dispatch-val method]
-    (let [new-primary (assoc primary dispatch-val (vary-meta method assoc :dispatch-value dispatch-val))]
+    (let [new-primary (assoc primary dispatch-val (u/fn-vary-meta method assoc :dispatch-value dispatch-val))]
       (if (= primary new-primary)
         this
         (StandardMethodTable. new-primary aux))))
@@ -67,7 +68,7 @@
                                (if (contains? (set existing-methods) method)
                                  existing-methods
                                  (conj (vec existing-methods)
-                                       (vary-meta method assoc :dispatch-value dispatch-value)))))]
+                                       (u/fn-vary-meta method assoc :dispatch-value dispatch-value)))))]
       (if (= aux new-aux)
         this
         (StandardMethodTable. primary new-aux))))
@@ -75,7 +76,9 @@
   (remove-aux-method [this qualifier dispatch-value method]
     (let [xforms  [(fn [aux]
                      (update-in aux [qualifier dispatch-value] (fn [defined-methods]
-                                                                 (remove #(= % method) defined-methods))))
+                                                                 (remove #(or (= % method)
+                                                                              (= (u/unwrap-fn-with-meta %) method))
+                                                                         defined-methods))))
                    (fn [aux]
                      (cond-> aux
                        (empty? (get-in aux [qualifier dispatch-value]))

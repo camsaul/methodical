@@ -4,6 +4,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.combo.common :as combo.common]
    [methodical.interface]
+   [methodical.util :as u]
    [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
@@ -47,7 +48,7 @@
               ([a b c d e f]          (threaded-fn a b c d e f))
               ([a b c d e f g]        (threaded-fn a b c d e f g))
               ([a b c d e f g & more] (apply threaded-fn a b c d e f g more)))
-            (vary-meta assoc :methodical/combined-method? true))
+            (u/fn-vary-meta assoc :methodical/combined-method? true))
         around)))))
 
 (defmulti threading-invoker

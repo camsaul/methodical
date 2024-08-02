@@ -294,7 +294,7 @@
           (-> (impl/multifn impl nil (impl/watching-cache
                                       (impl/simple-cache)
                                       [#'clojure.core/global-hierarchy]))
-              (i/add-primary-method :x (u/primary-method mf1 :x)))]
+              (i/add-primary-method :x (u/unwrap-fn-with-meta (u/primary-method mf1 :x))))]
       (t/testing "Sanity check"
         (t/testing 'mf1
           (t/is (= 1

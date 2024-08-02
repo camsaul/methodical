@@ -3,7 +3,8 @@
    [clojure.test :as t]
    [methodical.core :as m]
    [methodical.impl :as impl]
-   [methodical.interface :as i])
+   [methodical.interface :as i]
+   [methodical.test-utils :as tu])
   (:import
    (methodical.interface MethodTable)))
 
@@ -32,10 +33,10 @@
     (t/testing "matching-primary-methods should return all matches in order of specificity."
       (let [method-table (method-table {:child 'child, :parent 'parent, :grandparent 'grandparent} nil)]
         (t/is (= '[child parent grandparent]
-                 (i/matching-primary-methods dispatcher method-table :child)))
+                 (tu/unwrap-fns-with-meta (i/matching-primary-methods dispatcher method-table :child))))
 
         (t/is (= '[parent grandparent]
-                 (i/matching-primary-methods dispatcher method-table :parent)))))
+                 (tu/unwrap-fns-with-meta (i/matching-primary-methods dispatcher method-table :parent))))))
 
     (t/testing "default primary methods"
       (let [method-table (method-table {:child       'child
@@ -44,14 +45,14 @@
                                         :default     'default} nil)]
         (t/testing "default methods should be included if they exist"
           (t/is (= '[parent grandparent default]
-                   (i/matching-primary-methods dispatcher method-table :parent)))
+                   (tu/unwrap-fns-with-meta (i/matching-primary-methods dispatcher method-table :parent))))
           (t/testing "should return ^:dispatch-value metadata"
             (t/is (= [{:dispatch-value :parent} {:dispatch-value :grandparent} {:dispatch-value :default}]
                      (map meta (i/matching-primary-methods dispatcher method-table :parent))))))
 
         (t/testing "If there are otherwise no matches, default should be returned (but nothing else)"
           (t/is (= '[default]
-                   (i/matching-primary-methods dispatcher method-table :cousin)))
+                   (tu/unwrap-fns-with-meta (i/matching-primary-methods dispatcher method-table :cousin))))
           (t/testing "should return ^:dispatch-value metadata"
             (t/is (= [{:dispatch-value :default}]
                      (map meta (i/matching-primary-methods dispatcher method-table :cousin))))))
@@ -61,7 +62,7 @@
                                                  :hierarchy #'basic-hierarchy
                                                  :default-value :grandparent)]
             (t/is (= '[parent grandparent]
-                     (i/matching-primary-methods dispatcher-with-custom-default method-table :parent)))
+                     (tu/unwrap-fns-with-meta (i/matching-primary-methods dispatcher-with-custom-default method-table :parent))))
             (t/testing "should return ^:dispatch-value metadata"
               (t/is (= [{:dispatch-value :parent} {:dispatch-value :grandparent}]
                        (map meta (i/matching-primary-methods
@@ -82,7 +83,7 @@
         (let [dispatcher (impl/standard-dispatcher keyword
                                                    :hierarchy #'basic-hierarchy)]
           (t/is (= {:before '[default]}
-                   (i/matching-aux-methods dispatcher method-table :cousin)))
+                   (tu/unwrap-fns-with-meta (i/matching-aux-methods dispatcher method-table :cousin))))
           (t/testing "should return ^:dispatch-value metadata"
             (t/is (= {:before [{:dispatch-value :default}]}
                      (aux-methods-metadata (i/matching-aux-methods dispatcher method-table :cousin)))))))
@@ -92,7 +93,7 @@
                                                    :hierarchy #'basic-hierarchy
                                                    :default-value :grandparent)]
           (t/is (= {:before '[parent grandparent]}
-                   (i/matching-aux-methods dispatcher method-table :parent)))
+                   (tu/unwrap-fns-with-meta (i/matching-aux-methods dispatcher method-table :parent))))
           (t/testing "should return ^:dispatch-value metadata"
             (t/is (= {:before [{:dispatch-value :parent} {:dispatch-value :grandparent}]}
                      (aux-methods-metadata (i/matching-aux-methods dispatcher method-table :parent))))))))))
@@ -130,10 +131,10 @@
         (catch Exception e
           (t/is (= {:method-1 {:ns             (the-ns 'methodical.impl.dispatcher.standard-test)
                                :file           "methodical/impl/dispatcher/standard_test.clj"
-                               :line           106
+                               :line           107
                                :dispatch-value ::parrot}
                     :method-2 {:ns             (the-ns 'methodical.impl.dispatcher.standard-test)
                                :file           "methodical/impl/dispatcher/standard_test.clj"
-                               :line           110
+                               :line           111
                                :dispatch-value ::friend}}
                    (ex-data e))))))))

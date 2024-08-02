@@ -4,6 +4,7 @@
    [clojure.core.protocols :as clojure.protocols]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
+   [methodical.util :as u]
    [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
@@ -46,7 +47,7 @@
     (let [primary-methods (i/primary-methods method-table)
           comparatorr     (dispatcher.common/domination-comparator (deref hierarchy-var) prefs)]
       (for [[dispatch-value method] (sort-by first comparatorr primary-methods)]
-        (vary-meta method assoc :dispatch-value dispatch-value))))
+        (u/fn-vary-meta method assoc :dispatch-value dispatch-value))))
 
   (matching-aux-methods [_ method-table _]
     (let [aux-methods (i/aux-methods method-table)
@@ -54,7 +55,7 @@
       (into {} (for [[qualifier dispatch-value->methods] aux-methods]
                  [qualifier (for [[dispatch-value methods] (sort-by first comparatorr dispatch-value->methods)
                                   method                   methods]
-                              (vary-meta method assoc :dispatch-value dispatch-value))]))))
+                              (u/fn-vary-meta method assoc :dispatch-value dispatch-value))]))))
 
   (default-dispatch-value [_]
     nil)

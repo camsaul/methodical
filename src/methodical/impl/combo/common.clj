@@ -1,5 +1,6 @@
 (ns methodical.impl.combo.common
-  "Utility functions for implementing method combinations.")
+  "Utility functions for implementing method combinations."
+  (:require [methodical.util :as u]))
 
 (defn partial*
   "[[clojure.core/partial]] but with more direct arities."
@@ -93,7 +94,8 @@
   (when (seq primary-methods)
     (reduce
      (fn [next-method primary-method]
-       (with-meta (partial* primary-method next-method) (meta primary-method)))
+       (u/fn-with-meta (partial* (u/unwrap-fn-with-meta primary-method) next-method)
+                       (meta primary-method)))
      nil
      (reverse primary-methods))))
 
@@ -104,7 +106,8 @@
   [combined-method around-methods]
   (reduce
    (fn [combined-method around-method]
-     (with-meta (partial* around-method combined-method) (meta around-method)))
+     (u/fn-with-meta (partial* (u/unwrap-fn-with-meta around-method) combined-method)
+                     (meta around-method)))
    combined-method
    around-methods))
 
