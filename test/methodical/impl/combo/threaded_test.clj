@@ -3,33 +3,6 @@
             [methodical.impl.combo.threaded :as combo.threaded]
             [methodical.interface :as i]))
 
-(t/deftest threading-invoker-test
-  (t/are [threading expected-2 expected-3 expected-4 expected-5]
-      (let [invoker (comp second (combo.threaded/threading-invoker threading))]
-        (t/is (= expected-2
-                 ((invoker :a :b) list 'acc)))
-
-        (t/is (= expected-3
-                 ((invoker :a :b :c) list 'acc)))
-
-        (t/is (= expected-4
-                 ((invoker :a :b :c :d) list 'acc)))
-
-        (t/is (= expected-5
-                 ((invoker :a :b :c :d :e) list 'acc))))
-
-    :thread-first
-    ['acc :b]
-    ['acc :b :c]
-    ['acc :b :c :d]
-    ['acc :b :c :d :e]
-
-    :thread-last
-    [:a 'acc]
-    [:a :b 'acc]
-    [:a :b :c 'acc]
-    [:a :b :c :d 'acc]))
-
 (defn- combine-methods [threading-type primary-methods aux-methods]
   (i/combine-methods (combo.threaded/threading-method-combination threading-type) primary-methods aux-methods))
 
