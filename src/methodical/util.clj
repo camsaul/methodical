@@ -112,11 +112,14 @@
   ;; since protocols can't define varargs, we have to wrap the `dispatch-value` method from the protocol and apply
   ;; varargs for > 4 args. The various < 4 args arities are there as an optimization because it's a little faster than
   ;; calling apply every time.
-  ([multifn a]              (i/dispatch-value multifn a))
-  ([multifn a b]            (i/dispatch-value multifn a b))
-  ([multifn a b c]          (i/dispatch-value multifn a b c))
-  ([multifn a b c d]        (i/dispatch-value multifn a b c d))
-  ([multifn a b c d & more] (i/dispatch-value multifn a b c d more)))
+  ([multifn a]                    (i/dispatch-value multifn a))
+  ([multifn a b]                  (i/dispatch-value multifn a b))
+  ([multifn a b c]                (i/dispatch-value multifn a b c))
+  ([multifn a b c d]              (i/dispatch-value multifn a b c d))
+  ([multifn a b c d e]            (i/dispatch-value multifn a b c d e))
+  ([multifn a b c d e f]          (i/dispatch-value multifn a b c d e f))
+  ([multifn a b c d e f g]        (i/dispatch-value multifn a b c d e f g))
+  ([multifn a b c d e f g & more] (i/dispatch-value multifn a b c d e f g more)))
 
 (defn dispatch-fn
   "Return a function that can be used to calculate dispatch values of given arg(s)."
