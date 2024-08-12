@@ -20,6 +20,10 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@9.5
+        with:
+          cli: 1.11.1.1155
       - name: Install clj-kondo
         run: |
           curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
