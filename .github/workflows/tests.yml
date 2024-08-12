@@ -29,8 +29,19 @@ jobs:
           sha256sum -c SHA256sum.txt
           unzip -d /usr/local/bin clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
       - run: clj-kondo --version
+      - name: Copy Kondo config from deps
+        run: |
+          clj-kondo
+          --copy-configs
+          --dependencies
+          --lint "$(clojure -A:dev -Spath)"
+          --skip-lint
+          --parallel
       - name: Run clj-kondo
-        run: ./bin/kondo.sh
+        run: |
+          clj-kondo
+          --parallel
+          --lint src test
 
   tests:
     runs-on: ubuntu-20.04

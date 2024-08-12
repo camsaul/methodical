@@ -1,8 +1,10 @@
 *.class
 *.jar
 .\#*
+.lsp
 /*.iml
 /.clj-kondo/.cache
+/.clj-kondo/methodical/
 /.cpcache
 /.eastwood
 /.env
@@ -26,4 +28,3 @@
 /tags
 /target
 \#*\#
-.lsp
