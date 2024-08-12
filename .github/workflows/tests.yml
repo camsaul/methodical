@@ -30,7 +30,7 @@ jobs:
           unzip -d /usr/local/bin clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
       - run: clj-kondo --version
       - name: Copy Kondo config from deps
-        run: |
+        run: >-
           clj-kondo
           --copy-configs
           --dependencies
@@ -38,7 +38,7 @@ jobs:
           --skip-lint
           --parallel
       - name: Run clj-kondo
-        run: |
+        run: >-
           clj-kondo
           --parallel
           --lint src test
