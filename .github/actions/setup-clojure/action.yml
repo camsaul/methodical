@@ -18,7 +18,7 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
     - name: Setup Clojure
-      uses: DeLaGuardo/setup-clojure@9.5
+      uses: DeLaGuardo/setup-clojure@12.5
       with:
         cli: ${{ inputs.clojure-version }}
     - name: Restore cache
