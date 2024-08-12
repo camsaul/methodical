@@ -1,0 +1,34 @@
+name: Setup Clojure
+inputs:
+  clojure-version:
+    required: true
+    default: "1.11.4"
+  java-version:
+    required: true
+    default: "17"
+  cache-key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        cli: ${{ inputs.clojure-version }}
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: v1-${{ hashFiles('./deps.edn') }}-${{ inputs.cache-key }}
+        restore-keys: |
+          v1-${{ hashFiles('./deps.edn') }}-
+          v1-
