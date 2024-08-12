@@ -17,10 +17,11 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
-    - name: Setup Clojure
-      uses: DeLaGuardo/setup-clojure@12.5
-      with:
-        cli: ${{ inputs.clojure-version }}
+    - name: Install Clojure CLI
+      shell: bash
+      run: |
+        curl -O https://download.clojure.org/install/linux-install-${{ inputs.clojure-version }}.sh &&
+        sudo bash ./linux-install-${{ inputs.clojure-version }}.sh
     - name: Restore cache
       uses: actions/cache@v3
       with:
