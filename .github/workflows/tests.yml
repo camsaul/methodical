@@ -10,16 +10,23 @@ jobs:
   kondo:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    env:
+      CLJ_KONDO_VERSION: "2023.09.07"
+      DOWNLOAD_URL: https://github.com/clj-kondo/clj-kondo/releases/download
     steps:
       - uses: actions/checkout@v4
       - name: Setup Java & Clojure
         uses: ./.github/actions/setup-clojure
         with:
           cache-key: kondo
-      - name: Install Kondo
-        uses: DeLaGuardo/setup-clojure@12.5
-        with:
-          clj-kondo: "2023.09.07"
+      - name: Install clj-kondo
+        run: |
+          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
+          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256
+          cat clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256 >> SHA256sum.txt
+          echo " clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip" >> SHA256sum.txt
+          sha256sum -c SHA256sum.txt
+          unzip -d /usr/local/bin clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
       - run: clj-kondo --version
       - name: Copy Kondo config from deps
         run: >-
