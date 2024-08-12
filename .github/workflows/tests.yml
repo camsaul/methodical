@@ -8,22 +8,35 @@ on:
 
 jobs:
   kondo:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
+    env:
+      CLJ_KONDO_VERSION: "2023.09.07"
+      DOWNLOAD_URL: https://github.com/clj-kondo/clj-kondo/releases/download
     steps:
-    - uses: actions/checkout@v3
-    - uses: DeLaGuardo/clojure-lint-action@master
-      with:
-        check-name: Run clj-kondo
-        clj-kondo-args: >-
-          --lint src test
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - name: Prepare JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+      - name: Install clj-kondo
+        run: |
+          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
+          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256
+          cat clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256 >> SHA256sum.txt
+          echo " clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip" >> SHA256sum.txt
+          sha256sum -c SHA256sum.txt
+          unzip -d /usr/local/bin clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
+      - run: clj-kondo --version
+      - name: Run clj-kondo
+        run: ./bin/kondo.sh
 
   tests:
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Prepare JDK 17
       uses: actions/setup-java@v3
       with:
@@ -49,7 +62,7 @@ jobs:
   whitespace-linter:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Prepare JDK 17
       uses: actions/setup-java@v3
       with:
@@ -73,7 +86,7 @@ jobs:
   check:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Prepare JDK 17
       uses: actions/setup-java@v3
       with:
@@ -97,7 +110,7 @@ jobs:
   codecov:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Prepare JDK 17
       uses: actions/setup-java@v3
       with:
@@ -125,5 +138,5 @@ jobs:
   codespell:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: codespell-project/actions-codespell@master
