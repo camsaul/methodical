@@ -72,7 +72,10 @@
     [dispatcher a b]
     [dispatcher a b c]
     [dispatcher a b c d]
-    [dispatcher a b c d more]
+    [dispatcher a b c d e]
+    [dispatcher a b c d e f]
+    [dispatcher a b c d e f g]
+    [dispatcher a b c d e f g more]
     "Return an appropriate dispatch value for args passed to a multimethod. (This method is equivalent in purpose to
     the dispatch function of vanilla Clojure multimethods.)")
 

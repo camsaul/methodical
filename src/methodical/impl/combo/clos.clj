@@ -22,34 +22,49 @@
     combined-method
     (fn
       ([]
-       (doseq [f befores]
-         (f))
+       (doseq [before befores]
+         (before))
        (combined-method))
 
       ([a]
-       (doseq [f befores]
-         (f a))
+       (doseq [before befores]
+         (before a))
        (combined-method a))
 
       ([a b]
-       (doseq [f befores]
-         (f a b))
+       (doseq [before befores]
+         (before a b))
        (combined-method a b))
 
       ([a b c]
-       (doseq [f befores]
-         (f a b c))
+       (doseq [before befores]
+         (before a b c))
        (combined-method a b c))
 
       ([a b c d]
-       (doseq [f befores]
-         (f a b c d))
+       (doseq [before befores]
+         (before a b c d))
        (combined-method a b c d))
 
-      ([a b c d & more]
-       (doseq [f befores]
-         (apply f a b c d more))
-       (apply combined-method a b c d more)))))
+      ([a b c d e]
+       (doseq [before befores]
+         (before a b c d e))
+       (combined-method a b c d e))
+
+      ([a b c d e f]
+       (doseq [before befores]
+         (before a b c d e f))
+       (combined-method a b c d e f))
+
+      ([a b c d e f g]
+       (doseq [before befores]
+         (before a b c d e f g))
+       (combined-method a b c d e f g))
+
+      ([a b c d e f g & more]
+       (doseq [before befores]
+         (apply before a b c d e f g more))
+       (apply combined-method a b c d e f g more)))))
 
 (defn- apply-afters [combined-method afters]
   (if (empty? afters)
