@@ -5,6 +5,7 @@
    [clojure.datafy :as datafy]
    [methodical.impl.dispatcher.common :as dispatcher.common]
    [methodical.interface :as i]
+   [methodical.util :as u]
    [methodical.util.describe :as describe]
    [pretty.core :as pretty])
   (:import
@@ -102,7 +103,7 @@
   (let [primary-methods (i/matching-primary-methods dispatcher method-table dispatch-value)
         aux-methods     (i/matching-aux-methods dispatcher method-table dispatch-value)]
     (some-> (i/combine-methods method-combination primary-methods aux-methods)
-            (with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
+            (u/fn-with-meta {:dispatch-value (effective-dispatch-value dispatcher dispatch-value primary-methods aux-methods)}))))
 
 (deftype StandardMultiFnImpl [^MethodCombination combo
                               ^Dispatcher dispatcher

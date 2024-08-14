@@ -322,7 +322,7 @@
          ~@(when docstring
              [docstring])
          ~@(i/transform-fn-tail multifn nil fn-tail))
-       (u/add-primary-method! (var ~multifn-symb) ~dispatch-value (vary-meta ~fn-symb merge (meta (var ~fn-symb)))))))
+       (u/add-primary-method! (var ~multifn-symb) ~dispatch-value (u/fn-vary-meta ~fn-symb merge (meta (var ~fn-symb)))))))
 
 (defn- emit-aux-method
   "Impl for [[defmethod]] for aux methods."
@@ -337,7 +337,7 @@
        (u/add-aux-method-with-unique-key! (var ~multifn-symb)
                                           ~qualifier
                                           ~dispatch-value
-                                          (vary-meta ~fn-symb merge (meta (var ~fn-symb)))
+                                          (u/fn-vary-meta ~fn-symb merge (meta (var ~fn-symb)))
                                           ~unique-key))))
 
 (defn- defmethod-args-spec [multifn]

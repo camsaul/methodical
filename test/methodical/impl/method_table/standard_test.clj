@@ -3,7 +3,8 @@
    [clojure.test :as t]
    [clojure.tools.reader.edn :as edn]
    [methodical.impl.method-table.standard :as method-table.standard]
-   [methodical.interface :as i]))
+   [methodical.interface :as i]
+   [methodical.test-utils :as tu]))
 
 (t/deftest print-test
   (t/is (= "(standard-method-table)"
@@ -32,17 +33,17 @@
                     (i/add-aux-method :before :x 'f))]
       (t/testing "primary method"
         (t/is (= {[:x :y] 'f}
-                 (i/primary-methods table)))
+                 (tu/unwrap-fns-with-meta (i/primary-methods table))))
         (let [method (-> (i/primary-methods table) vals first)]
           (t/is (= 'f
-                   method))
+                   (tu/unwrap-fns-with-meta method)))
           (t/is (= {:dispatch-value [:x :y]}
                    (meta method)))))
       (t/testing "aux method"
         (let [method (-> (i/aux-methods table) :before vals ffirst)]
           (t/is (= {:before {:x ['f]}}
-                   (i/aux-methods table)))
+                   (tu/unwrap-fns-with-meta (i/aux-methods table))))
           (t/is (= 'f
-                   method))
+                   (tu/unwrap-fns-with-meta method)))
           (t/is (= {:dispatch-value :x}
                    (meta method))))))))
