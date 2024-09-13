@@ -65,13 +65,17 @@
 
 (defn distinct-by
   "Like `distinct`, but uses value of `(f item)` to determine whether to keep each `item` in the resulting collection."
-  [f coll]
-  (first
-   (reduce
-    (fn [[items already-seen? :as acc] item]
-      (let [v (f item)]
-        (if (already-seen? v)
-          acc
-          [(conj items item) (conj already-seen? v)])))
-    [[] #{}]
-    coll)))
+  ([f]
+   (fn [rf]
+     (let [seen (volatile! #{})]
+       (fn
+         ([] (rf))
+         ([result] (rf result))
+         ([result input]
+          (let [v (f input)]
+            (if (contains? @seen v)
+              result
+              (do (vswap! seen conj v)
+                  (rf result input)))))))))
+  ([f coll]
+   (into [] (distinct-by f) coll)))
