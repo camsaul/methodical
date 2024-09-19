@@ -34,12 +34,13 @@
   ;;     1 | 01     | [:default :y]
   ;;     0 | 00     | [:default :default]
   (let [cnt (count dispatch-value)]
-    (for [i (reverse (range (dec (int (Math/pow 2 cnt)))))]
-      (vec
-       (for [j (reverse (range 0 cnt))]
-         (if (pos? (bit-and i (bit-shift-left 1 j)))
-           (nth dispatch-value (- cnt j 1))
-           default-value))))))
+    (mapv (fn [i]
+            (mapv (fn [j]
+                    (if (pos? (bit-and i (bit-shift-left 1 j)))
+                      (nth dispatch-value (- cnt j 1))
+                      default-value))
+                  (range (dec cnt) -1 -1)))
+          (range (- (int (Math/pow 2 cnt)) 2) -1 -1))))
 
 (defn partially-specialized-default-dispatch-values
   "Return a sequence of all partially-specialized default dispatch values for a given `dispatch-value` and
@@ -57,27 +58,21 @@
              (not (sequential? default-value)))
     (partially-specialized-default-dispatch-values* dispatch-value default-value)))
 
-(defn- matching-partially-specialized-default-primary-method-pairs*
-  [{:keys [default-value dispatch-value unambiguous-pairs-seq-fn]
-    :or   {unambiguous-pairs-seq-fn dispatcher.standard/unambiguous-pairs-seq}
-    :as   opts}]
-  (mapcat
-   (fn [partial-default]
-     (let [pairs (dispatcher.standard/matching-primary-pairs-excluding-default
-                  (assoc opts :dispatch-value partial-default))]
-       (unambiguous-pairs-seq-fn opts pairs)))
-   (partially-specialized-default-dispatch-values dispatch-value default-value)))
-
 (defn matching-partially-specialized-default-primary-method-pairs
   "Return pairs of `[dispatch-value method]` for all matching partially-specialized default methods, sorted from
   most-specific to least-specific"
   ;; TODO - this is too many args!
   [opts standard-dispatch-vals]
-  (->> (matching-partially-specialized-default-primary-method-pairs* opts)
-       (dispatcher.common/distinct-by first)
-       (remove
-        (fn [[dispatch-val]]
-          (contains? standard-dispatch-vals dispatch-val)))))
+  (let [{:keys [default-value dispatch-value unambiguous-pairs-seq-fn]
+         :or   {unambiguous-pairs-seq-fn dispatcher.standard/unambiguous-pairs-seq}} opts]
+    (into []
+          (comp (mapcat (fn [partial-default]
+                          (let [pairs (dispatcher.standard/matching-primary-pairs-excluding-default
+                                       (assoc opts :dispatch-value partial-default))]
+                            (unambiguous-pairs-seq-fn opts pairs))))
+                (dispatcher.common/distinct-by first)
+                (remove (fn [[dispatch-val]] (contains? standard-dispatch-vals dispatch-val))))
+          (partially-specialized-default-dispatch-values dispatch-value default-value))))
 
 (defn matching-primary-methods
   "Return a lazy sequence of applicable priamry methods for `dispatch-value`, sorted from most-specific to
