@@ -49,6 +49,26 @@
    :exec-args {:only ["test"]}
    :jvm-opts  ["-Dinhumane.test.output=true"]}
 
+  ;; Run Kondo
+  ;;
+  ;;    clojure -M:kondo --lint ...
+  ;;
+  ;; Copy configs
+  ;;
+  ;;    clojure -M:kondo --copy-configs --dependencies --lint "$(clojure -A:dev -Spath)" --skip-lint --parallel
+  :kondo
+  {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2025.01.16"}}
+   :main-opts    ["-m" "clj-kondo.main"]}
+
+  ;; lint everything with Kondo
+  ;;
+  ;; clojure -M:kondo:kondo/all
+  :kondo/all
+  {:main-opts ["-m" "clj-kondo.main"
+               "--lint"
+               "src"
+               "test"]}
+
   ;; clj -X:dev:cloverage
   :cloverage
   {:extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}

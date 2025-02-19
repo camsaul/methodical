@@ -8,42 +8,28 @@ on:
 
 jobs:
   kondo:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      CLJ_KONDO_VERSION: "2023.09.07"
-      DOWNLOAD_URL: https://github.com/clj-kondo/clj-kondo/releases/download
     steps:
       - uses: actions/checkout@v4
       - name: Setup Java & Clojure
         uses: ./.github/actions/setup-clojure
         with:
           cache-key: kondo
-      - name: Install clj-kondo
-        run: |
-          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
-          curl -OL ${DOWNLOAD_URL}/v${CLJ_KONDO_VERSION}/clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256
-          cat clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip.sha256 >> SHA256sum.txt
-          echo " clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip" >> SHA256sum.txt
-          sha256sum -c SHA256sum.txt
-          unzip -d /usr/local/bin clj-kondo-${CLJ_KONDO_VERSION}-linux-static-amd64.zip
-      - run: clj-kondo --version
-      - name: Copy Kondo config from deps
-        run: >-
-          clj-kondo
-          --copy-configs
-          --dependencies
-          --lint "$(clojure -A:dev -Spath)"
-          --skip-lint
-          --parallel
-      - name: Run clj-kondo
-        run: >-
-          clj-kondo
-          --parallel
-          --lint src test
+    - name: Copy Kondo config from deps
+      run: >-
+        clojure -M:kondo
+        --copy-configs
+        --dependencies
+        --lint "$(clojure -A:dev -Spath)"
+        --skip-lint
+        --parallel
+    - name: Run clj-kondo
+      run: >-
+        clojure -M:kondo:kondo/all
 
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
@@ -57,7 +43,7 @@ jobs:
         CI: TRUE
 
   whitespace-linter:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Setup Java & Clojure
@@ -68,7 +54,7 @@ jobs:
       name: Run whitespace linter
 
   check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Setup Java & Clojure
@@ -79,7 +65,7 @@ jobs:
       name: Check namespaces
 
   codecov:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Setup Java & Clojure
@@ -94,7 +80,7 @@ jobs:
         files: ./target/coverage/codecov.json
 
   codespell:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: codespell-project/actions-codespell@master
