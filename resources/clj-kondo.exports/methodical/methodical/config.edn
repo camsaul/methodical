@@ -1,7 +1,9 @@
 {:config-paths ["macros"]
 
- :lint-as
- {}
+ :config-in-call
+ {methodical.core/defmethod
+  {:linters
+   {:redundant-fn-wrapper {:level :off}}}}
 
  :hooks
  {:analyze-call

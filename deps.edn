@@ -11,7 +11,8 @@
   {:extra-paths ["dev" "test"]
 
    :extra-deps
-   {eftest/eftest                  {:mvn/version "0.5.9"}
+   {clj-kondo/clj-kondo            {:mvn/version "2025.01.16"}
+    eftest/eftest                  {:mvn/version "0.5.9"}
     environ/environ                {:mvn/version "1.2.0"}
     io.github.camsaul/humane-are   {:mvn/version "1.0.2"}
     org.clojure/java.classpath     {:mvn/version "1.0.0"}
