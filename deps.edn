@@ -11,7 +11,8 @@
   {:extra-paths ["dev" "test"]
 
    :extra-deps
-   {eftest/eftest                  {:mvn/version "0.5.9"}
+   {clj-kondo/clj-kondo            {:mvn/version "2025.01.16"}
+    eftest/eftest                  {:mvn/version "0.5.9"}
     environ/environ                {:mvn/version "1.2.0"}
     io.github.camsaul/humane-are   {:mvn/version "1.0.2"}
     org.clojure/java.classpath     {:mvn/version "1.0.0"}
@@ -48,6 +49,26 @@
   {:exec-fn   methodical.test-runner/run-tests
    :exec-args {:only ["test"]}
    :jvm-opts  ["-Dinhumane.test.output=true"]}
+
+  ;; Run Kondo
+  ;;
+  ;;    clojure -M:kondo --lint ...
+  ;;
+  ;; Copy configs
+  ;;
+  ;;    clojure -M:kondo --copy-configs --dependencies --lint "$(clojure -A:dev -Spath)" --skip-lint --parallel
+  :kondo
+  {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2025.01.16"}}
+   :main-opts    ["-m" "clj-kondo.main"]}
+
+  ;; lint everything with Kondo
+  ;;
+  ;; clojure -M:kondo:kondo/all
+  :kondo/all
+  {:main-opts ["-m" "clj-kondo.main"
+               "--lint"
+               "src"
+               "test"]}
 
   ;; clj -X:dev:cloverage
   :cloverage

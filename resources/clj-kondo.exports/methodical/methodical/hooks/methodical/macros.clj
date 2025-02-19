@@ -121,7 +121,7 @@
                                                    'next-method
                                                    '__FN__NAME__THAT__YOU__CANNOT__REFER__TO__))
                                fn-tail))
-                             (vary-meta update :clj-kondo/ignore conj :redundant-fn-wrapper))]))]
+                             (with-meta (meta node)))]))]
       #_(println "=>")
       #_(clojure.pprint/pprint (hooks/sexpr result))
       {:node result})))

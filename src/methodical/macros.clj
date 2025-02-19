@@ -49,12 +49,13 @@
   [name-symb dispatch-fn {:keys [hierarchy dispatcher combo method-table cache default-value]
                           :or   {combo        `(impl/thread-last-method-combination)
                                  method-table `(impl/standard-method-table)
-                                 cache        (if hierarchy
-                                                `(impl/watching-cache (impl/simple-cache) [~hierarchy])
-                                                `(impl/simple-cache))
                                  hierarchy    '#'clojure.core/global-hierarchy}
                           prefs :prefers}]
-  (let [dispatch-fn (or dispatch-fn `identity)
+  (let [cache       (or cache
+                        (if hierarchy
+                          `(impl/watching-cache (impl/simple-cache) [~hierarchy])
+                          `(impl/simple-cache)))
+        dispatch-fn (or dispatch-fn `identity)
         dispatcher  (or dispatcher
                         `(impl/multi-default-dispatcher ~dispatch-fn
                                                         :hierarchy ~hierarchy
