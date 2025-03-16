@@ -19,9 +19,10 @@
   method (if any); pairs are sorted in order from most-specific to least-specific."
   [{:keys [hierarchy prefs method-map dispatch-value]}]
   {:pre [(map? method-map)]}
-  (let [matches        (for [[a-dispatch-val method] method-map
-                             :when                   (isa? hierarchy dispatch-value a-dispatch-val)]
-                         [a-dispatch-val method])]
+  (let [matches (reduce-kv (fn [acc a-dispatch-val method]
+                             (cond-> acc
+                               (isa? hierarchy dispatch-value a-dispatch-val) (conj [a-dispatch-val method])))
+                           [] method-map)]
     (when (seq matches)
       (sort-by first (dispatcher.common/domination-comparator hierarchy prefs dispatch-value) matches))))
 
