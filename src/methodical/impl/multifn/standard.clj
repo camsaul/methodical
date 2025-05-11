@@ -19,10 +19,17 @@
 (defn sort-dispatch-values
   "Sort dispatch values in order from most-specific-overall to least-specific-overall."
   [dispatcher dispatch-values]
-  (sort-by
-   identity
-   (dispatcher.common/domination-comparator (partial i/dominates? dispatcher))
-   dispatch-values))
+  (if (< (count dispatch-values) 2) ;; Fastpath
+    dispatch-values
+    (sort-by
+     identity
+     (dispatcher.common/domination-comparator (partial i/dominates? dispatcher))
+     dispatch-values)))
+
+(defn- distinct* [coll]
+  (if (< (count coll) 2) ;; Fastpath
+    coll
+    (into [] (distinct) coll)))
 
 (defn non-composite-effective-dispatch-value
   "Operates only on non-composite dispatch values. Determine the effective (most-specific) dispatch value that will be
@@ -38,7 +45,11 @@
   value would become `::toucan`, since out of the three possibilities only a `::toucan` is both a `::bird` and a
   `::can`."
   [dispatcher actual-dispatch-value method-dispatch-values]
-  (let [[most-specific-dispatch-value & more-dispatch-values] (distinct (sort-dispatch-values dispatcher method-dispatch-values))
+  (let [method-dispatch-values (distinct* (sort-dispatch-values dispatcher method-dispatch-values))
+        ;; Slightly awkward alternative to `[a & b]` destructuring for performance purposes.
+        most-specific-dispatch-value (nth method-dispatch-values 0 nil)
+        more-dispatch-values (if (> (count method-dispatch-values) 1)
+                               (subvec method-dispatch-values 1) [])
         ;; do not take preferences into account when calculating the effective dispatch value. Aux methods are applied
         ;; to *all* matching dispatch values, which means that one aux method should not be considered unambiguously
         ;; dominant over another based on preferences alone; we should only consider a method to be dominant over
@@ -78,19 +89,24 @@
       (mapv (fn [i]
               (non-composite-effective-dispatch-value dispatcher
                                                       (nth actual-dispatch-value i)
-                                                      (map #(nth % i)
-                                                           (filter sequential? method-dispatch-values))))
+                                                      (into [] (comp (filter sequential?)
+                                                                     (map #(nth % i)))
+                                                            method-dispatch-values)))
             (range (count actual-dispatch-value))))))
+
+(def ^:private methods->dispatch-values-xform
+  (comp cat
+        (keep #(let [m (meta %)]
+                 (when (contains? m :dispatch-value)
+                   m)))
+        (map :dispatch-value)))
 
 (defn effective-dispatch-value
   "Given matching `primary-methods` and `aux-methods` for the `actual-dispatch-value`, determine the effective dispatch
   value."
   [dispatcher actual-dispatch-value primary-methods aux-methods]
   (let [dispatch-values (transduce
-                         (comp cat
-                               (map meta)
-                               (filter #(contains? % :dispatch-value))
-                               (map :dispatch-value))
+                         methods->dispatch-values-xform
                          conj
                          []
                          (cons primary-methods (vals aux-methods)))]
